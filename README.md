@@ -18,8 +18,7 @@ This app is used for merging multiple files into a single PDF file
 # pre-requisites:
 # make sure to have VcXsrv running w/ -ac arguments (/mnt/e/software/VcXsrv/xlaunch.exe)
 # display number: 0 | do not allow access control | uncheck "native openGL"
-$(kivy_venv) shihanxiong@DESKTOP-5DHS48L:/mnt/e/dev/github/PDFMerger$ echo $DISPLAY
-172.20.144.1:0
+$(kivy_venv) shihanxiong@DESKTOP-5DHS48L:/mnt/e/dev/github/PDFMerger$export DISPLAY=172.20.144.1:0
 
 # Ensure you have kivy installed
 $python3 -m pip install --upgrade pip setuptools virtualenv
@@ -31,6 +30,9 @@ $python3 -m virtualenv kivy_venv
 
 # before each start, run
 $source kivy_venv/bin/activate
+
+# run application
+$python3 app.py
 ```
 
 #### Mac
