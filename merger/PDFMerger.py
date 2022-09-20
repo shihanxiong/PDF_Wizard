@@ -5,8 +5,9 @@ import os
 
 input_dir = 'merger/input/'
 output_dir = 'merger/output/'
-files = os.listdir(input_dir)
 
+files = os.listdir(input_dir)
+print("This order could be random:")
 print(files)
 
 merger = PdfFileMerger()
@@ -17,8 +18,12 @@ for file in files:
         image = Image.open(input_dir + file)
         im = image.convert('RGB')
         im.save(r'input/' + file.replace('.jpeg', '') + '.pdf')
+print('.jpeg files have been successfully comverted to .pdf files')
 
-files = os.listdir(input_dir)
+# comment below if you do not want to use a custom order
+custom_files = ['1_51.pdf', '52_53.pdf', '54_81.pdf']
+files = custom_files or os.listdir(input_dir)
+print('Files used for merging: ', files)
 
 # combine all PDF files
 for file in files:
@@ -27,3 +32,4 @@ for file in files:
 
 with open(output_dir + 'output.pdf', 'wb') as fout:
     merger.write(fout)
+print('PDF merging process complete')
