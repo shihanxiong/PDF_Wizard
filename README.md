@@ -1,11 +1,15 @@
 # PDFMerger
 
 ```
-This app is used for merging multiple files into a single PDF file
+This app is working in progress, currently supports:
+- merging multiple files into a single PDF file
+- splitting a PDF file into given start / end pages
 ```
 
 ### Version History:
-
+- v0.2.0
+  - Added PDF splitter feature
+  - Now it supports splitting PDF into given start / end pages
 - v0.1.0
   - Added GUI component
   - Now supports `.jpeg` files as input files
