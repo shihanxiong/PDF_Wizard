@@ -3,3 +3,9 @@ __pycache__/
 inputFiles/*.pdf
 dist/
 build/
+
+# ignore input / output folders
+src/merger/input/*.pdf
+src/merger/output/*.pdf
+src/splitter/input/*.pdf
+src/splitter/output/*.pdf
