@@ -6,14 +6,6 @@ This app is working in progress, currently supports:
 - splitting a PDF file into given start / end pages
 ```
 
-### Version History:
-- v0.2.0
-  - Added PDF splitter feature
-  - Now it supports splitting PDF into given start / end pages
-- v0.1.0
-  - Added GUI component
-  - Now supports `.jpeg` files as input files
-
 ### Installation:
 
 #### Windows
@@ -66,3 +58,7 @@ $python -m PyInstaller PDFMerger.spec --noconfirm
 $pip install auto-py-to-exe
 $auto-py-to-exe # start GUI (make sure to run in windows powershell)
 ```
+
+### Change logs
+
+> change logs can be found [here](changelog.md)
