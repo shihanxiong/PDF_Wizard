@@ -1,5 +1,9 @@
 # Versions
 
+### v0.3.0
+
+- Migrate to PyQt framework
+
 ### v0.2.0
 
 - Added PDF splitter feature
