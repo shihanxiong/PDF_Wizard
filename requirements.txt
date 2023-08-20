@@ -1,1 +1,4 @@
 PyPDF2
+PyQt6
+pdf2image
+fpdf

@@ -9,3 +9,5 @@ src/merger/input/*.pdf
 src/merger/output/*.pdf
 src/splitter/input/*.pdf
 src/splitter/output/*.pdf
+src/jupyter_notebooks/*.pdf
+src/jupyter_notebooks/*.png
