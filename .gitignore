@@ -1,0 +1,14 @@
+.DS_Store
+__pycache__/
+inputFiles/*.pdf
+dist/
+build/
+
+# ignore input / output folders
+src/merger/input/*.pdf
+src/merger/output/*.pdf
+src/splitter/input/*.pdf
+src/splitter/output/*.pdf
+src/jupyter_notebooks/input/*.pdf
+src/jupyter_notebooks/input/*.png
+src/jupyter_notebooks/output/*.pdf
