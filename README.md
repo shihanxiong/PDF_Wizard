@@ -1,6 +1,8 @@
-# PDFMerger
+# PDF Tool
 
-> This app is working in progress
+<p align="center">
+  <img src="./src/assets/img/app_logo.png" width="450" height="450" />
+</p>
 
 ### Installation
 
