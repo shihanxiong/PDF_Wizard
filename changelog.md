@@ -3,6 +3,7 @@
 ### v0.3.0
 
 - Migrate to PyQt framework
+- Allow batch processing PDFs into greyscale and remove shadows
 
 ### v0.2.0
 
