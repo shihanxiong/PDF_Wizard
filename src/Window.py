@@ -1,15 +1,23 @@
+import os
+import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget
 from PyQt6.QtGui import QIcon
-import sys
+from file_utils import FileUtils
 
 
 class Window(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setGeometry(200, 200, 700, 400)
-        self.setWindowTitle("Python GUI Development")
-        self.setWindowIcon(QIcon("assets/img/app_logo.png"))  # TODO: fix icon issue
+        self.setGeometry(400, 400, 700, 400)
+        self.setWindowTitle("PDF Tool")
+        self.setWindowIcon(
+            QIcon(
+                FileUtils.get_file_path(
+                    os.path.join("src", "assets", "img", "app_logo.png")
+                )
+            )
+        )
         self.setFixedWidth(700)
         self.setFixedHeight(400)
 
