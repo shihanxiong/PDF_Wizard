@@ -10,7 +10,7 @@
 
 ```bash
 # pre-requisites
-# python v3.11+
+# python v3.9 (currently PyQt6/PyQt6-tools only support python 3.9)
 
 $pip3 install -r requirements.txt
 ```
