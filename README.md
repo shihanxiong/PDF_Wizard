@@ -33,6 +33,13 @@ $pip3 install -r requirements.txt
 # TBD
 ```
 
+### PyQt Designer
+
+```bash
+# example location (win32)
+E:\software\Python\Python310\Lib\site-packages\qt6_applications\Qt\bin
+```
+
 ### Change logs
 
 > change logs can be found [here](changelog.md)
