@@ -4,6 +4,9 @@ inputFiles/*.pdf
 dist/
 build/
 
+# logs
+*.log
+
 # ignore input / output folders
 src/merger/input/*.pdf
 src/merger/output/*.pdf
