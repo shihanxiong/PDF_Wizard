@@ -1,7 +1,7 @@
 import os
 import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QPixmap
 from file_utils import FileUtils
 
 
@@ -13,8 +13,10 @@ class Window(QWidget):
         self.setWindowTitle("PDF Tool")
         self.setWindowIcon(
             QIcon(
-                FileUtils.get_file_path(
-                    os.path.join("src", "assets", "img", "app_logo.png")
+                QPixmap(
+                    FileUtils.get_file_path(
+                        os.path.join("src", "assets", "img", "app_logo.png")
+                    )
                 )
             )
         )
