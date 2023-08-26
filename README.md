@@ -33,6 +33,14 @@ $pip3 install -r requirements.txt
 # TBD
 ```
 
+#### Apple M chips
+
+```bash
+# Install version below
+pip uninstall pyinstaller
+PYINSTALLER_COMPILE_BOOTLOADER=1 pip install git+https://github.com/pyinstaller/pyinstaller.git@develop
+```
+
 ### PyQt Designer
 
 ```bash

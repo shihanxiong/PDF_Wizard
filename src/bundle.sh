@@ -22,8 +22,8 @@ then
 
   if [ $1 == "app.macos.spec" ]
   then
-    mv dist/video_loom.app dist/video_loom_$converted_version.app
-    mv dist/video_loom dist/video_loom_$converted_version
+    mv dist/PDF_Tools.app dist/PDF_Tools_$converted_version.app
+    mv dist/PDF_Tools dist/PDF_Tools_$converted_version
   elif [ $1 == "app.win32.spec" ]
   then
     mv dist/PDF_Tools.exe dist/PDF_Tools_$converted_version.exe
