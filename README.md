@@ -10,7 +10,7 @@
 
 ```bash
 # pre-requisites
-# python v3.11+
+# python v3.9 (currently PyQt6/PyQt6-tools only support python 3.9)
 
 $pip3 install -r requirements.txt
 ```
@@ -31,6 +31,13 @@ $pip3 install -r requirements.txt
 
 ```bash
 # TBD
+```
+
+### PyQt Designer
+
+```bash
+# example location (win32)
+E:\software\Python\Python310\Lib\site-packages\qt6_applications\Qt\bin
 ```
 
 ### Change logs

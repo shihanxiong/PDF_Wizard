@@ -1,4 +1,6 @@
 PyPDF2
 PyQt6
+pyqt6-tools
 pdf2image
 fpdf
+pytest
