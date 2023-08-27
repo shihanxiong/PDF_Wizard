@@ -1,7 +1,7 @@
 # PDFMerger
 
 <p align="center">
-  <img src="./src/assets/img/app_logo.png" width="450" height="450" />
+  <img src="./src/assets/img/app_logo_raw.png" width="450" height="450" />
 </p>
 
 ### Installation
