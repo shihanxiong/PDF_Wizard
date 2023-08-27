@@ -3,6 +3,7 @@ __pycache__/
 inputFiles/*.pdf
 dist/
 build/
+env
 
 # logs
 *.log
