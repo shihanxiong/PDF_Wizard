@@ -38,7 +38,7 @@ $pip3 install -r requirements.txt
 ```bash
 # Install version below
 pip uninstall pyinstaller
-PYINSTALLER_COMPILE_BOOTLOADER=1 pip install git+https://github.com/pyinstaller/pyinstaller.git@develop
+PYINSTALLER_COMPILE_BOOTLOADER=1 pip3 install git+https://github.com/pyinstaller/pyinstaller.git@develop
 ```
 
 ### PyQt Designer

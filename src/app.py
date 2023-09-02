@@ -47,7 +47,11 @@ class App(QWidget):
         root_logger.addHandler(console_handler)
 
 
-app = QApplication(sys.argv)
-window = App()
-window.show()
-sys.exit(app.exec())
+try:
+    if __name__ == "__main__":
+        app = QApplication(sys.argv)
+        window = App()
+        window.show()
+        sys.exit(app.exec())
+except Exception as err:
+    logging.error(f"app.py: {str(err)}")
