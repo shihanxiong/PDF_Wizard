@@ -14,7 +14,7 @@ class App(QWidget):
 
         # app config
         self.setGeometry(400, 400, 700, 400)
-        self.setWindowTitle("PDF Tool")
+        self.setWindowTitle("PDF Tools")
         icon_path = FileUtils.get_file_path(
             os.path.join("src", "assets", "img", "app_logo.png")
         )

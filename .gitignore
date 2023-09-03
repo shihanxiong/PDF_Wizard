@@ -9,10 +9,10 @@ env
 *.log
 
 # ignore input / output folders
-src/merger/input/*.pdf
-src/merger/output/*.pdf
-src/splitter/input/*.pdf
-src/splitter/output/*.pdf
-src/jupyter_notebooks/input/*.pdf
-src/jupyter_notebooks/input/*.png
-src/jupyter_notebooks/output/*.pdf
+merger/input/*.pdf
+merger/output/*.pdf
+splitter/input/*.pdf
+splitter/output/*.pdf
+jupyter_notebooks/input/*.pdf
+jupyter_notebooks/input/*.png
+jupyter_notebooks/output/*.pdf
