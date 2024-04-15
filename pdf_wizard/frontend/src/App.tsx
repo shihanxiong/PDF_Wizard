@@ -1,30 +1,68 @@
 import { useState } from 'react';
 import logo from './assets/images/logo-universal.png';
 import './App.css';
+import { styled } from '@mui/material/styles';
 import { Greet } from '../wailsjs/go/main/App';
+import { Button, Container, TextField } from '@mui/material';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+
+const VisuallyHiddenInput = styled('input')({
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
+  height: 1,
+  overflow: 'hidden',
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  whiteSpace: 'nowrap',
+  width: 1,
+});
 
 export const App = () => {
-  const [resultText, setResultText] = useState('Please enter your name below 👇');
-  const [name, setName] = useState('');
-  const updateName = (e: any) => setName(e.target.value);
-  const updateResultText = (result: string) => setResultText(result);
+  const [filePath, setFilePath] = useState<String>('');
+  const [startPage, setStartPage] = useState<Number | null>(null);
+  const [endPage, setEndPage] = useState<Number | null>(null);
 
-  function greet() {
-    Greet(name).then(updateResultText);
-  }
+  const processPdf = () => {
+    console.log('!!!!!!!!!', filePath, startPage, endPage);
+  };
 
   return (
-    <div id="App">
+    <Container id="App">
       <img src={logo} id="logo" alt="logo" />
-      <div id="result" className="result">
-        {resultText}
-      </div>
-      <div id="input" className="input-box">
-        <input id="name" className="input" onChange={updateName} autoComplete="off" name="input" type="text" />
-        <button className="btn" onClick={greet}>
-          Greet
-        </button>
-      </div>
-    </div>
+
+      <Container>
+        <Button component="label" role={undefined} variant="contained" startIcon={<CloudUploadIcon />}>
+          Select file
+          <VisuallyHiddenInput type="file" onChange={(e) => setFilePath(e.target.value)} />
+        </Button>
+
+        <Button component="label" role={undefined} variant="contained" startIcon={<CloudDownloadIcon />}>
+          Select output directory
+          <VisuallyHiddenInput type="file" onChange={(e) => setFilePath(e.target.value)} />
+        </Button>
+
+        <TextField
+          id="outlined-number"
+          label="Start Page"
+          type="number"
+          size="small"
+          onChange={(e) => setStartPage(parseInt(e.target.value))}
+        />
+
+        <TextField
+          id="outlined-number"
+          label="End Page"
+          type="number"
+          size="small"
+          onChange={(e) => setEndPage(parseInt(e.target.value))}
+        />
+
+        <Button variant="contained" onClick={() => processPdf()}>
+          Process
+        </Button>
+      </Container>
+    </Container>
   );
 };
