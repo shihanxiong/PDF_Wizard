@@ -51,3 +51,9 @@ E:\software\Python\Python310\Lib\site-packages\qt6_applications\Qt\bin
 ### Change logs
 
 > change logs can be found [here](changelog.md)
+
+## Trouble Shooting
+
+### `wails` command not found
+
+Ensure you have `go` installed correctly. On MacOS, go binary is installed to `/usr/local/go`, whereas `wails` is installed under `~go/bin/wails`. So you can run `sudo cp ~/go/bin/wails /usr/local/go/bin/` to resolve this.
