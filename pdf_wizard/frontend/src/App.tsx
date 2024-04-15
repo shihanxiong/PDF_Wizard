@@ -3,7 +3,7 @@ import logo from './assets/images/logo-universal.png';
 import './App.css';
 import { Greet } from '../wailsjs/go/main/App';
 
-function App() {
+export const App = () => {
   const [resultText, setResultText] = useState('Please enter your name below 👇');
   const [name, setName] = useState('');
   const updateName = (e: any) => setName(e.target.value);
@@ -27,6 +27,4 @@ function App() {
       </div>
     </div>
   );
-}
-
-export default App;
+};
