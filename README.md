@@ -1,7 +1,7 @@
 # PDFMerger
 
 <p align="center">
-  <img src="./src/assets/img/app_logo_raw.png" width="450" height="450" />
+  <img src="./assets/img/app_logo_raw.png" width="450" height="450" />
 </p>
 
 ### Installation
@@ -15,37 +15,20 @@
 $pip3 install -r requirements.txt
 ```
 
-#### Windows
+### Local Environment
+
+#### Windows & MacOS
 
 ```bash
-# TBD
-```
-
-#### Mac
-
-```bash
-# TBD
+$cd pdf_wizard
+$wails dev
 ```
 
 ### Packaging:
 
 ```bash
-# TBD
-```
-
-#### Apple M chips
-
-```bash
-# Install version below
-pip uninstall pyinstaller
-PYINSTALLER_COMPILE_BOOTLOADER=1 pip install git+https://github.com/pyinstaller/pyinstaller.git@develop
-```
-
-### PyQt Designer
-
-```bash
-# example location (win32)
-E:\software\Python\Python310\Lib\site-packages\qt6_applications\Qt\bin
+# build executables based on current os
+$wails build
 ```
 
 ### Change logs
