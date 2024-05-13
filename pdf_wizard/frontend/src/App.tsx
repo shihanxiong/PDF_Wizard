@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import logo from './assets/images/logo-universal.png';
 import './App.css';
 import { styled } from '@mui/material/styles';
 import { Greet } from '../wailsjs/go/main/App';
-import { Button, Container, TextField } from '@mui/material';
+import { Box, Button, Container, TextField } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 
@@ -30,11 +29,9 @@ export const App = () => {
 
   return (
     <Container id="App">
-      <img src={logo} id="logo" alt="logo" />
-
-      <Container>
+      <Box sx={{ p: 5 }}>
         <Button component="label" role={undefined} variant="contained" startIcon={<CloudUploadIcon />}>
-          Select file
+          Select files
           <VisuallyHiddenInput type="file" onChange={(e) => setFilePath(e.target.value)} />
         </Button>
 
@@ -62,7 +59,7 @@ export const App = () => {
         <Button variant="contained" onClick={() => processPdf()}>
           Process
         </Button>
-      </Container>
+      </Box>
     </Container>
   );
 };
