@@ -28,7 +28,7 @@ export function formatDate(date: Date): string {
 }
 
 /**
- * Convert FileMetadata from backend to SelectedFile for frontend
+ * Convert PDFMetadata from backend to SelectedFile for frontend
  */
 export function convertToSelectedFile(metadata: any): any {
   return {

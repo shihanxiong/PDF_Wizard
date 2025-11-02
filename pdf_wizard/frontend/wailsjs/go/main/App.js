@@ -6,6 +6,14 @@ export function GetFileMetadata(arg1) {
   return window['go']['main']['App']['GetFileMetadata'](arg1);
 }
 
+export function GetPDFMetadata(arg1) {
+  return window['go']['main']['App']['GetPDFMetadata'](arg1);
+}
+
+export function GetPDFPageCount(arg1) {
+  return window['go']['main']['App']['GetPDFPageCount'](arg1);
+}
+
 export function MergePDFs(arg1, arg2, arg3) {
   return window['go']['main']['App']['MergePDFs'](arg1, arg2, arg3);
 }
@@ -14,6 +22,14 @@ export function SelectOutputDirectory() {
   return window['go']['main']['App']['SelectOutputDirectory']();
 }
 
+export function SelectPDFFile() {
+  return window['go']['main']['App']['SelectPDFFile']();
+}
+
 export function SelectPDFFiles() {
   return window['go']['main']['App']['SelectPDFFiles']();
+}
+
+export function SplitPDF(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SplitPDF'](arg1, arg2, arg3);
 }

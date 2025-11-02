@@ -1,17 +1,380 @@
-import { Box, Typography, Paper } from '@mui/material';
+import { useState, useEffect } from 'react';
+import {
+  Box,
+  Button,
+  Typography,
+  TextField,
+  IconButton,
+  Card,
+  CardContent,
+  Alert,
+  CircularProgress,
+  Paper,
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import FolderIcon from '@mui/icons-material/Folder';
+import { SelectPDFFile, GetPDFMetadata, SelectOutputDirectory, SplitPDF } from '../../wailsjs/go/main/App';
+import { OnFileDrop } from '../../wailsjs/runtime/runtime';
+import { SelectedPDF, SplitDefinition } from '../types';
+import { formatFileSize, formatDate } from '../utils/formatters';
+import { main } from '../../wailsjs/go/models';
+
+const MAX_SPLITS = 10;
 
 export const SplitTab = () => {
+  const [selectedPDF, setSelectedPDF] = useState<SelectedPDF | null>(null);
+  const [splits, setSplits] = useState<SplitDefinition[]>([]);
+  const [outputDirectory, setOutputDirectory] = useState<string>('');
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // Set up drag and drop for PDF file selection
+  useEffect(() => {
+    OnFileDrop((x, y, paths) => {
+      handleDroppedPDF(paths);
+    }, false);
+  }, []);
+
+  const handleDroppedPDF = async (paths: string[]) => {
+    const pdfPaths = paths.filter((path) => path.toLowerCase().endsWith('.pdf'));
+    if (pdfPaths.length === 0) {
+      setError('No PDF files found in dropped files');
+      return;
+    }
+    if (pdfPaths.length > 1) {
+      setError('Please drop only one PDF file');
+      return;
+    }
+
+    try {
+      const path = pdfPaths[0];
+      const metadata = await GetPDFMetadata(path);
+      setSelectedPDF({
+        path: metadata.path,
+        name: metadata.name,
+        size: metadata.size,
+        lastModified: new Date(metadata.lastModified),
+        totalPages: metadata.totalPages,
+      });
+      // Clear existing splits when new PDF is selected
+      setSplits([]);
+      setError(null);
+    } catch (err: any) {
+      setError(`Failed to load PDF: ${err.message}`);
+    }
+  };
+
+  const handleSelectPDF = async () => {
+    try {
+      const path = await SelectPDFFile();
+      if (path) {
+        const metadata = await GetPDFMetadata(path);
+        setSelectedPDF({
+          path: metadata.path,
+          name: metadata.name,
+          size: metadata.size,
+          lastModified: new Date(metadata.lastModified),
+          totalPages: metadata.totalPages,
+        });
+        // Clear existing splits when new PDF is selected
+        setSplits([]);
+        setError(null);
+      }
+    } catch (err: any) {
+      setError(`Failed to select PDF: ${err.message}`);
+    }
+  };
+
+  const handleAddSplit = () => {
+    if (splits.length >= MAX_SPLITS || !selectedPDF) return;
+
+    const splitNumber = splits.length + 1;
+    const lastEndPage = splits.length > 0 ? splits[splits.length - 1].endPage : 0;
+
+    const newSplit: SplitDefinition = {
+      id: `split-${Date.now()}-${splitNumber}`,
+      startPage: Math.min(lastEndPage + 1, selectedPDF.totalPages),
+      endPage: Math.min(lastEndPage + 10, selectedPDF.totalPages),
+      filename: `file_${splitNumber}`,
+    };
+
+    setSplits((prev) => [...prev, newSplit]);
+  };
+
+  const handleRemoveSplit = (id: string) => {
+    setSplits((prev) => prev.filter((split) => split.id !== id));
+  };
+
+  const handleUpdateSplit = (id: string, field: keyof SplitDefinition, value: string | number) => {
+    setSplits((prev) => prev.map((split) => (split.id === id ? { ...split, [field]: value } : split)));
+  };
+
+  const validateSplit = (split: SplitDefinition): boolean => {
+    if (!selectedPDF) return false;
+    return (
+      split.startPage >= 1 &&
+      split.startPage <= selectedPDF.totalPages &&
+      split.endPage >= split.startPage &&
+      split.endPage <= selectedPDF.totalPages &&
+      split.filename.trim().length > 0
+    );
+  };
+
+  const handleSelectOutputDirectory = async () => {
+    try {
+      const dir = await SelectOutputDirectory();
+      if (dir) {
+        setOutputDirectory(dir);
+        setError(null);
+      }
+    } catch (err: any) {
+      setError(`Failed to select output directory: ${err.message}`);
+    }
+  };
+
+  const handleSplit = async () => {
+    if (!selectedPDF || splits.length === 0 || !outputDirectory) return;
+
+    // Validate all splits
+    const invalidSplits = splits.filter((split) => !validateSplit(split));
+    if (invalidSplits.length > 0) {
+      setError('Please fix invalid split configurations before proceeding');
+      return;
+    }
+
+    setIsProcessing(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const splitDefinitions: main.SplitDefinition[] = splits.map((split) => ({
+        startPage: split.startPage,
+        endPage: split.endPage,
+        filename: split.filename.trim(),
+      }));
+
+      await SplitPDF(selectedPDF.path, splitDefinitions, outputDirectory);
+      const outputFiles = splits.map((s) => `${s.filename.trim()}.pdf`).join(', ');
+      setSuccess(`PDF split successfully! Created ${splits.length} file(s): ${outputFiles}`);
+      // Clear splits after successful split
+      setSplits([]);
+    } catch (err: any) {
+      const errorMessage = err?.message || err?.toString() || 'Unknown error occurred';
+      setError(`Split failed: ${errorMessage}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const canAddSplit = splits.length < MAX_SPLITS && selectedPDF !== null && !isProcessing;
+  const canSplit =
+    selectedPDF !== null &&
+    splits.length > 0 &&
+    outputDirectory.length > 0 &&
+    splits.every(validateSplit) &&
+    !isProcessing;
+
   return (
-    <Box sx={{ p: 3 }}>
-      <Paper sx={{ p: 4, textAlign: 'center' }}>
-        <Typography variant="h6" color="text.secondary">
-          Split PDFs
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 3, overflow: 'hidden' }}>
+      {/* PDF Selection Section */}
+      <Box sx={{ mb: 3 }}>
+        <Button
+          variant="contained"
+          startIcon={<CloudUploadIcon />}
+          onClick={handleSelectPDF}
+          sx={{ mb: 2 }}
+          disabled={isProcessing}
+        >
+          Select PDF File
+        </Button>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Or drag and drop a PDF file anywhere on the window
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-          This feature will be implemented in a future phase.
-        </Typography>
-      </Paper>
+      </Box>
+
+      {/* Error/Success Messages */}
+      {error && (
+        <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      {success && (
+        <Alert severity="success" onClose={() => setSuccess(null)} sx={{ mb: 2 }}>
+          {success}
+        </Alert>
+      )}
+
+      {/* Selected PDF Information */}
+      {selectedPDF && (
+        <>
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 1 }}>
+                📄 {selectedPDF.name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                {selectedPDF.path}
+              </Typography>
+              <Typography variant="body2">
+                {formatFileSize(selectedPDF.size)} • {selectedPDF.totalPages} pages • Modified:{' '}
+                {formatDate(selectedPDF.lastModified)}
+              </Typography>
+            </CardContent>
+          </Card>
+
+          {/* Add Split Button */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <Button onClick={handleAddSplit} disabled={!canAddSplit} startIcon={<AddIcon />} variant="outlined">
+              Add Split
+            </Button>
+            <Typography variant="body2" color="text.secondary">
+              {splits.length} / {MAX_SPLITS} splits
+            </Typography>
+          </Box>
+
+          {/* Split Definitions List */}
+          <Paper
+            sx={{
+              flex: 1,
+              overflow: 'auto',
+              mb: 3,
+              minHeight: 200,
+              p: 2,
+            }}
+          >
+            {splits.length === 0 ? (
+              <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>
+                <Typography>No splits defined. Click "Add Split" to create one.</Typography>
+              </Box>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {splits.map((split, index) => {
+                  const isValid = validateSplit(split);
+                  const pageCount = split.endPage - split.startPage + 1;
+
+                  return (
+                    <Card
+                      key={split.id}
+                      sx={{
+                        border: isValid ? '1px solid' : '2px solid',
+                        borderColor: isValid ? 'divider' : 'error.main',
+                      }}
+                    >
+                      <CardContent>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            mb: 2,
+                          }}
+                        >
+                          <Typography variant="subtitle1">Split {index + 1}</Typography>
+                          <IconButton
+                            onClick={() => handleRemoveSplit(split.id)}
+                            size="small"
+                            disabled={isProcessing}
+                            color="error"
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Box>
+
+                        <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                          <TextField
+                            label="Start Page"
+                            type="number"
+                            value={split.startPage}
+                            onChange={(e) => handleUpdateSplit(split.id, 'startPage', parseInt(e.target.value) || 1)}
+                            inputProps={{ min: 1, max: selectedPDF.totalPages }}
+                            size="small"
+                            error={!isValid && (split.startPage < 1 || split.startPage > selectedPDF.totalPages)}
+                            disabled={isProcessing}
+                            sx={{ width: '120px' }}
+                          />
+                          <TextField
+                            label="End Page"
+                            type="number"
+                            value={split.endPage}
+                            onChange={(e) => handleUpdateSplit(split.id, 'endPage', parseInt(e.target.value) || 1)}
+                            inputProps={{ min: split.startPage, max: selectedPDF.totalPages }}
+                            size="small"
+                            error={
+                              !isValid && (split.endPage < split.startPage || split.endPage > selectedPDF.totalPages)
+                            }
+                            disabled={isProcessing}
+                            sx={{ width: '120px' }}
+                          />
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="body2">File Name:</Typography>
+                            <TextField
+                              value={split.filename}
+                              onChange={(e) => handleUpdateSplit(split.id, 'filename', e.target.value)}
+                              placeholder="file_1"
+                              size="small"
+                              error={split.filename.trim().length === 0}
+                              disabled={isProcessing}
+                              sx={{ width: '200px' }}
+                            />
+                            <Typography variant="body2">.pdf</Typography>
+                          </Box>
+                        </Box>
+
+                        <Typography variant="body2" color="text.secondary">
+                          Pages {split.startPage}-{split.endPage} ({pageCount} {pageCount === 1 ? 'page' : 'pages'})
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </Box>
+            )}
+          </Paper>
+        </>
+      )}
+
+      {/* Output Configuration Section */}
+      <Box
+        sx={{
+          mt: 'auto',
+          pt: 2,
+          pb: 2,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          flexShrink: 0,
+        }}
+      >
+        <Box sx={{ mb: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<FolderIcon />}
+            onClick={handleSelectOutputDirectory}
+            sx={{ mb: 1 }}
+            disabled={isProcessing}
+          >
+            Select Output Directory
+          </Button>
+          {outputDirectory && (
+            <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+              {outputDirectory}
+            </Typography>
+          )}
+        </Box>
+
+        <Button
+          variant="contained"
+          onClick={handleSplit}
+          disabled={!canSplit}
+          fullWidth
+          sx={{ py: 1.5, mb: 2 }}
+          startIcon={isProcessing ? <CircularProgress size={16} color="inherit" /> : undefined}
+        >
+          {isProcessing ? 'Splitting...' : 'Split PDFs'}
+        </Button>
+      </Box>
     </Box>
   );
 };
-
