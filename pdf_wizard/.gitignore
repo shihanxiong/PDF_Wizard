@@ -1,0 +1,10 @@
+# Ignore binaries in bin, but allow .app bundles (macOS app bundles)
+build/bin/*
+!build/bin/*.app
+!build/bin/*.app/**
+
+# Distribution artifacts
+dist/
+
+node_modules
+frontend/dist

@@ -1,18 +1,21 @@
 .DS_Store
+.pytest_cache/
 __pycache__/
 inputFiles/*.pdf
 dist/
-build/
 env
+
+# Wails build output - do not ignore
+!pdf_wizard/build/
 
 # logs
 *.log
 
 # ignore input / output folders
-src/merger/input/*.pdf
-src/merger/output/*.pdf
-src/splitter/input/*.pdf
-src/splitter/output/*.pdf
-src/jupyter_notebooks/input/*.pdf
-src/jupyter_notebooks/input/*.png
-src/jupyter_notebooks/output/*.pdf
+legacy/merger/input/*.pdf
+legacy/merger/output/*.pdf
+legacy/splitter/input/*.pdf
+legacy/splitter/output/*.pdf
+legacy/jupyter_notebooks/input/*.pdf
+legacy/jupyter_notebooks/input/*.png
+legacy/jupyter_notebooks/output/*.pdf
