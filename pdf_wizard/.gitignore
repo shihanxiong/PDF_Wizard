@@ -1,3 +1,7 @@
-build/bin
+# Ignore binaries in bin, but allow .app bundles (macOS app bundles)
+build/bin/*
+!build/bin/*.app
+!build/bin/*.app/**
+
 node_modules
 frontend/dist

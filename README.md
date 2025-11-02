@@ -1,37 +1,131 @@
-# PDFMerger
+# PDF Wizard
 
 <p align="center">
   <img src="./assets/img/app_logo_raw.png" width="450" height="450" />
 </p>
 
-## Installation
+A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backend performance with a React/TypeScript frontend.
 
-### Install Dependencies
+## Prerequisites
 
-Install go + wails per documentation: https://wails.io/docs/gettingstarted/installation
+- Go 1.21 or higher
+- Node.js 16+ and npm
+- Wails CLI v2.8.1 or higher
 
-## Local Environment
+## Quick Start
 
-### Windows & MacOS
+### Automated Installation
 
-```bash
-$cd pdf_wizard
-$wails dev
-```
-
-## Packaging:
+Run the installation script to set up all dependencies:
 
 ```bash
-# build executables based on current os
-$wails build
+./install.sh
 ```
 
-## Change logs
+This script will:
 
-> change logs can be found [here](changelog.md)
+- Check and install Go (if needed)
+- Install Wails CLI
+- Verify Node.js and npm are available
+- Install frontend dependencies
 
-## Trouble Shooting
+### Manual Installation
 
-### `wails` command not found on MacOS
+If you prefer to install dependencies manually:
 
-Ensure you have `go` installed correctly. On MacOS, go binary is installed to `/usr/local/go`, whereas `wails` is installed under `~go/bin/wails`. So you can run `sudo cp ~/go/bin/wails /usr/local/go/bin/` to resolve this.
+1. **Install Go**: Follow the [official Go installation guide](https://go.dev/doc/install)
+
+2. **Install Wails CLI**:
+
+   ```bash
+   go install github.com/wailsapp/wails/v2/cmd/wails@latest
+   ```
+
+3. **Verify Node.js**: Ensure Node.js 16+ is installed:
+   ```bash
+   node --version
+   npm --version
+   ```
+
+## Development
+
+### Running the Application
+
+```bash
+cd pdf_wizard
+wails dev
+```
+
+This will start the development server with hot-reload enabled for both the frontend and backend.
+
+## Building
+
+### Build Executables
+
+Build platform-specific executables:
+
+```bash
+cd pdf_wizard
+wails build
+```
+
+The output will be generated in the `pdf_wizard/build/bin` directory.
+
+## Project Structure
+
+```
+PDF_Tools/
+├── pdf_wizard/          # Main Wails application
+│   ├── frontend/        # React/TypeScript frontend
+│   ├── app.go          # Go application entry
+│   └── main.go         # Wails main file
+├── assets/             # Application assets
+└── legacy/             # Legacy Python implementation
+```
+
+## Changelog
+
+> See detailed changelog [here](changelog.md)
+
+## Troubleshooting
+
+### `wails` command not found
+
+**macOS/Linux:**
+
+Ensure Go is properly installed and your `GOPATH/bin` is in your `PATH`. You can add it to your shell profile:
+
+```bash
+export PATH=$PATH:$(go env GOPATH)/bin
+```
+
+If you prefer to copy the binary to a system path:
+
+```bash
+sudo cp ~/go/bin/wails /usr/local/go/bin/
+```
+
+**Windows:**
+
+Add `%USERPROFILE%\go\bin` to your system PATH environment variable.
+
+### Node.js not found
+
+Install Node.js from [nodejs.org](https://nodejs.org/) or use a version manager like [nvm](https://github.com/nvm-sh/nvm).
+
+### Frontend dependencies not installing
+
+Navigate to the frontend directory and install manually:
+
+```bash
+cd pdf_wizard/frontend
+npm install
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+[Add your license here]

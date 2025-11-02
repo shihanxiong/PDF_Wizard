@@ -3,8 +3,10 @@
 __pycache__/
 inputFiles/*.pdf
 dist/
-build/
 env
+
+# Wails build output - do not ignore
+!pdf_wizard/build/
 
 # logs
 *.log

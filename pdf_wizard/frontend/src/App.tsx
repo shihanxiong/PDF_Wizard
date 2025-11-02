@@ -1,65 +1,55 @@
 import { useState } from 'react';
 import './App.css';
-import { styled } from '@mui/material/styles';
-import { Greet } from '../wailsjs/go/main/App';
-import { Box, Button, Container, TextField } from '@mui/material';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import { Box, Tabs, Tab } from '@mui/material';
+import { MergeTab } from './components/MergeTab';
+import { SplitTab } from './components/SplitTab';
 
-const VisuallyHiddenInput = styled('input')({
-  clip: 'rect(0 0 0 0)',
-  clipPath: 'inset(50%)',
-  height: 1,
-  overflow: 'hidden',
-  position: 'absolute',
-  bottom: 0,
-  left: 0,
-  whiteSpace: 'nowrap',
-  width: 1,
-});
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`pdf-wizard-tabpanel-${index}`}
+      aria-labelledby={`pdf-wizard-tab-${index}`}
+      style={{ height: '100%' }}
+      {...other}
+    >
+      {value === index && <Box sx={{ height: '100%' }}>{children}</Box>}
+    </div>
+  );
+}
 
 export const App = () => {
-  const [filePath, setFilePath] = useState<String>('');
-  const [startPage, setStartPage] = useState<Number | null>(null);
-  const [endPage, setEndPage] = useState<Number | null>(null);
+  const [tabValue, setTabValue] = useState(0);
 
-  const processPdf = () => {
-    console.log('!!!!!!!!!', filePath, startPage, endPage);
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
   };
 
   return (
-    <Container id="App">
-      <Box sx={{ p: 5 }}>
-        <Button component="label" role={undefined} variant="contained" startIcon={<CloudUploadIcon />}>
-          Select files
-          <VisuallyHiddenInput type="file" onChange={(e) => setFilePath(e.target.value)} />
-        </Button>
-
-        <Button component="label" role={undefined} variant="contained" startIcon={<CloudDownloadIcon />}>
-          Select output directory
-          <VisuallyHiddenInput type="file" onChange={(e) => setFilePath(e.target.value)} />
-        </Button>
-
-        <TextField
-          id="outlined-number"
-          label="Start Page"
-          type="number"
-          size="small"
-          onChange={(e) => setStartPage(parseInt(e.target.value))}
-        />
-
-        <TextField
-          id="outlined-number"
-          label="End Page"
-          type="number"
-          size="small"
-          onChange={(e) => setEndPage(parseInt(e.target.value))}
-        />
-
-        <Button variant="contained" onClick={() => processPdf()}>
-          Process
-        </Button>
+    <Box id="App" sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Tabs value={tabValue} onChange={handleTabChange} aria-label="PDF Wizard tabs">
+          <Tab label="Merge PDFs" id="pdf-wizard-tab-0" aria-controls="pdf-wizard-tabpanel-0" />
+          <Tab label="Split PDFs" id="pdf-wizard-tab-1" aria-controls="pdf-wizard-tabpanel-1" />
+        </Tabs>
       </Box>
-    </Container>
+      <Box sx={{ flex: 1, overflow: 'hidden' }}>
+        <TabPanel value={tabValue} index={0}>
+          <MergeTab />
+        </TabPanel>
+        <TabPanel value={tabValue} index={1}>
+          <SplitTab />
+        </TabPanel>
+      </Box>
+    </Box>
   );
 };
