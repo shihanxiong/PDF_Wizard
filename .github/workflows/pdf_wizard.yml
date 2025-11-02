@@ -1,0 +1,111 @@
+name: PDF Wizard Tests
+
+on:
+  push:
+    branches: ['master', 'main']
+    paths:
+      - 'pdf_wizard/**'
+      - '.github/workflows/pdf_wizard.yml'
+  pull_request:
+    branches: ['master', 'main']
+    paths:
+      - 'pdf_wizard/**'
+      - '.github/workflows/pdf_wizard.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test PDF Wizard
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        go-version: ['1.21', '1.22']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache-dependency-path: pdf_wizard/go.sum
+
+      - name: Install dependencies
+        working-directory: pdf_wizard
+        run: |
+          go mod download
+          go mod verify
+
+      - name: Run tests
+        working-directory: pdf_wizard
+        run: |
+          go test -v -race -coverprofile=coverage.out ./...
+
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.go-version == '1.22'
+        uses: codecov/codecov-action@v3
+        with:
+          file: pdf_wizard/coverage.out
+          flags: pdf_wizard
+          name: pdf-wizard-coverage
+
+  build:
+    name: Build PDF Wizard
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        go-version: ['1.22']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache-dependency-path: pdf_wizard/go.sum
+
+      - name: Install Wails CLI
+        if: matrix.os != 'windows-latest'
+        run: |
+          go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Install Wails CLI (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: pdf_wizard/frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: pdf_wizard/frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: pdf_wizard/frontend
+        run: npm run build
+
+      - name: Test Wails build (without actual binary generation)
+        working-directory: pdf_wizard
+        run: |
+          # Verify the app can be initialized
+          go build -o /dev/null ./...
+          echo "Build verification successful"
+
+      - name: Check build artifacts
+        if: matrix.os == 'macos-latest'
+        working-directory: pdf_wizard
+        run: |
+          echo "Build artifacts check skipped in CI (requires actual wails build)"
+

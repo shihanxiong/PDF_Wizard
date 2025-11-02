@@ -71,6 +71,73 @@ wails build
 
 The output will be generated in the `pdf_wizard/build/bin` directory.
 
+**Build for macOS Distribution:**
+
+To create a universal binary that works on both Intel and Apple Silicon Macs:
+
+```bash
+cd pdf_wizard
+wails build -platform darwin/universal
+```
+
+For distribution to other Mac machines, see [Distribution Guide](pdf_wizard/DISTRIBUTION.md).
+
+**Quick Distribution Build:**
+
+Use the automated build script:
+
+```bash
+cd pdf_wizard
+./build-dist.sh
+```
+
+This creates a ZIP file and DMG ready for distribution in the `pdf_wizard/dist` directory.
+
+## Testing
+
+### Running Integration Tests
+
+Run the integration tests locally:
+
+```bash
+cd pdf_wizard
+go test -v ./...
+```
+
+This will run all tests with verbose output.
+
+**Test Coverage:**
+
+To see test coverage:
+
+```bash
+cd pdf_wizard
+go test -v -coverprofile=coverage.out ./...
+go tool cover -func=coverage.out
+```
+
+To view an HTML coverage report:
+
+```bash
+go tool cover -html=coverage.out
+```
+
+**Run Specific Tests:**
+
+Run a specific test function:
+
+```bash
+cd pdf_wizard
+go test -v -run TestGetFileMetadata
+```
+
+Run tests with race detection:
+
+```bash
+cd pdf_wizard
+go test -v -race ./...
+```
+
 ## Project Structure
 
 ```

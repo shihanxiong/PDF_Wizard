@@ -3,5 +3,8 @@ build/bin/*
 !build/bin/*.app
 !build/bin/*.app/**
 
+# Distribution artifacts
+dist/
+
 node_modules
 frontend/dist

@@ -9,5 +9,14 @@
   "author": {
     "name": "Hanxiong Shi",
     "email": "shihanxiong@gmail.com"
-  }
+  },
+  "info": {
+    "productName": "PDF Wizard",
+    "productVersion": "1.0.0",
+    "copyright": "Copyright © 2024",
+    "comments": "A modern PDF toolkit built with Wails v2"
+  },
+  "nsisType": "multiple",
+  "obfuscated": false,
+  "garbleargs": ""
 }
