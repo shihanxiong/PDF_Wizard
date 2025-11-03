@@ -1,26 +1,13 @@
 # OS and Editor files
 .DS_Store
 
-# Python
-.pytest_cache/
-__pycache__/
-env
-
-# PDF input files
-inputFiles/*.pdf
-
 # Logs
 *.log
 
-# Wails build output
-# Ignore binaries in bin, but allow .app bundles (macOS app bundles)
-pdf_wizard/build/bin/*
-!pdf_wizard/build/bin/*.app
-!pdf_wizard/build/bin/*.app/**
-
-# Distribution artifacts - tracked in git
-# pdf_wizard/dist/ (commented out to allow tracking of distribution files)
-
 # Node.js / Frontend
-node_modules
+pdf_wizard/frontend/node_modules
 pdf_wizard/frontend/dist
+
+# Playwright test artifacts
+pdf_wizard/frontend/playwright-report
+pdf_wizard/frontend/test-results
