@@ -56,7 +56,7 @@ Pre-built installers are available in the [`pdf_wizard/dist/`](https://github.co
 ## Prerequisites
 
 - Go 1.21 or higher
-- Node.js 16+ and npm
+- Node.js 20+ and npm (Vite 7 requires Node.js 20.19+ or 22.12+)
 - Wails CLI v2.8.1 or higher
 
 ## Quick Start
@@ -88,7 +88,7 @@ If you prefer to install dependencies manually:
    go install github.com/wailsapp/wails/v2/cmd/wails@latest
    ```
 
-3. **Verify Node.js**: Ensure Node.js 16+ is installed:
+3. **Verify Node.js**: Ensure Node.js 20+ is installed:
    ```bash
    node --version
    npm --version
@@ -142,9 +142,11 @@ This creates a ZIP file and DMG ready for distribution in the `pdf_wizard/dist` 
 
 ## Testing
 
-### Running Integration Tests
+PDF Wizard includes both backend integration tests and frontend E2E tests.
 
-Run the integration tests locally:
+### Backend Integration Tests
+
+Run the Go integration tests locally:
 
 ```bash
 cd pdf_wizard
@@ -185,16 +187,82 @@ cd pdf_wizard
 go test -v -race ./...
 ```
 
+### Frontend E2E Tests
+
+The frontend uses Playwright for end-to-end UI testing. These tests verify the application UI, user interactions, and component behavior.
+
+**Running E2E Tests:**
+
+Run all E2E tests:
+
+```bash
+cd pdf_wizard/frontend
+npm run test:e2e
+```
+
+This will:
+
+1. Automatically start the Vite dev server
+2. Run all E2E tests in Chromium
+3. Generate HTML reports and screenshots on failure
+
+**Interactive Test Modes:**
+
+- **UI Mode** (recommended for development): Watch tests run step-by-step in a visual UI
+
+  ```bash
+  npm run test:e2e:ui
+  ```
+
+- **Headed Mode**: Run tests with a visible browser window
+
+  ```bash
+  npm run test:e2e:headed
+  ```
+
+- **Debug Mode**: Step through tests with Playwright Inspector
+  ```bash
+  npm run test:e2e:debug
+  ```
+
+**Viewing Test Reports:**
+
+After running tests, view the HTML report:
+
+```bash
+cd pdf_wizard/frontend
+npx playwright show-report
+```
+
+**E2E Test Coverage:**
+
+The E2E test suite includes:
+
+- App loading and initialization
+- Tab navigation (Merge/Split tabs)
+- UI component visibility and functionality
+- User interactions (form inputs, buttons)
+- State management
+- Material-UI component rendering
+
+For more details, see the [E2E Testing README](pdf_wizard/frontend/e2e/README.md).
+
 ## Project Structure
 
 ```
-PDF_Tools/
+PDF_Wizard/
 ├── pdf_wizard/          # Main Wails application
 │   ├── frontend/        # React/TypeScript frontend
-│   ├── app.go          # Go application entry
-│   └── main.go         # Wails main file
-├── assets/             # Application assets
-└── legacy/             # Legacy Python implementation
+│   │   ├── e2e/         # Playwright E2E tests
+│   │   ├── src/         # React source code
+│   │   └── dist/        # Built frontend assets
+│   ├── services/        # Go service layer
+│   ├── models/          # Data models
+│   ├── app.go           # Go application entry
+│   └── main.go          # Wails main file
+├── assets/              # Application assets
+├── .github/workflows/   # GitHub Actions CI/CD workflows
+└── changelog.md         # Project changelog
 ```
 
 ## Changelog
