@@ -27,7 +27,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: pdf_wizard/frontend/package-lock.json
 
@@ -41,6 +41,9 @@ jobs:
 
       - name: Run E2E tests
         working-directory: pdf_wizard/frontend
+        env:
+          # Suppress git commit info warning in CI
+          CI: true
         run: npm run test:e2e
 
       - name: Upload test results
