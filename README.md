@@ -261,13 +261,8 @@ PDF_Wizard/
 │   ├── app.go           # Go application entry
 │   └── main.go          # Wails main file
 ├── assets/              # Application assets
-├── .github/workflows/   # GitHub Actions CI/CD workflows
-└── changelog.md         # Project changelog
+└── .github/workflows/   # GitHub Actions CI/CD workflows
 ```
-
-## Changelog
-
-> See detailed changelog [here](changelog.md)
 
 ## Troubleshooting
 
