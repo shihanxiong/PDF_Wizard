@@ -1,21 +1,26 @@
+# OS and Editor files
 .DS_Store
+
+# Python
 .pytest_cache/
 __pycache__/
-inputFiles/*.pdf
-dist/
 env
 
-# Wails build output - do not ignore
-!pdf_wizard/build/
+# PDF input files
+inputFiles/*.pdf
 
-# logs
+# Logs
 *.log
 
-# ignore input / output folders
-legacy/merger/input/*.pdf
-legacy/merger/output/*.pdf
-legacy/splitter/input/*.pdf
-legacy/splitter/output/*.pdf
-legacy/jupyter_notebooks/input/*.pdf
-legacy/jupyter_notebooks/input/*.png
-legacy/jupyter_notebooks/output/*.pdf
+# Wails build output
+# Ignore binaries in bin, but allow .app bundles (macOS app bundles)
+pdf_wizard/build/bin/*
+!pdf_wizard/build/bin/*.app
+!pdf_wizard/build/bin/*.app/**
+
+# Distribution artifacts - tracked in git
+# pdf_wizard/dist/ (commented out to allow tracking of distribution files)
+
+# Node.js / Frontend
+node_modules
+pdf_wizard/frontend/dist

@@ -6,6 +6,53 @@
 
 A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backend performance with a React/TypeScript frontend.
 
+## Screenshots
+
+### Merge PDFs Tab
+
+<p align="center">
+  <img src="./assets/img/app_view_1.png" alt="Merge PDFs Tab" width="800" />
+</p>
+
+### Split PDFs Tab
+
+<p align="center">
+  <img src="./assets/img/app_view_2.png" alt="Split PDFs Tab" width="800" />
+</p>
+
+## Downloads
+
+### macOS Installer
+
+Pre-built installers are available in the [`pdf_wizard/dist/`](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist) folder:
+
+- **DMG Installer**: [`pdf_wizard-macos-universal.dmg`](https://github.com/shihanxiong/PDF_Wizard/raw/master/pdf_wizard/dist/pdf_wizard-macos-universal.dmg) - Universal binary for both Intel and Apple Silicon Macs
+- **ZIP Archive**: [`pdf_wizard-macos-universal.zip`](https://github.com/shihanxiong/PDF_Wizard/raw/master/pdf_wizard/dist/pdf_wizard-macos-universal.zip) - ZIP file containing the application bundle
+
+**Installation Instructions:**
+
+**DMG Installation (Recommended):**
+
+1. Download the DMG file from the [dist folder](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist)
+2. Double-click the DMG file to mount it
+3. Drag `pdf_wizard.app` to the Applications folder (shown in the DMG window)
+4. Open Applications folder and launch PDF Wizard
+5. On first launch: Right-click → Open → Click "Open" to bypass macOS security warning
+
+**ZIP Installation:**
+
+1. Download the ZIP file from the [dist folder](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist)
+2. Extract the ZIP file
+3. Right-click `pdf_wizard.app` → Open → Click "Open"
+4. Or run in Terminal: `xattr -cr pdf_wizard.app`
+
+**System Requirements:**
+
+- macOS 10.13 or later
+- Works on Intel and Apple Silicon Macs (universal binary)
+
+> **Note**: If you see "App is damaged and can't be opened", right-click the app → Open → Click "Open", or run `xattr -cr pdf_wizard.app` in Terminal.
+
 ## Prerequisites
 
 - Go 1.21 or higher
