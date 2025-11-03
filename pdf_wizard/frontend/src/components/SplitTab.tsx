@@ -16,14 +16,17 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import FolderIcon from '@mui/icons-material/Folder';
 import { SelectPDFFile, GetPDFMetadata, SelectOutputDirectory, SplitPDF } from '../../wailsjs/go/main/App';
-import { OnFileDrop } from '../../wailsjs/runtime/runtime';
 import { SelectedPDF, SplitDefinition } from '../types';
 import { formatFileSize, formatDate } from '../utils/formatters';
-import { main } from '../../wailsjs/go/models';
+import { models } from '../../wailsjs/go/models';
 
 const MAX_SPLITS = 10;
 
-export const SplitTab = () => {
+interface SplitTabProps {
+  onFileDrop: (handler: (paths: string[]) => void) => void;
+}
+
+export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
   const [selectedPDF, setSelectedPDF] = useState<SelectedPDF | null>(null);
   const [splits, setSplits] = useState<SplitDefinition[]>([]);
   const [outputDirectory, setOutputDirectory] = useState<string>('');
@@ -31,11 +34,10 @@ export const SplitTab = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Set up drag and drop for PDF file selection
+  // Register drag and drop handler with App component
   useEffect(() => {
-    OnFileDrop((x, y, paths) => {
-      handleDroppedPDF(paths);
-    }, false);
+    onFileDrop(handleDroppedPDF);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDroppedPDF = async (paths: string[]) => {
@@ -150,7 +152,7 @@ export const SplitTab = () => {
     setSuccess(null);
 
     try {
-      const splitDefinitions: main.SplitDefinition[] = splits.map((split) => ({
+      const splitDefinitions: models.SplitDefinition[] = splits.map((split) => ({
         startPage: split.startPage,
         endPage: split.endPage,
         filename: split.filename.trim(),
