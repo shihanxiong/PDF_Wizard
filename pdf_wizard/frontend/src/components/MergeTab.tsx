@@ -19,11 +19,14 @@ import FolderIcon from '@mui/icons-material/Folder';
 import { DragDropContext, Draggable, DropResult } from 'react-beautiful-dnd';
 import { StrictModeDroppable } from './StrictModeDroppable';
 import { SelectPDFFiles, GetFileMetadata, SelectOutputDirectory, MergePDFs } from '../../wailsjs/go/main/App';
-import { OnFileDrop } from '../../wailsjs/runtime/runtime';
 import { SelectedFile } from '../types';
 import { formatFileSize, formatDate, convertToSelectedFile } from '../utils/formatters';
 
-export const MergeTab = () => {
+interface MergeTabProps {
+  onFileDrop: (handler: (paths: string[]) => void) => void;
+}
+
+export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
   const [files, setFiles] = useState<SelectedFile[]>([]);
   const [outputDirectory, setOutputDirectory] = useState<string>('');
   const [outputFilename, setOutputFilename] = useState<string>('merged');
@@ -31,14 +34,10 @@ export const MergeTab = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Set up drag and drop for file selection
+  // Register drag and drop handler with App component
   useEffect(() => {
-    OnFileDrop((x, y, paths) => {
-      handleDroppedFiles(paths);
-    }, false);
-
-    // Note: OnFileDrop persists throughout app lifecycle
-    // No cleanup needed unless we want to disable it
+    onFileDrop(handleDroppedFiles);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDroppedFiles = async (paths: string[]) => {

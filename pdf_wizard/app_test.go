@@ -10,6 +10,8 @@ import (
 
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
+
+	"pdf_wizard/models"
 )
 
 // createTestPDF creates a minimal valid PDF file for testing
@@ -546,7 +548,7 @@ func TestSplitPDF(t *testing.T) {
 	}
 
 	// Define splits
-	splits := []SplitDefinition{
+	splits := []models.SplitDefinition{
 		{StartPage: 1, EndPage: 3, Filename: "split1"},
 		{StartPage: 4, EndPage: 7, Filename: "split2"},
 		{StartPage: 8, EndPage: 10, Filename: "split3"},
@@ -604,7 +606,7 @@ func TestSplitPDF_SinglePageSplit(t *testing.T) {
 	}
 
 	// Define single page split
-	splits := []SplitDefinition{
+	splits := []models.SplitDefinition{
 		{StartPage: 3, EndPage: 3, Filename: "single_page"},
 	}
 
@@ -645,7 +647,7 @@ func TestSplitPDF_InvalidPageRange(t *testing.T) {
 	}
 
 	// Define split with invalid page range (page 2 doesn't exist)
-	splits := []SplitDefinition{
+	splits := []models.SplitDefinition{
 		{StartPage: 2, EndPage: 2, Filename: "invalid"},
 	}
 
@@ -675,7 +677,7 @@ func TestSplitPDF_EndPageLessThanStartPage(t *testing.T) {
 	}
 
 	// Define split with end page less than start page
-	splits := []SplitDefinition{
+	splits := []models.SplitDefinition{
 		{StartPage: 3, EndPage: 1, Filename: "invalid"},
 	}
 
@@ -705,7 +707,7 @@ func TestSplitPDF_EmptyFilename(t *testing.T) {
 	}
 
 	// Define split with empty filename
-	splits := []SplitDefinition{
+	splits := []models.SplitDefinition{
 		{StartPage: 1, EndPage: 1, Filename: ""},
 	}
 
@@ -735,7 +737,7 @@ func TestSplitPDF_DuplicateFilenames(t *testing.T) {
 	}
 
 	// Define splits with duplicate filenames
-	splits := []SplitDefinition{
+	splits := []models.SplitDefinition{
 		{StartPage: 1, EndPage: 2, Filename: "duplicate"},
 		{StartPage: 3, EndPage: 4, Filename: "duplicate"},
 	}
@@ -759,7 +761,7 @@ func TestSplitPDF_NonExistentInputFile(t *testing.T) {
 		t.Fatalf("Failed to create output directory: %v", err)
 	}
 
-	splits := []SplitDefinition{
+	splits := []models.SplitDefinition{
 		{StartPage: 1, EndPage: 1, Filename: "test"},
 	}
 
@@ -784,7 +786,7 @@ func TestSplitPDF_NonExistentOutputDir(t *testing.T) {
 	}
 
 	nonExistentDir := filepath.Join(testDir, "nonexistent")
-	splits := []SplitDefinition{
+	splits := []models.SplitDefinition{
 		{StartPage: 1, EndPage: 1, Filename: "test"},
 	}
 
@@ -819,7 +821,7 @@ func TestSplitPDF_OverwriteExisting(t *testing.T) {
 		t.Fatalf("Failed to create existing output file: %v", err)
 	}
 
-	splits := []SplitDefinition{
+	splits := []models.SplitDefinition{
 		{StartPage: 1, EndPage: 3, Filename: "split1"},
 	}
 
