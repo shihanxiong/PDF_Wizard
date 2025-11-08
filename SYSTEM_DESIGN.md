@@ -9,11 +9,11 @@ PDF Wizard is a desktop application built with Wails v2 that provides PDF manipu
 ### Technology Stack
 
 - **Backend**: Go 1.21+ with Wails v2.8.1+
-- **Frontend**: React 18+ with TypeScript, Material-UI (MUI) v5
+- **Frontend**: React 18+ with TypeScript, Material-UI (MUI) v7
 - **PDF Processing**: `github.com/pdfcpu/pdfcpu` - Native Go PDF library
 - **Build Tool**: Wails CLI
 - **UI Framework**: Material-UI
-- **Drag and Drop**: `@dnd-kit/core` and `@dnd-kit/sortable` for file reordering
+- **Drag and Drop**: `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities` for file reordering (replaced deprecated react-beautiful-dnd)
 
 ### Project Structure
 
@@ -139,7 +139,7 @@ interface MergeTabState {
 #### File List Component
 
 - Material-UI `Paper` component containing a scrollable list with drag-and-drop support
-- Uses `react-beautiful-dnd` with `StrictModeDroppable` wrapper for reordering
+- Uses `@dnd-kit` with `SortableContext` and `useSortable` hook for reordering
 - Each list item displays:
   - Drag handle icon (`DragIndicatorIcon`) on the left
   - Order indicator (numbered "1", "2", "3", etc.)
@@ -1612,10 +1612,10 @@ func copyFile(src, dst string) error {
 **Frontend:**
 
 - React 18+
-- Material-UI v5
+- Material-UI v7
 - TypeScript
 - Wails runtime bindings
-- `@dnd-kit/core` and `@dnd-kit/sortable` - For drag-and-drop file reordering
+- `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities` - For drag-and-drop file reordering (replaced deprecated react-beautiful-dnd)
 
 ### Error Handling
 
@@ -1696,5 +1696,5 @@ func copyFile(src, dst string) error {
 - TypeScript for type safety
 - Go structs with JSON tags for data exchange
 - Service-based architecture for separation of concerns
-- pdfcpu library for all PDF processing operations
-- @dnd-kit library for drag-and-drop file reordering in Merge tab
+- pdfcpu library for all PDF processing operations (merge, split, rotate)
+- @dnd-kit library for drag-and-drop file reordering in Merge tab (modern replacement for deprecated react-beautiful-dnd)

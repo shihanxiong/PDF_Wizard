@@ -1,8 +1,16 @@
-# README
+# PDF Wizard - Wails Application
+
+This directory contains the main Wails application for PDF Wizard.
 
 ## About
 
-This is the official Wails React-TS template.
+PDF Wizard is a desktop application built with Wails v2 that provides PDF manipulation capabilities:
+
+- **Merge PDFs**: Combine multiple PDF files into a single document
+- **Split PDFs**: Divide a PDF into multiple files based on page ranges
+- **Rotate PDFs**: Rotate specific page ranges in a PDF (90°, -90°, or 180°)
+
+## Project Configuration
 
 You can configure the project by editing `wails.json`. More information about the project settings can be found
 here: https://wails.io/docs/reference/project-config
@@ -17,3 +25,5 @@ to this in your browser, and you can call your Go code from devtools.
 ## Building
 
 To build a redistributable, production mode package, use `wails build`.
+
+For more information, see the main [README.md](../README.md) in the project root.

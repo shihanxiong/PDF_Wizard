@@ -45,9 +45,9 @@ This will:
 The test suite (`pdf-wizard.spec.ts`) includes tests for:
 
 1. **App Loading**: Verifies the application loads with correct title and logo
-2. **Tab Navigation**: Tests that both Merge and Split tabs are visible and functional
+2. **Tab Navigation**: Tests that all three tabs (Merge, Split, and Rotate) are visible and functional
 3. **Merge Tab Content**: Verifies all UI elements in the Merge tab
-4. **Tab Switching**: Tests navigation between tabs
+4. **Tab Switching**: Tests navigation between all tabs (Merge, Split, and Rotate)
 5. **User Interactions**: Tests form input and button interactions
 6. **State Management**: Verifies tab state is maintained correctly
 7. **UI Structure**: Validates Material-UI components render correctly
