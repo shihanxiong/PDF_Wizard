@@ -145,17 +145,23 @@ test.describe('PDF Wizard E2E Tests', () => {
     await expect(page.getByRole('tab', { name: 'Merge PDF' })).toHaveAttribute('aria-selected', 'false');
     await expect(page.getByRole('tab', { name: 'Split PDF' })).toHaveAttribute('aria-selected', 'false');
 
-    // Get the active tab panel
+    // Get the active tab panel and wait for it to be visible
     const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-2');
+    await expect(rotateTabPanel).toBeVisible({ timeout: 10000 });
 
     // Verify Merge tab content is hidden (check the merge tab panel)
     const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
     await expect(mergeTabPanel.getByRole('button', { name: 'Select PDF Files' })).not.toBeVisible();
 
     // Verify Rotate tab content is visible (scoped to rotate tab panel)
+    // Note: "Add Rotate" button is only visible when a PDF is selected, so we check for the initial state
     await expect(rotateTabPanel.getByRole('button', { name: 'Select PDF File' })).toBeVisible();
-    await expect(rotateTabPanel.getByRole('button', { name: 'Add Rotate' })).toBeVisible();
-    await expect(rotateTabPanel.getByRole('button', { name: 'Rotate PDF' })).toBeVisible();
+    // The "Add Rotate" button is only shown when a PDF is selected, so we check for the empty state message instead
+    await expect(rotateTabPanel.getByText(/No PDF selected|Or drag and drop/)).toBeVisible();
+    // The "Rotate PDF" button should be visible but disabled when no PDF is selected
+    const rotateButton = rotateTabPanel.locator('button').filter({ hasText: 'Rotate PDF' });
+    await expect(rotateButton).toBeVisible();
+    await expect(rotateButton).toBeDisabled();
   });
 
   test('should allow user to interact with filename input field', async ({ page }) => {
