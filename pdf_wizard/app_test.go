@@ -15,6 +15,7 @@ import (
 )
 
 // createTestPDF creates a minimal valid PDF file for testing
+// Uses the same approach as the service tests which work correctly
 func createTestPDF(path string) error {
 	// Create a minimal valid PDF content
 	pdfContent := `%PDF-1.4
@@ -193,6 +194,9 @@ func TestMergePDFs(t *testing.T) {
 	if err := createTestPDF(pdf3); err != nil {
 		t.Fatalf("Failed to create test PDF 3: %v", err)
 	}
+
+	// Wait a bit to ensure files are fully written to disk
+	time.Sleep(100 * time.Millisecond)
 
 	outputDir := testDir
 	outputFilename := "merged"

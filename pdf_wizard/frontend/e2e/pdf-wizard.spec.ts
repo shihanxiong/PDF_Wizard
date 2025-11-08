@@ -89,8 +89,9 @@ test.describe('PDF Wizard E2E Tests', () => {
     await expect(mergeTab).toBeVisible({ timeout: 10000 });
     await expect(mergeTab).toHaveAttribute('aria-selected', 'true');
 
-    // Get the active tab panel
+    // Get the active tab panel and wait for it to be visible
     const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    await expect(mergeTabPanel).toBeVisible({ timeout: 10000 });
 
     // Verify Merge tab content is visible (with explicit waits)
     await expect(mergeTabPanel.getByRole('button', { name: 'Select PDF Files' })).toBeVisible({ timeout: 10000 });
@@ -109,7 +110,8 @@ test.describe('PDF Wizard E2E Tests', () => {
     await expect(filenameInput).toBeVisible({ timeout: 10000 });
 
     // Verify the Merge button exists (should be disabled initially since no files are selected)
-    const mergeButton = mergeTabPanel.getByRole('button', { name: 'Merge PDFs' });
+    // Use a more flexible selector that works even when button is disabled
+    const mergeButton = mergeTabPanel.locator('button').filter({ hasText: 'Merge PDF' });
     await expect(mergeButton).toBeVisible({ timeout: 10000 });
     await expect(mergeButton).toBeDisabled(); // Disabled because no files selected
 
@@ -172,7 +174,7 @@ test.describe('PDF Wizard E2E Tests', () => {
     await expect(filenameInput).toHaveValue('test-output');
 
     // Verify the Merge button is still disabled (no files selected)
-    const mergeButton = mergeTabPanel.getByRole('button', { name: 'Merge PDFs' });
+    const mergeButton = mergeTabPanel.locator('button').filter({ hasText: 'Merge PDF' });
     await expect(mergeButton).toBeVisible();
     await expect(mergeButton).toBeDisabled();
   });
