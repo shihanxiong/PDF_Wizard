@@ -28,15 +28,14 @@ test.describe('PDF Wizard E2E Tests', () => {
         },
       };
     });
-    
+
     // Ignore console errors from Wails runtime (not available in Vite-only mode)
     page.on('console', (msg) => {
       const text = msg.text();
-      if (msg.type() === 'error' && (
-        text.includes('wails') || 
-        text.includes('runtime') ||
-        text.includes('OnFileDrop')
-      )) {
+      if (
+        msg.type() === 'error' &&
+        (text.includes('wails') || text.includes('runtime') || text.includes('OnFileDrop'))
+      ) {
         // Ignore Wails-related errors when testing UI only
         return;
       }
@@ -45,20 +44,22 @@ test.describe('PDF Wizard E2E Tests', () => {
         console.log('Console error:', text);
       }
     });
-    
+
     // Navigate to the app (Vite dev server)
     await page.goto('/', { waitUntil: 'domcontentloaded' });
-    
+
     // Wait for the root div to exist (basic HTML structure)
     await page.waitForSelector('#root', { timeout: 5000 });
-    
+
     // Wait for React to render - look for any React-rendered content
     // Try tabs first as they're more reliable than #App
     await page.waitForSelector('[role="tab"]', { timeout: 15000 }).catch(async () => {
       // If tabs don't appear, check what's actually on the page
       const bodyText = await page.textContent('body');
       const html = await page.content();
-      throw new Error(`React app failed to render. Body content: ${bodyText?.substring(0, 200)}. HTML length: ${html.length}`);
+      throw new Error(
+        `React app failed to render. Body content: ${bodyText?.substring(0, 200)}. HTML length: ${html.length}`,
+      );
     });
   });
 
@@ -71,10 +72,11 @@ test.describe('PDF Wizard E2E Tests', () => {
     await expect(logo).toBeVisible({ timeout: 5000 });
   });
 
-  test('should display both Merge and Split tabs', async ({ page }) => {
-    // Verify both tabs are present
+  test('should display all three tabs (Merge, Split, and Rotate)', async ({ page }) => {
+    // Verify all three tabs are present
     await expect(page.getByRole('tab', { name: 'Merge PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Split PDF' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toBeVisible();
 
     // Verify Merge tab is selected by default (active)
     const mergeTab = page.getByRole('tab', { name: 'Merge PDF' });
@@ -115,6 +117,7 @@ test.describe('PDF Wizard E2E Tests', () => {
     // Verify Split tab is now active
     await expect(page.getByRole('tab', { name: 'Split PDF' })).toHaveAttribute('aria-selected', 'true');
     await expect(page.getByRole('tab', { name: 'Merge PDF' })).toHaveAttribute('aria-selected', 'false');
+    await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toHaveAttribute('aria-selected', 'false');
 
     // Verify Merge tab content is hidden
     await expect(page.getByRole('button', { name: 'Select PDF Files' })).not.toBeVisible();
@@ -122,6 +125,24 @@ test.describe('PDF Wizard E2E Tests', () => {
     // Verify Split tab content is visible (check for Split tab specific elements)
     // Split tab has "Select PDF File" (singular) vs Merge tab's "Select PDF Files" (plural)
     await expect(page.getByRole('button', { name: 'Select PDF File' })).toBeVisible();
+  });
+
+  test('should switch to Rotate tab when clicked', async ({ page }) => {
+    // Click on Rotate tab
+    await page.getByRole('tab', { name: 'Rotate PDF' }).click();
+
+    // Verify Rotate tab is now active
+    await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tab', { name: 'Merge PDF' })).toHaveAttribute('aria-selected', 'false');
+    await expect(page.getByRole('tab', { name: 'Split PDF' })).toHaveAttribute('aria-selected', 'false');
+
+    // Verify Merge tab content is hidden
+    await expect(page.getByRole('button', { name: 'Select PDF Files' })).not.toBeVisible();
+
+    // Verify Rotate tab content is visible
+    await expect(page.getByRole('button', { name: 'Select PDF File' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add Rotate' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Rotate PDF' })).toBeVisible();
   });
 
   test('should allow user to interact with filename input field', async ({ page }) => {
@@ -154,6 +175,10 @@ test.describe('PDF Wizard E2E Tests', () => {
     await page.getByRole('tab', { name: 'Split PDF' }).click();
     await expect(page.getByRole('tab', { name: 'Split PDF' })).toHaveAttribute('aria-selected', 'true');
 
+    // Switch to Rotate tab
+    await page.getByRole('tab', { name: 'Rotate PDF' }).click();
+    await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toHaveAttribute('aria-selected', 'true');
+
     // Switch back to Merge tab
     await page.getByRole('tab', { name: 'Merge PDF' }).click();
     await expect(page.getByRole('tab', { name: 'Merge PDF' })).toHaveAttribute('aria-selected', 'true');
@@ -172,9 +197,15 @@ test.describe('PDF Wizard E2E Tests', () => {
     const tabList = page.getByRole('tablist');
     await expect(tabList).toBeVisible();
 
-    // Verify tab panels exist
+    // Verify all three tab panels exist
     const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
     await expect(mergeTabPanel).toBeVisible();
+
+    const splitTabPanel = page.locator('#pdf-wizard-tabpanel-1');
+    await expect(splitTabPanel).toBeVisible();
+
+    const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-2');
+    await expect(rotateTabPanel).toBeVisible();
 
     // Verify buttons have proper styling (check for MUI button classes)
     const selectFilesButton = page.getByRole('button', { name: 'Select PDF Files' });
