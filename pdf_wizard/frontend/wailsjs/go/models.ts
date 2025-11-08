@@ -22,6 +22,22 @@ export namespace models {
 	        this.totalPages = source["totalPages"];
 	    }
 	}
+	export class RotateDefinition {
+	    startPage: number;
+	    endPage: number;
+	    rotation: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new RotateDefinition(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.startPage = source["startPage"];
+	        this.endPage = source["endPage"];
+	        this.rotation = source["rotation"];
+	    }
+	}
 	export class SplitDefinition {
 	    startPage: number;
 	    endPage: number;

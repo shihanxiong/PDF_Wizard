@@ -16,3 +16,10 @@ type SplitDefinition struct {
 	EndPage   int    `json:"endPage"`   // 1-based page number (inclusive)
 	Filename  string `json:"filename"`  // Filename without .pdf extension
 }
+
+// RotateDefinition represents a rotation configuration for a page range
+type RotateDefinition struct {
+	StartPage int `json:"startPage"` // 1-based page number
+	EndPage   int `json:"endPage"`   // 1-based page number (inclusive)
+	Rotation  int `json:"rotation"`  // Rotation angle: 90, -90, or 180
+}

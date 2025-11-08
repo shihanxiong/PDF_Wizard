@@ -18,6 +18,10 @@ export function MergePDFs(arg1, arg2, arg3) {
   return window['go']['main']['App']['MergePDFs'](arg1, arg2, arg3);
 }
 
+export function RotatePDF(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['RotatePDF'](arg1, arg2, arg3, arg4);
+}
+
 export function SelectOutputDirectory() {
   return window['go']['main']['App']['SelectOutputDirectory']();
 }

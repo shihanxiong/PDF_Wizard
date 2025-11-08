@@ -29,3 +29,9 @@ export interface SplitDefinition {
   filename: string; // Filename without extension
 }
 
+export interface RotateDefinition {
+  id: string; // Unique identifier for the rotation
+  startPage: number;
+  endPage: number;
+  rotation: number; // Rotation angle: 90, -90, or 180
+}

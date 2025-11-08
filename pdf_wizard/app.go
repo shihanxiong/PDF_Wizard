@@ -68,3 +68,8 @@ func (a *App) MergePDFs(inputPaths []string, outputDirectory string, outputFilen
 func (a *App) SplitPDF(inputPath string, splits []models.SplitDefinition, outputDirectory string) error {
 	return a.pdfService.SplitPDF(inputPath, splits, outputDirectory)
 }
+
+// RotatePDF rotates specified page ranges in a PDF file
+func (a *App) RotatePDF(inputPath string, rotations []models.RotateDefinition, outputDirectory string, outputFilename string) error {
+	return a.pdfService.RotatePDF(inputPath, rotations, outputDirectory, outputFilename)
+}

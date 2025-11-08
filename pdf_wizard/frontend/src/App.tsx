@@ -3,6 +3,7 @@ import './App.css';
 import { Box, Tabs, Tab, AppBar, Toolbar, Typography } from '@mui/material';
 import { MergeTab } from './components/MergeTab';
 import { SplitTab } from './components/SplitTab';
+import { RotateTab } from './components/RotateTab';
 import logo from './assets/img/app_logo.png';
 import { OnFileDrop } from '../wailsjs/runtime/runtime';
 
@@ -34,6 +35,7 @@ export const App = () => {
   const tabValueRef = useRef(0);
   const mergeTabDropHandler = useRef<((paths: string[]) => void) | null>(null);
   const splitTabDropHandler = useRef<((paths: string[]) => void) | null>(null);
+  const rotateTabDropHandler = useRef<((paths: string[]) => void) | null>(null);
 
   // Update ref when tab changes
   useEffect(() => {
@@ -51,6 +53,9 @@ export const App = () => {
       } else if (tabValueRef.current === 1 && splitTabDropHandler.current) {
         // Split tab is active
         splitTabDropHandler.current(paths);
+      } else if (tabValueRef.current === 2 && rotateTabDropHandler.current) {
+        // Rotate tab is active
+        rotateTabDropHandler.current(paths);
       }
     }, false);
 
@@ -104,6 +109,7 @@ export const App = () => {
             <Tabs value={tabValue} onChange={handleTabChange} aria-label="PDF Wizard tabs" sx={{ minHeight: 'auto' }}>
               <Tab label="Merge PDF" id="pdf-wizard-tab-0" aria-controls="pdf-wizard-tabpanel-0" />
               <Tab label="Split PDF" id="pdf-wizard-tab-1" aria-controls="pdf-wizard-tabpanel-1" />
+              <Tab label="Rotate PDF" id="pdf-wizard-tab-2" aria-controls="pdf-wizard-tabpanel-2" />
             </Tabs>
           </Box>
         </Toolbar>
@@ -114,6 +120,9 @@ export const App = () => {
         </TabPanel>
         <TabPanel value={tabValue} index={1}>
           <SplitTab onFileDrop={(handler: (paths: string[]) => void) => (splitTabDropHandler.current = handler)} />
+        </TabPanel>
+        <TabPanel value={tabValue} index={2}>
+          <RotateTab onFileDrop={(handler: (paths: string[]) => void) => (rotateTabDropHandler.current = handler)} />
         </TabPanel>
       </Box>
     </Box>

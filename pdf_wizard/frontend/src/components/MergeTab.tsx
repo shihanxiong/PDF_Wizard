@@ -263,7 +263,7 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
           sx={{ py: 1.5, mb: 2 }}
           startIcon={isProcessing ? <CircularProgress size={16} color="inherit" /> : undefined}
         >
-          {isProcessing ? 'Merging...' : 'Merge PDFs'}
+          {isProcessing ? 'Merging...' : 'Merge PDF'}
         </Button>
       </Box>
     </Box>
