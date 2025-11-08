@@ -94,10 +94,14 @@ test.describe('PDF Wizard E2E Tests', () => {
 
     // Verify Merge tab content is visible (with explicit waits)
     await expect(mergeTabPanel.getByRole('button', { name: 'Select PDF Files' })).toBeVisible({ timeout: 10000 });
-    await expect(mergeTabPanel.getByText('Or drag and drop PDF files anywhere on the window')).toBeVisible({ timeout: 5000 });
+    await expect(mergeTabPanel.getByText('Or drag and drop PDF files anywhere on the window')).toBeVisible({
+      timeout: 5000,
+    });
 
     // Check for output configuration elements (scoped to merge tab panel)
-    await expect(mergeTabPanel.getByRole('button', { name: 'Select Output Directory' })).toBeVisible({ timeout: 10000 });
+    await expect(mergeTabPanel.getByRole('button', { name: 'Select Output Directory' })).toBeVisible({
+      timeout: 10000,
+    });
     await expect(mergeTabPanel.getByText('Output Filename:')).toBeVisible({ timeout: 5000 });
 
     // Check that the filename input field exists (by placeholder or label)
@@ -155,7 +159,7 @@ test.describe('PDF Wizard E2E Tests', () => {
   test('should allow user to interact with filename input field', async ({ page }) => {
     // Get the active merge tab panel
     const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
-    
+
     // Wait for the input field to be visible and ready (scoped to merge tab panel)
     const filenameInput = mergeTabPanel.locator('input[placeholder="merged"]');
     await expect(filenameInput).toBeVisible({ timeout: 10000 });
