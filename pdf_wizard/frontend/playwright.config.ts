@@ -17,9 +17,9 @@ export default defineConfig({
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    // Increase timeout for slow loading
-    navigationTimeout: 30000,
-    actionTimeout: 10000,
+    // Increase timeout for slow loading (especially in CI)
+    navigationTimeout: 60000,
+    actionTimeout: 15000,
   },
 
   projects: [
@@ -35,7 +35,7 @@ export default defineConfig({
     command: 'npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
-    timeout: 30 * 1000, // 30 seconds to start
+    timeout: 60 * 1000, // 60 seconds to start (increased for CI)
     stdout: 'pipe',
     stderr: 'pipe',
   },

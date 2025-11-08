@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/pdfcpu/pdfcpu v0.11.1
-	github.com/wailsapp/wails/v2 v2.10.2
+	github.com/wailsapp/wails/v2 v2.11.0
 )
 
 require (

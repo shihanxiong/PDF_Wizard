@@ -159,3 +159,54 @@ func createMultiPageTestPDF(path string, numPages int) error {
 
 	return nil
 }
+
+func TestPDFService_RotatePDF(t *testing.T) {
+	fileService := NewFileService(context.Background())
+	service := NewPDFService(fileService)
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	// Create a multi-page PDF (5 pages)
+	inputPDF := filepath.Join(testDir, "input.pdf")
+	if err := createMultiPageTestPDF(inputPDF, 5); err != nil {
+		t.Fatalf("Failed to create multi-page test PDF: %v", err)
+	}
+
+	outputDir := testDir
+	outputFilename := "rotated"
+
+	// Define rotations
+	rotations := []models.RotateDefinition{
+		{StartPage: 1, EndPage: 2, Rotation: 90},
+		{StartPage: 3, EndPage: 4, Rotation: -90},
+		{StartPage: 5, EndPage: 5, Rotation: 180},
+	}
+
+	// Test RotatePDF
+	err := service.RotatePDF(inputPDF, rotations, outputDir, outputFilename)
+	if err != nil {
+		t.Fatalf("RotatePDF failed: %v", err)
+	}
+
+	// Verify output file was created
+	outputPath := filepath.Join(outputDir, outputFilename+".pdf")
+	info, err := os.Stat(outputPath)
+	if err != nil {
+		t.Fatalf("Output file was not created: %v", err)
+	}
+
+	if info.Size() == 0 {
+		t.Error("Output file is empty")
+	}
+
+	// Verify it's a valid PDF by checking for PDF header
+	content, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("Failed to read output file: %v", err)
+	}
+
+	if len(content) < 4 || string(content[0:4]) != "%PDF" {
+		t.Error("Output file does not appear to be a valid PDF")
+	}
+}

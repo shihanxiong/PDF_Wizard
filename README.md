@@ -4,21 +4,96 @@
   <img src="./assets/img/app_logo_raw.png" width="450" height="450" />
 </p>
 
-A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backend performance with a React/TypeScript frontend.
+A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backend performance with a React/TypeScript frontend. PDF Wizard provides three main features:
+
+- **Merge PDFs**: Combine multiple PDF files into a single document
+- **Split PDFs**: Divide a PDF into multiple files based on page ranges
+- **Rotate PDFs**: Rotate specific page ranges in a PDF (90°, -90°, or 180°)
 
 ## Screenshots
 
-### Merge PDFs Tab
+<div align="center">
 
-<p align="center">
-  <img src="./assets/img/app_view_1.png" alt="Merge PDFs Tab" width="800" />
-</p>
+<style>
+.carousel-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+}
+.carousel-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  background: #fff;
+}
+.carousel-radio {
+  display: none;
+}
+.carousel-slide {
+  display: none;
+  width: 100%;
+}
+.carousel-slide img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.carousel-radio#slide1:checked ~ .carousel-container .slide1,
+.carousel-radio#slide2:checked ~ .carousel-container .slide2,
+.carousel-radio#slide3:checked ~ .carousel-container .slide3 {
+  display: block;
+}
+.carousel-nav {
+  text-align: center;
+  padding: 15px 0;
+}
+.carousel-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ccc;
+  margin: 0 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.carousel-radio#slide1:checked ~ .carousel-nav label[for="slide1"],
+.carousel-radio#slide2:checked ~ .carousel-nav label[for="slide2"],
+.carousel-radio#slide3:checked ~ .carousel-nav label[for="slide3"] {
+  background: #007bff;
+  opacity: 1;
+}
+</style>
 
-### Split PDFs Tab
+<div class="carousel-wrapper">
+  <input type="radio" class="carousel-radio" name="carousel" id="slide1" checked>
+  <input type="radio" class="carousel-radio" name="carousel" id="slide2">
+  <input type="radio" class="carousel-radio" name="carousel" id="slide3">
+  
+  <div class="carousel-container">
+    <div class="carousel-slide slide1">
+      <img src="./assets/img/app_view_1.png" alt="Merge PDFs Tab">
+      <p style="text-align: center; margin-top: 10px; font-weight: bold;">Merge PDFs Tab</p>
+    </div>
+    <div class="carousel-slide slide2">
+      <img src="./assets/img/app_view_2.png" alt="Split PDFs Tab">
+      <p style="text-align: center; margin-top: 10px; font-weight: bold;">Split PDFs Tab</p>
+    </div>
+    <div class="carousel-slide slide3">
+      <img src="./assets/img/app_view_3.png" alt="Rotate PDFs Tab">
+      <p style="text-align: center; margin-top: 10px; font-weight: bold;">Rotate PDFs Tab</p>
+    </div>
+  </div>
+  
+  <div class="carousel-nav">
+    <label for="slide1" class="carousel-dot"></label>
+    <label for="slide2" class="carousel-dot"></label>
+    <label for="slide3" class="carousel-dot"></label>
+  </div>
+</div>
 
-<p align="center">
-  <img src="./assets/img/app_view_2.png" alt="Split PDFs Tab" width="800" />
-</p>
+</div>
 
 ## Downloads
 
@@ -239,13 +314,31 @@ npx playwright show-report
 The E2E test suite includes:
 
 - App loading and initialization
-- Tab navigation (Merge/Split tabs)
+- Tab navigation (Merge/Split/Rotate tabs)
 - UI component visibility and functionality
 - User interactions (form inputs, buttons)
 - State management
 - Material-UI component rendering
 
 For more details, see the [E2E Testing README](pdf_wizard/frontend/e2e/README.md).
+
+## Technology Stack
+
+### Backend
+- **Go 1.21+**: High-performance backend services
+- **Wails v2**: Desktop application framework
+- **pdfcpu**: PDF manipulation library for merging, splitting, and rotating
+
+### Frontend
+- **React 18**: Modern UI library with hooks
+- **TypeScript**: Type-safe development
+- **Material-UI (MUI) v7**: Component library for modern UI
+- **@dnd-kit**: Modern drag-and-drop library (replaced deprecated react-beautiful-dnd)
+- **Vite**: Fast build tool and dev server
+
+### Testing
+- **Playwright**: End-to-end testing framework
+- **Go Testing**: Unit and integration tests
 
 ## Project Structure
 

@@ -35,16 +35,21 @@ jobs:
         working-directory: pdf_wizard/frontend
         run: npm ci
 
-      - name: Install Playwright browsers
+      - name: Install Playwright Browsers and Dependencies
         working-directory: pdf_wizard/frontend
-        run: npx playwright install --with-deps chromium
+        run: |
+          npx playwright install --with-deps chromium
+          npx playwright --version
 
       - name: Run E2E tests
         working-directory: pdf_wizard/frontend
         env:
           # Suppress git commit info warning in CI
           CI: true
+          # Increase timeout for CI environments
+          PLAYWRIGHT_TIMEOUT: 60000
         run: npm run test:e2e
+        continue-on-error: false
 
       - name: Upload test results
         if: always()

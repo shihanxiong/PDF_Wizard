@@ -28,15 +28,14 @@ test.describe('PDF Wizard E2E Tests', () => {
         },
       };
     });
-    
+
     // Ignore console errors from Wails runtime (not available in Vite-only mode)
     page.on('console', (msg) => {
       const text = msg.text();
-      if (msg.type() === 'error' && (
-        text.includes('wails') || 
-        text.includes('runtime') ||
-        text.includes('OnFileDrop')
-      )) {
+      if (
+        msg.type() === 'error' &&
+        (text.includes('wails') || text.includes('runtime') || text.includes('OnFileDrop'))
+      ) {
         // Ignore Wails-related errors when testing UI only
         return;
       }
@@ -45,20 +44,22 @@ test.describe('PDF Wizard E2E Tests', () => {
         console.log('Console error:', text);
       }
     });
-    
+
     // Navigate to the app (Vite dev server)
     await page.goto('/', { waitUntil: 'domcontentloaded' });
-    
+
     // Wait for the root div to exist (basic HTML structure)
     await page.waitForSelector('#root', { timeout: 5000 });
-    
+
     // Wait for React to render - look for any React-rendered content
     // Try tabs first as they're more reliable than #App
     await page.waitForSelector('[role="tab"]', { timeout: 15000 }).catch(async () => {
       // If tabs don't appear, check what's actually on the page
       const bodyText = await page.textContent('body');
       const html = await page.content();
-      throw new Error(`React app failed to render. Body content: ${bodyText?.substring(0, 200)}. HTML length: ${html.length}`);
+      throw new Error(
+        `React app failed to render. Body content: ${bodyText?.substring(0, 200)}. HTML length: ${html.length}`,
+      );
     });
   });
 
@@ -71,10 +72,11 @@ test.describe('PDF Wizard E2E Tests', () => {
     await expect(logo).toBeVisible({ timeout: 5000 });
   });
 
-  test('should display both Merge and Split tabs', async ({ page }) => {
-    // Verify both tabs are present
+  test('should display all three tabs (Merge, Split, and Rotate)', async ({ page }) => {
+    // Verify all three tabs are present
     await expect(page.getByRole('tab', { name: 'Merge PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Split PDF' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toBeVisible();
 
     // Verify Merge tab is selected by default (active)
     const mergeTab = page.getByRole('tab', { name: 'Merge PDF' });
@@ -87,25 +89,34 @@ test.describe('PDF Wizard E2E Tests', () => {
     await expect(mergeTab).toBeVisible({ timeout: 10000 });
     await expect(mergeTab).toHaveAttribute('aria-selected', 'true');
 
-    // Verify Merge tab content is visible (with explicit waits)
-    await expect(page.getByRole('button', { name: 'Select PDF Files' })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Or drag and drop PDF files anywhere on the window')).toBeVisible({ timeout: 5000 });
+    // Get the active tab panel and wait for it to be visible
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    await expect(mergeTabPanel).toBeVisible({ timeout: 10000 });
 
-    // Check for output configuration elements
-    await expect(page.getByRole('button', { name: 'Select Output Directory' })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Output Filename:')).toBeVisible({ timeout: 5000 });
+    // Verify Merge tab content is visible (with explicit waits)
+    await expect(mergeTabPanel.getByRole('button', { name: 'Select PDF Files' })).toBeVisible({ timeout: 10000 });
+    await expect(mergeTabPanel.getByText('Or drag and drop PDF files anywhere on the window')).toBeVisible({
+      timeout: 5000,
+    });
+
+    // Check for output configuration elements (scoped to merge tab panel)
+    await expect(mergeTabPanel.getByRole('button', { name: 'Select Output Directory' })).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(mergeTabPanel.getByText('Output Filename:')).toBeVisible({ timeout: 5000 });
 
     // Check that the filename input field exists (by placeholder or label)
-    const filenameInput = page.locator('input[placeholder="merged"]');
+    const filenameInput = mergeTabPanel.locator('input[placeholder="merged"]');
     await expect(filenameInput).toBeVisible({ timeout: 10000 });
 
     // Verify the Merge button exists (should be disabled initially since no files are selected)
-    const mergeButton = page.getByRole('button', { name: 'Merge PDFs' });
+    // Use a more flexible selector that works even when button is disabled
+    const mergeButton = mergeTabPanel.locator('button').filter({ hasText: 'Merge PDF' });
     await expect(mergeButton).toBeVisible({ timeout: 10000 });
     await expect(mergeButton).toBeDisabled(); // Disabled because no files selected
 
     // Verify empty state message
-    await expect(page.getByText('No files selected')).toBeVisible({ timeout: 5000 });
+    await expect(mergeTabPanel.getByText('No files selected')).toBeVisible({ timeout: 5000 });
   });
 
   test('should switch to Split tab when clicked', async ({ page }) => {
@@ -115,6 +126,7 @@ test.describe('PDF Wizard E2E Tests', () => {
     // Verify Split tab is now active
     await expect(page.getByRole('tab', { name: 'Split PDF' })).toHaveAttribute('aria-selected', 'true');
     await expect(page.getByRole('tab', { name: 'Merge PDF' })).toHaveAttribute('aria-selected', 'false');
+    await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toHaveAttribute('aria-selected', 'false');
 
     // Verify Merge tab content is hidden
     await expect(page.getByRole('button', { name: 'Select PDF Files' })).not.toBeVisible();
@@ -124,9 +136,40 @@ test.describe('PDF Wizard E2E Tests', () => {
     await expect(page.getByRole('button', { name: 'Select PDF File' })).toBeVisible();
   });
 
+  test('should switch to Rotate tab when clicked', async ({ page }) => {
+    // Click on Rotate tab
+    await page.getByRole('tab', { name: 'Rotate PDF' }).click();
+
+    // Verify Rotate tab is now active
+    await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tab', { name: 'Merge PDF' })).toHaveAttribute('aria-selected', 'false');
+    await expect(page.getByRole('tab', { name: 'Split PDF' })).toHaveAttribute('aria-selected', 'false');
+
+    // Get the active tab panel and wait for it to be visible
+    const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-2');
+    await expect(rotateTabPanel).toBeVisible({ timeout: 10000 });
+
+    // Verify Merge tab content is hidden (check the merge tab panel)
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    await expect(mergeTabPanel.getByRole('button', { name: 'Select PDF Files' })).not.toBeVisible();
+
+    // Verify Rotate tab content is visible (scoped to rotate tab panel)
+    // Note: "Add Rotate" button is only visible when a PDF is selected, so we check for the initial state
+    await expect(rotateTabPanel.getByRole('button', { name: 'Select PDF File' })).toBeVisible();
+    // The "Add Rotate" button is only shown when a PDF is selected, so we check for the empty state message instead
+    await expect(rotateTabPanel.getByText(/No PDF selected|Or drag and drop/)).toBeVisible();
+    // The "Rotate PDF" button should be visible but disabled when no PDF is selected
+    const rotateButton = rotateTabPanel.locator('button').filter({ hasText: 'Rotate PDF' });
+    await expect(rotateButton).toBeVisible();
+    await expect(rotateButton).toBeDisabled();
+  });
+
   test('should allow user to interact with filename input field', async ({ page }) => {
-    // Wait for the input field to be visible and ready
-    const filenameInput = page.locator('input[placeholder="merged"]');
+    // Get the active merge tab panel
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+
+    // Wait for the input field to be visible and ready (scoped to merge tab panel)
+    const filenameInput = mergeTabPanel.locator('input[placeholder="merged"]');
     await expect(filenameInput).toBeVisible({ timeout: 10000 });
 
     // Clear the field and type a new filename
@@ -137,7 +180,7 @@ test.describe('PDF Wizard E2E Tests', () => {
     await expect(filenameInput).toHaveValue('test-output');
 
     // Verify the Merge button is still disabled (no files selected)
-    const mergeButton = page.getByRole('button', { name: 'Merge PDFs' });
+    const mergeButton = mergeTabPanel.locator('button').filter({ hasText: 'Merge PDF' });
     await expect(mergeButton).toBeVisible();
     await expect(mergeButton).toBeDisabled();
   });
@@ -153,6 +196,10 @@ test.describe('PDF Wizard E2E Tests', () => {
     // Switch to Split tab
     await page.getByRole('tab', { name: 'Split PDF' }).click();
     await expect(page.getByRole('tab', { name: 'Split PDF' })).toHaveAttribute('aria-selected', 'true');
+
+    // Switch to Rotate tab
+    await page.getByRole('tab', { name: 'Rotate PDF' }).click();
+    await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toHaveAttribute('aria-selected', 'true');
 
     // Switch back to Merge tab
     await page.getByRole('tab', { name: 'Merge PDF' }).click();
@@ -172,12 +219,21 @@ test.describe('PDF Wizard E2E Tests', () => {
     const tabList = page.getByRole('tablist');
     await expect(tabList).toBeVisible();
 
-    // Verify tab panels exist
+    // Verify all three tab panels exist (they exist in DOM but only active one is visible)
     const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    await expect(mergeTabPanel).toBeAttached();
+
+    const splitTabPanel = page.locator('#pdf-wizard-tabpanel-1');
+    await expect(splitTabPanel).toBeAttached();
+
+    const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-2');
+    await expect(rotateTabPanel).toBeAttached();
+
+    // Verify the active tab panel (Merge) is visible
     await expect(mergeTabPanel).toBeVisible();
 
-    // Verify buttons have proper styling (check for MUI button classes)
-    const selectFilesButton = page.getByRole('button', { name: 'Select PDF Files' });
+    // Verify buttons have proper styling (check for MUI button classes) - scoped to active panel
+    const selectFilesButton = mergeTabPanel.getByRole('button', { name: 'Select PDF Files' });
     await expect(selectFilesButton).toHaveClass(/MuiButton/);
   });
 });

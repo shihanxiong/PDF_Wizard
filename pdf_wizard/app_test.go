@@ -15,6 +15,7 @@ import (
 )
 
 // createTestPDF creates a minimal valid PDF file for testing
+// Uses the same approach as the service tests which work correctly
 func createTestPDF(path string) error {
 	// Create a minimal valid PDF content
 	pdfContent := `%PDF-1.4
@@ -193,6 +194,9 @@ func TestMergePDFs(t *testing.T) {
 	if err := createTestPDF(pdf3); err != nil {
 		t.Fatalf("Failed to create test PDF 3: %v", err)
 	}
+
+	// Wait a bit to ensure files are fully written to disk
+	time.Sleep(100 * time.Millisecond)
 
 	outputDir := testDir
 	outputFilename := "merged"
@@ -843,5 +847,137 @@ func TestSplitPDF_OverwriteExisting(t *testing.T) {
 
 	if len(content) < 4 || string(content[0:4]) != "%PDF" {
 		t.Error("Output file does not appear to be a valid PDF after overwrite")
+	}
+}
+
+func TestRotatePDF(t *testing.T) {
+	app := NewApp()
+	app.startup(context.Background())
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	// Create a multi-page PDF (5 pages)
+	inputPDF := filepath.Join(testDir, "input.pdf")
+	if err := createMultiPageTestPDF(inputPDF, 5); err != nil {
+		t.Fatalf("Failed to create multi-page test PDF: %v", err)
+	}
+
+	outputDir := testDir
+	outputFilename := "rotated"
+
+	// Define rotations
+	rotations := []models.RotateDefinition{
+		{StartPage: 1, EndPage: 2, Rotation: 90},
+		{StartPage: 3, EndPage: 4, Rotation: -90},
+		{StartPage: 5, EndPage: 5, Rotation: 180},
+	}
+
+	// Test RotatePDF
+	err := app.RotatePDF(inputPDF, rotations, outputDir, outputFilename)
+	if err != nil {
+		t.Fatalf("RotatePDF failed: %v", err)
+	}
+
+	// Verify output file was created
+	outputPath := filepath.Join(outputDir, outputFilename+".pdf")
+	info, err := os.Stat(outputPath)
+	if err != nil {
+		t.Fatalf("Output file was not created: %v", err)
+	}
+
+	if info.Size() == 0 {
+		t.Error("Output file is empty")
+	}
+
+	// Verify it's a valid PDF by checking for PDF header
+	content, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("Failed to read output file: %v", err)
+	}
+
+	if len(content) < 4 || string(content[0:4]) != "%PDF" {
+		t.Error("Output file does not appear to be a valid PDF")
+	}
+}
+
+func TestRotatePDF_InvalidPageRange(t *testing.T) {
+	app := NewApp()
+	app.startup(context.Background())
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	// Create a test PDF (1 page)
+	inputPDF := filepath.Join(testDir, "input.pdf")
+	if err := createTestPDF(inputPDF); err != nil {
+		t.Fatalf("Failed to create test PDF: %v", err)
+	}
+
+	outputDir := testDir
+	outputFilename := "rotated"
+
+	// Define rotation with invalid page range (page 2 doesn't exist)
+	rotations := []models.RotateDefinition{
+		{StartPage: 2, EndPage: 2, Rotation: 90},
+	}
+
+	// Test RotatePDF should fail
+	err := app.RotatePDF(inputPDF, rotations, outputDir, outputFilename)
+	if err == nil {
+		t.Error("Expected error for invalid page range, got nil")
+	}
+}
+
+func TestRotatePDF_InvalidRotationAngle(t *testing.T) {
+	app := NewApp()
+	app.startup(context.Background())
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	// Create a test PDF
+	inputPDF := filepath.Join(testDir, "input.pdf")
+	if err := createTestPDF(inputPDF); err != nil {
+		t.Fatalf("Failed to create test PDF: %v", err)
+	}
+
+	outputDir := testDir
+	outputFilename := "rotated"
+
+	// Define rotation with invalid angle (45 degrees is not allowed)
+	rotations := []models.RotateDefinition{
+		{StartPage: 1, EndPage: 1, Rotation: 45},
+	}
+
+	// Test RotatePDF should fail
+	err := app.RotatePDF(inputPDF, rotations, outputDir, outputFilename)
+	if err == nil {
+		t.Error("Expected error for invalid rotation angle, got nil")
+	}
+}
+
+func TestRotatePDF_EmptyFilename(t *testing.T) {
+	app := NewApp()
+	app.startup(context.Background())
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	// Create a test PDF
+	inputPDF := filepath.Join(testDir, "input.pdf")
+	if err := createTestPDF(inputPDF); err != nil {
+		t.Fatalf("Failed to create test PDF: %v", err)
+	}
+
+	outputDir := testDir
+	rotations := []models.RotateDefinition{
+		{StartPage: 1, EndPage: 1, Rotation: 90},
+	}
+
+	// Test RotatePDF should fail
+	err := app.RotatePDF(inputPDF, rotations, outputDir, "")
+	if err == nil {
+		t.Error("Expected error for empty filename, got nil")
 	}
 }

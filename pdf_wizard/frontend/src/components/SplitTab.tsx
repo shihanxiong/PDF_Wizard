@@ -374,7 +374,7 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
           sx={{ py: 1.5, mb: 2 }}
           startIcon={isProcessing ? <CircularProgress size={16} color="inherit" /> : undefined}
         >
-          {isProcessing ? 'Splitting...' : 'Split PDFs'}
+          {isProcessing ? 'Splitting...' : 'Split PDF'}
         </Button>
       </Box>
     </Box>
