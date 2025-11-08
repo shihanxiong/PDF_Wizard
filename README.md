@@ -1,7 +1,7 @@
 # PDF Wizard
 
 <p align="center">
-  <img src="./assets/img/app_logo_raw.png" width="450" height="450" />
+  <img src="./assets/img/app_logo_raw.png" width="350" height="350" />
 </p>
 
 A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backend performance with a React/TypeScript frontend. PDF Wizard provides three main features:
