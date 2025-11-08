@@ -16,8 +16,23 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import FolderIcon from '@mui/icons-material/Folder';
-import { DragDropContext, Draggable, DropResult } from 'react-beautiful-dnd';
-import { StrictModeDroppable } from './StrictModeDroppable';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { SelectPDFFiles, GetFileMetadata, SelectOutputDirectory, MergePDFs } from '../../wailsjs/go/main/App';
 import { SelectedFile } from '../types';
 import { formatFileSize, formatDate, convertToSelectedFile } from '../utils/formatters';
@@ -25,6 +40,75 @@ import { formatFileSize, formatDate, convertToSelectedFile } from '../utils/form
 interface MergeTabProps {
   onFileDrop: (handler: (paths: string[]) => void) => void;
 }
+
+interface SortableFileItemProps {
+  file: SelectedFile;
+  index: number;
+  onRemove: () => void;
+}
+
+// Sortable file item component using @dnd-kit
+const SortableFileItem = ({ file, index, onRemove }: SortableFileItemProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: file.path,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <Box
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      sx={{
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+        bgcolor: isDragging ? 'action.selected' : 'background.paper',
+        display: 'flex',
+        alignItems: 'center',
+        p: 2,
+        cursor: isDragging ? 'grabbing' : 'grab',
+      }}
+    >
+      <Box sx={{ mr: 2, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>
+        <DragIndicatorIcon color="action" />
+      </Box>
+      <Box sx={{ mr: 2, minWidth: 40 }}>
+        <Typography variant="caption" color="text.secondary">
+          {index + 1}
+        </Typography>
+      </Box>
+      <Box sx={{ flex: 1 }}>
+        <Typography variant="subtitle1" sx={{ mb: 0.5 }}>
+          {file.name}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+          {file.path}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {formatFileSize(file.size)} • Modified: {formatDate(file.lastModified)}
+        </Typography>
+      </Box>
+      <IconButton
+        edge="end"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove();
+        }}
+        color="error"
+        size="small"
+        sx={{ ml: 2 }}
+      >
+        <DeleteIcon />
+      </IconButton>
+    </Box>
+  );
+};
 
 export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
   const [files, setFiles] = useState<SelectedFile[]>([]);
@@ -85,14 +169,23 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
     }
   };
 
-  const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
-    const items = Array.from(files);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
 
-    setFiles(items);
+    if (over && active.id !== over.id) {
+      setFiles((items) => {
+        const oldIndex = items.findIndex((item) => item.path === active.id);
+        const newIndex = items.findIndex((item) => item.path === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
   };
 
   const handleRemoveFile = (index: number) => {
@@ -161,71 +254,13 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
             <Typography>No files selected</Typography>
           </Box>
         ) : (
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <StrictModeDroppable droppableId="file-list">
-              {(provided, snapshot) => (
-                <Box
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                  sx={{
-                    bgcolor: snapshot.isDraggingOver ? 'action.hover' : 'transparent',
-                  }}
-                >
-                  {files.map((file, index) => (
-                    <Draggable key={file.path} draggableId={file.path} index={index}>
-                      {(provided, snapshot) => (
-                        <Box
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          sx={{
-                            borderBottom: '1px solid',
-                            borderColor: 'divider',
-                            bgcolor: snapshot.isDragging ? 'action.selected' : 'background.paper',
-                            display: 'flex',
-                            alignItems: 'center',
-                            p: 2,
-                            cursor: snapshot.isDragging ? 'grabbing' : 'grab',
-                            ...provided.draggableProps.style,
-                          }}
-                        >
-                          <Box sx={{ mr: 2, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>
-                            <DragIndicatorIcon color="action" />
-                          </Box>
-                          <Box sx={{ mr: 2, minWidth: 40 }}>
-                            <Typography variant="caption" color="text.secondary">
-                              {index + 1}
-                            </Typography>
-                          </Box>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="subtitle1" sx={{ mb: 0.5 }}>
-                              {file.name}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                              {file.path}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {formatFileSize(file.size)} • Modified: {formatDate(file.lastModified)}
-                            </Typography>
-                          </Box>
-                          <IconButton
-                            edge="end"
-                            onClick={() => handleRemoveFile(index)}
-                            color="error"
-                            size="small"
-                            sx={{ ml: 2 }}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Box>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </Box>
-              )}
-            </StrictModeDroppable>
-          </DragDropContext>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={files.map((f) => f.path)} strategy={verticalListSortingStrategy}>
+              {files.map((file, index) => (
+                <SortableFileItem key={file.path} file={file} index={index} onRemove={() => handleRemoveFile(index)} />
+              ))}
+            </SortableContext>
+          </DndContext>
         )}
       </Paper>
 

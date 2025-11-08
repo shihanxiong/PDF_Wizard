@@ -322,6 +322,24 @@ The E2E test suite includes:
 
 For more details, see the [E2E Testing README](pdf_wizard/frontend/e2e/README.md).
 
+## Technology Stack
+
+### Backend
+- **Go 1.21+**: High-performance backend services
+- **Wails v2**: Desktop application framework
+- **pdfcpu**: PDF manipulation library for merging, splitting, and rotating
+
+### Frontend
+- **React 18**: Modern UI library with hooks
+- **TypeScript**: Type-safe development
+- **Material-UI (MUI) v7**: Component library for modern UI
+- **@dnd-kit**: Modern drag-and-drop library (replaced deprecated react-beautiful-dnd)
+- **Vite**: Fast build tool and dev server
+
+### Testing
+- **Playwright**: End-to-end testing framework
+- **Go Testing**: Unit and integration tests
+
 ## Project Structure
 
 ```
