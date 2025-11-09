@@ -194,3 +194,88 @@ func TestFileService_GetPDFMetadata(t *testing.T) {
 		t.Errorf("Expected TotalPages to be 1, got %d", metadata.TotalPages)
 	}
 }
+
+func TestFileService_GetFileMetadata_NonExistentFile(t *testing.T) {
+	service := NewFileService(context.Background())
+
+	_, err := service.GetFileMetadata("/nonexistent/file.pdf")
+	if err == nil {
+		t.Error("Expected error for non-existent file, got nil")
+	}
+}
+
+func TestFileService_GetFileMetadata_NonPDFFile(t *testing.T) {
+	service := NewFileService(context.Background())
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	// Create a text file
+	testFile := filepath.Join(testDir, "test.txt")
+	if err := os.WriteFile(testFile, []byte("not a PDF"), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	metadata, err := service.GetFileMetadata(testFile)
+	if err != nil {
+		t.Fatalf("GetFileMetadata failed: %v", err)
+	}
+
+	if metadata.IsPDF {
+		t.Errorf("Expected IsPDF to be false for .txt file, got true")
+	}
+}
+
+func TestFileService_GetPDFPageCount_NonExistentFile(t *testing.T) {
+	service := NewFileService(context.Background())
+
+	_, err := service.GetPDFPageCount("/nonexistent/file.pdf")
+	if err == nil {
+		t.Error("Expected error for non-existent file, got nil")
+	}
+}
+
+func TestFileService_GetPDFPageCount_NonPDFFile(t *testing.T) {
+	service := NewFileService(context.Background())
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	// Create a text file
+	testFile := filepath.Join(testDir, "test.txt")
+	if err := os.WriteFile(testFile, []byte("not a PDF"), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	_, err := service.GetPDFPageCount(testFile)
+	if err == nil {
+		t.Error("Expected error for non-PDF file, got nil")
+	}
+}
+
+func TestFileService_GetPDFMetadata_NonExistentFile(t *testing.T) {
+	service := NewFileService(context.Background())
+
+	_, err := service.GetPDFMetadata("/nonexistent/file.pdf")
+	if err == nil {
+		t.Error("Expected error for non-existent file, got nil")
+	}
+}
+
+func TestFileService_GetPDFMetadata_NonPDFFile(t *testing.T) {
+	service := NewFileService(context.Background())
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	// Create a text file
+	testFile := filepath.Join(testDir, "test.txt")
+	if err := os.WriteFile(testFile, []byte("not a PDF"), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	_, err := service.GetPDFMetadata(testFile)
+	if err == nil {
+		t.Error("Expected error for non-PDF file, got nil")
+	}
+}
