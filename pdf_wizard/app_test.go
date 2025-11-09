@@ -981,3 +981,193 @@ func TestRotatePDF_EmptyFilename(t *testing.T) {
 		t.Error("Expected error for empty filename, got nil")
 	}
 }
+
+func TestRotatePDF_AllRotationAngles(t *testing.T) {
+	app := NewApp()
+	app.startup(context.Background())
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	// Create a multi-page PDF (3 pages)
+	inputPDF := filepath.Join(testDir, "input.pdf")
+	if err := createMultiPageTestPDF(inputPDF, 3); err != nil {
+		t.Fatalf("Failed to create multi-page test PDF: %v", err)
+	}
+
+	outputDir := testDir
+
+	// Test each rotation angle
+	angles := []int{90, -90, 180}
+	for _, angle := range angles {
+		t.Run(fmt.Sprintf("Rotation_%d", angle), func(t *testing.T) {
+			outputFilename := fmt.Sprintf("rotated_%d", angle)
+			rotations := []models.RotateDefinition{
+				{StartPage: 1, EndPage: 3, Rotation: angle},
+			}
+
+			err := app.RotatePDF(inputPDF, rotations, outputDir, outputFilename)
+			if err != nil {
+				t.Fatalf("RotatePDF failed for angle %d: %v", angle, err)
+			}
+
+			// Verify output file was created
+			outputPath := filepath.Join(outputDir, outputFilename+".pdf")
+			info, err := os.Stat(outputPath)
+			if err != nil {
+				t.Fatalf("Output file was not created for angle %d: %v", angle, err)
+			}
+
+			if info.Size() == 0 {
+				t.Errorf("Output file is empty for angle %d", angle)
+			}
+
+			// Verify it's a valid PDF
+			content, err := os.ReadFile(outputPath)
+			if err != nil {
+				t.Fatalf("Failed to read output file for angle %d: %v", angle, err)
+			}
+
+			if len(content) < 4 || string(content[0:4]) != "%PDF" {
+				t.Errorf("Output file does not appear to be a valid PDF for angle %d", angle)
+			}
+		})
+	}
+}
+
+func TestRotatePDF_MultipleRotationsOnSamePages(t *testing.T) {
+	app := NewApp()
+	app.startup(context.Background())
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	// Create a multi-page PDF (5 pages)
+	inputPDF := filepath.Join(testDir, "input.pdf")
+	if err := createMultiPageTestPDF(inputPDF, 5); err != nil {
+		t.Fatalf("Failed to create multi-page test PDF: %v", err)
+	}
+
+	outputDir := testDir
+	outputFilename := "rotated"
+
+	// Define multiple rotations, some overlapping
+	rotations := []models.RotateDefinition{
+		{StartPage: 1, EndPage: 2, Rotation: 90},
+		{StartPage: 2, EndPage: 3, Rotation: -90}, // Overlaps with previous
+		{StartPage: 4, EndPage: 5, Rotation: 180},
+	}
+
+	// Test RotatePDF - should succeed even with overlapping pages
+	err := app.RotatePDF(inputPDF, rotations, outputDir, outputFilename)
+	if err != nil {
+		t.Fatalf("RotatePDF failed with overlapping rotations: %v", err)
+	}
+
+	// Verify output file was created
+	outputPath := filepath.Join(outputDir, outputFilename+".pdf")
+	info, err := os.Stat(outputPath)
+	if err != nil {
+		t.Fatalf("Output file was not created: %v", err)
+	}
+
+	if info.Size() == 0 {
+		t.Error("Output file is empty")
+	}
+
+	// Verify it's a valid PDF
+	content, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("Failed to read output file: %v", err)
+	}
+
+	if len(content) < 4 || string(content[0:4]) != "%PDF" {
+		t.Error("Output file does not appear to be a valid PDF")
+	}
+}
+
+func TestRotatePDF_NonExistentInputFile(t *testing.T) {
+	app := NewApp()
+	app.startup(context.Background())
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	rotations := []models.RotateDefinition{
+		{StartPage: 1, EndPage: 1, Rotation: 90},
+	}
+
+	err := app.RotatePDF("/nonexistent/file.pdf", rotations, testDir, "output")
+	if err == nil {
+		t.Error("Expected error for non-existent input file, got nil")
+	}
+}
+
+func TestRotatePDF_NonExistentOutputDir(t *testing.T) {
+	app := NewApp()
+	app.startup(context.Background())
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	// Create a test PDF
+	inputPDF := filepath.Join(testDir, "input.pdf")
+	if err := createTestPDF(inputPDF); err != nil {
+		t.Fatalf("Failed to create test PDF: %v", err)
+	}
+
+	nonExistentDir := filepath.Join(testDir, "nonexistent")
+	rotations := []models.RotateDefinition{
+		{StartPage: 1, EndPage: 1, Rotation: 90},
+	}
+
+	err := app.RotatePDF(inputPDF, rotations, nonExistentDir, "output")
+	if err == nil {
+		t.Error("Expected error for non-existent output directory, got nil")
+	}
+}
+
+func TestRotatePDF_OverwriteExisting(t *testing.T) {
+	app := NewApp()
+	app.startup(context.Background())
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	// Create a test PDF
+	inputPDF := filepath.Join(testDir, "input.pdf")
+	if err := createTestPDF(inputPDF); err != nil {
+		t.Fatalf("Failed to create test PDF: %v", err)
+	}
+
+	outputPath := filepath.Join(testDir, "rotated.pdf")
+
+	// Create an existing output file
+	if err := os.WriteFile(outputPath, []byte("old content"), 0644); err != nil {
+		t.Fatalf("Failed to create existing output file: %v", err)
+	}
+
+	rotations := []models.RotateDefinition{
+		{StartPage: 1, EndPage: 1, Rotation: 90},
+	}
+
+	// Test RotatePDF should overwrite existing file
+	err := app.RotatePDF(inputPDF, rotations, testDir, "rotated")
+	if err != nil {
+		t.Fatalf("RotatePDF failed: %v", err)
+	}
+
+	// Verify the file was overwritten with a valid PDF
+	content, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("Failed to read output file: %v", err)
+	}
+
+	if string(content) == "old content" {
+		t.Error("Output file was not overwritten")
+	}
+
+	if len(content) < 4 || string(content[0:4]) != "%PDF" {
+		t.Error("Output file does not appear to be a valid PDF after overwrite")
+	}
+}
