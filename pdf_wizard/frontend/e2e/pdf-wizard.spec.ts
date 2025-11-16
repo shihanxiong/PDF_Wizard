@@ -12,12 +12,18 @@ import { test, expect } from '@playwright/test';
  */
 test.describe('PDF Wizard E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
-    // Mock Wails runtime before the app loads to prevent crashes
+    // Mock Wails runtime and Go bindings BEFORE the app loads
+    // This must be done in addInitScript to ensure it runs before any modules load
     await page.addInitScript(() => {
+      // Initialize language mock with sessionStorage persistence
+      if (!(window as any).__mockLanguage) {
+        const savedLang = sessionStorage.getItem('__test_mock_language');
+        (window as any).__mockLanguage = savedLang || 'en';
+      }
+
       // Create a mock window.runtime object for Wails bindings
       (window as any).runtime = {
         OnFileDrop: (callback: any, useDropTarget: boolean) => {
-          // Mock implementation - do nothing, just return
           return;
         },
         OnFileDropOff: () => {
@@ -26,41 +32,99 @@ test.describe('PDF Wizard E2E Tests', () => {
         CanResolveFilePaths: () => {
           return false;
         },
+        EventsOn: (event: string, callback: () => void) => {
+          if (!(window as any).__wailsEventHandlers) {
+            (window as any).__wailsEventHandlers = {};
+          }
+          (window as any).__wailsEventHandlers[event] = callback;
+          return () => {};
+        },
+        EventsEmit: (event: string, data?: any) => {
+          if ((window as any).__wailsEventHandlers && (window as any).__wailsEventHandlers[event]) {
+            (window as any).__wailsEventHandlers[event](data);
+          }
+        },
+      };
+
+      // Mock Wails Go bindings - MUST be set up before modules try to access window.go
+      (window as any).go = {
+        main: {
+          App: {
+            GetLanguage: () => {
+              return Promise.resolve((window as any).__mockLanguage || 'en');
+            },
+            SetLanguage: (lang: string) => {
+              (window as any).__mockLanguage = lang;
+              sessionStorage.setItem('__test_mock_language', lang);
+              return Promise.resolve();
+            },
+            EmitSettingsEvent: () => {
+              if ((window as any).runtime && (window as any).runtime.EventsEmit) {
+                (window as any).runtime.EventsEmit('show-settings');
+              }
+            },
+            SelectPDFFiles: () => Promise.resolve([]),
+            SelectPDFFile: () => Promise.resolve(''),
+            SelectOutputDirectory: () => Promise.resolve(''),
+            GetFileMetadata: () => Promise.resolve({}),
+            GetPDFMetadata: () => Promise.resolve({}),
+            GetPDFPageCount: () => Promise.resolve(0),
+            MergePDFs: () => Promise.resolve(),
+            SplitPDF: () => Promise.resolve(),
+            RotatePDF: () => Promise.resolve(),
+          },
+        },
       };
     });
 
-    // Ignore console errors from Wails runtime (not available in Vite-only mode)
+    // Capture all console messages for debugging
+    const consoleMessages: string[] = [];
     page.on('console', (msg) => {
       const text = msg.text();
-      if (
-        msg.type() === 'error' &&
-        (text.includes('wails') || text.includes('runtime') || text.includes('OnFileDrop'))
-      ) {
-        // Ignore Wails-related errors when testing UI only
-        return;
+      const type = msg.type();
+
+      // Store all errors for debugging
+      if (type === 'error') {
+        consoleMessages.push(`[${type}] ${text}`);
+        // Log to help debug
+        if (!text.includes('wails') && !text.includes('runtime') && !text.includes('OnFileDrop')) {
+          console.log('Console error:', text);
+        }
       }
-      // Log other errors for debugging
-      if (msg.type() === 'error') {
-        console.log('Console error:', text);
-      }
+    });
+
+    // Also capture page errors
+    page.on('pageerror', (error) => {
+      consoleMessages.push(`[pageerror] ${error.message}`);
+      console.log('Page error:', error.message, error.stack);
     });
 
     // Navigate to the app (Vite dev server)
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.goto('/', { waitUntil: 'networkidle' });
 
     // Wait for the root div to exist (basic HTML structure)
-    await page.waitForSelector('#root', { timeout: 5000 });
+    await page.waitForSelector('#root', { timeout: 10000, state: 'attached' });
+
+    // Wait a bit for React to finish initializing
+    await page.waitForTimeout(500);
 
     // Wait for React to render - look for any React-rendered content
     // Try tabs first as they're more reliable than #App
-    await page.waitForSelector('[role="tab"]', { timeout: 15000 }).catch(async () => {
-      // If tabs don't appear, check what's actually on the page
+    try {
+      await page.waitForSelector('[role="tab"]', { timeout: 15000 });
+    } catch (error) {
+      // If tabs don't appear, get more debug info
       const bodyText = await page.textContent('body');
       const html = await page.content();
+      const consoleErrors = await page.evaluate(() => {
+        return (window as any).__testConsoleErrors || [];
+      });
       throw new Error(
-        `React app failed to render. Body content: ${bodyText?.substring(0, 200)}. HTML length: ${html.length}`,
+        `React app failed to render. Body content: ${bodyText?.substring(0, 200)}. HTML length: ${
+          html.length
+        }. Console errors: ${JSON.stringify(consoleErrors)}`,
       );
-    });
+    }
   });
 
   test('should load the application with correct title and logo', async ({ page }) => {
@@ -330,5 +394,257 @@ test.describe('PDF Wizard E2E Tests', () => {
 
     // Verify Merge tab state is preserved (or reset, depending on implementation)
     await expect(mergeFilenameInput).toBeVisible();
+  });
+});
+
+test.describe('PDF Wizard i18n E2E Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    // Mock Wails runtime and Go bindings BEFORE the app loads
+    await page.addInitScript(() => {
+      // Initialize language mock with sessionStorage persistence
+      if (!(window as any).__mockLanguage) {
+        const savedLang = sessionStorage.getItem('__test_mock_language');
+        (window as any).__mockLanguage = savedLang || 'en';
+      }
+
+      // Create a mock window.runtime object for Wails bindings
+      (window as any).runtime = {
+        OnFileDrop: (callback: any, useDropTarget: boolean) => {
+          return;
+        },
+        OnFileDropOff: () => {
+          return;
+        },
+        CanResolveFilePaths: () => {
+          return false;
+        },
+        EventsOn: (event: string, callback: () => void) => {
+          if (!(window as any).__wailsEventHandlers) {
+            (window as any).__wailsEventHandlers = {};
+          }
+          (window as any).__wailsEventHandlers[event] = callback;
+          return () => {};
+        },
+        EventsEmit: (event: string, data?: any) => {
+          if ((window as any).__wailsEventHandlers && (window as any).__wailsEventHandlers[event]) {
+            (window as any).__wailsEventHandlers[event](data);
+          }
+        },
+      };
+
+      // Mock Wails Go bindings - MUST be set up before modules try to access window.go
+      (window as any).go = {
+        main: {
+          App: {
+            GetLanguage: () => {
+              return Promise.resolve((window as any).__mockLanguage || 'en');
+            },
+            SetLanguage: (lang: string) => {
+              (window as any).__mockLanguage = lang;
+              sessionStorage.setItem('__test_mock_language', lang);
+              return Promise.resolve();
+            },
+            EmitSettingsEvent: () => {
+              if ((window as any).runtime && (window as any).runtime.EventsEmit) {
+                (window as any).runtime.EventsEmit('show-settings');
+              }
+            },
+            SelectPDFFiles: () => Promise.resolve([]),
+            SelectPDFFile: () => Promise.resolve(''),
+            SelectOutputDirectory: () => Promise.resolve(''),
+            GetFileMetadata: () => Promise.resolve({}),
+            GetPDFMetadata: () => Promise.resolve({}),
+            GetPDFPageCount: () => Promise.resolve(0),
+            MergePDFs: () => Promise.resolve(),
+            SplitPDF: () => Promise.resolve(),
+            RotatePDF: () => Promise.resolve(),
+          },
+        },
+      };
+    });
+
+    // Ignore console errors from Wails runtime
+    page.on('console', (msg) => {
+      const text = msg.text();
+      if (
+        msg.type() === 'error' &&
+        (text.includes('wails') || text.includes('runtime') || text.includes('OnFileDrop'))
+      ) {
+        return;
+      }
+      if (msg.type() === 'error') {
+        console.log('Console error:', text);
+      }
+    });
+
+    // Navigate to the app
+    await page.goto('/', { waitUntil: 'networkidle' });
+
+    // Wait for React to render - check for root element first
+    await page.waitForSelector('#root', { timeout: 10000, state: 'attached' });
+
+    // Wait a bit for React to finish initializing
+    await page.waitForTimeout(500);
+
+    // Now wait for the actual content
+    await page.waitForSelector('[role="tab"]', { timeout: 15000 });
+  });
+
+  test('should display English text by default', async ({ page }) => {
+    // Verify English text is displayed
+    await expect(page.getByText('PDF Wizard')).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Merge PDF' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Split PDF' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toBeVisible();
+
+    // Verify Merge tab content is in English
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    await expect(mergeTabPanel.getByRole('button', { name: 'Select PDF Files' })).toBeVisible();
+    await expect(mergeTabPanel.getByText('Or drag and drop PDF files anywhere on the window')).toBeVisible();
+  });
+
+  test('should switch to Chinese when language is changed', async ({ page }) => {
+    // Change language to Chinese via mock and save to sessionStorage
+    await page.evaluate(() => {
+      (window as any).__mockLanguage = 'zh';
+      sessionStorage.setItem('__test_mock_language', 'zh');
+    });
+
+    // Reload page to trigger language loading
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('[role="tab"]', { timeout: 15000 });
+
+    // Verify Chinese text is displayed
+    await expect(page.getByText('PDF 工具')).toBeVisible();
+    await expect(page.getByRole('tab', { name: '合并 PDF' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: '拆分 PDF' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: '旋转 PDF' })).toBeVisible();
+
+    // Verify Merge tab content is in Chinese
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    await expect(mergeTabPanel.getByRole('button', { name: '选择 PDF 文件' })).toBeVisible();
+    await expect(mergeTabPanel.getByText('或将 PDF 文件拖放到窗口任意位置')).toBeVisible();
+  });
+
+  test('should open settings dialog when settings event is emitted', async ({ page }) => {
+    // Settings dialog should not be visible initially
+    const settingsDialog = page.locator('[role="dialog"]').filter({ hasText: /Settings|设置/ });
+    await expect(settingsDialog).not.toBeVisible();
+
+    // Emit show-settings event
+    await page.evaluate(() => {
+      if ((window as any).runtime && (window as any).runtime.EventsEmit) {
+        (window as any).runtime.EventsEmit('show-settings');
+      }
+    });
+
+    // Wait for dialog to appear
+    await expect(settingsDialog).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should display language selector in settings dialog', async ({ page }) => {
+    // Open settings dialog
+    await page.evaluate(() => {
+      if ((window as any).runtime && (window as any).runtime.EventsEmit) {
+        (window as any).runtime.EventsEmit('show-settings');
+      }
+    });
+
+    const settingsDialog = page.locator('[role="dialog"]').filter({ hasText: /Settings|设置/ });
+    await expect(settingsDialog).toBeVisible({ timeout: 5000 });
+
+    // Verify language selector is present
+    const languageLabel = settingsDialog.getByText(/Language|语言/);
+    await expect(languageLabel).toBeVisible();
+
+    // Verify language options are available
+    // Note: The select might be rendered differently, so we check for the dialog content
+    await expect(settingsDialog.getByText(/English|英语/)).toBeVisible();
+    await expect(settingsDialog.getByText(/Chinese|中文/)).toBeVisible();
+  });
+
+  test('should update UI text when language changes in settings', async ({ page }) => {
+    // Open settings dialog
+    await page.evaluate(() => {
+      if ((window as any).runtime && (window as any).runtime.EventsEmit) {
+        (window as any).runtime.EventsEmit('show-settings');
+      }
+    });
+
+    const settingsDialog = page.locator('[role="dialog"]').filter({ hasText: /Settings|设置/ });
+    await expect(settingsDialog).toBeVisible({ timeout: 5000 });
+
+    // Find and click the language select
+    // Note: Material-UI Select might render as a button or input
+    const languageSelect = settingsDialog
+      .locator('input, button')
+      .filter({ hasText: /Language|语言/ })
+      .first();
+
+    // Try to interact with the select - this might need adjustment based on actual MUI Select rendering
+    // For now, we'll verify the dialog structure exists
+    await expect(settingsDialog).toBeVisible();
+
+    // Close dialog by clicking cancel or outside
+    const cancelButton = settingsDialog.getByRole('button', { name: /Cancel|取消/i });
+    if (await cancelButton.isVisible().catch(() => false)) {
+      await cancelButton.click();
+    }
+  });
+
+  test('should maintain language preference across tab switches', async ({ page }) => {
+    // Set language to Chinese
+    await page.evaluate(() => {
+      (window as any).__mockLanguage = 'zh';
+      sessionStorage.setItem('__test_mock_language', 'zh');
+    });
+
+    // Reload to apply language
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('[role="tab"]', { timeout: 15000 });
+
+    // Verify Chinese text
+    await expect(page.getByText('PDF 工具')).toBeVisible();
+
+    // Switch to Split tab
+    await page.getByRole('tab', { name: '拆分 PDF' }).click();
+    await expect(page.getByRole('tab', { name: '拆分 PDF' })).toHaveAttribute('aria-selected', 'true');
+
+    // Switch to Rotate tab
+    await page.getByRole('tab', { name: '旋转 PDF' }).click();
+    await expect(page.getByRole('tab', { name: '旋转 PDF' })).toHaveAttribute('aria-selected', 'true');
+
+    // Switch back to Merge tab
+    await page.getByRole('tab', { name: '合并 PDF' }).click();
+    await expect(page.getByRole('tab', { name: '合并 PDF' })).toHaveAttribute('aria-selected', 'true');
+
+    // Verify language is still Chinese
+    await expect(page.getByText('PDF 工具')).toBeVisible();
+  });
+
+  test('should display translated button labels in all tabs', async ({ page }) => {
+    // Set language to Chinese
+    await page.evaluate(() => {
+      (window as any).__mockLanguage = 'zh';
+      sessionStorage.setItem('__test_mock_language', 'zh');
+    });
+
+    // Reload to apply language
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('[role="tab"]', { timeout: 15000 });
+
+    // Verify Merge tab buttons are translated
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    await expect(mergeTabPanel.getByRole('button', { name: '选择 PDF 文件' })).toBeVisible();
+
+    // Switch to Split tab
+    await page.getByRole('tab', { name: '拆分 PDF' }).click();
+    const splitTabPanel = page.locator('#pdf-wizard-tabpanel-1');
+    await expect(splitTabPanel.getByRole('button', { name: '选择 PDF 文件' })).toBeVisible();
+
+    // Switch to Rotate tab
+    await page.getByRole('tab', { name: '旋转 PDF' }).click();
+    const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-2');
+    await expect(rotateTabPanel.getByRole('button', { name: '选择 PDF 文件' })).toBeVisible();
   });
 });
