@@ -22,8 +22,21 @@ fi
 echo "Building universal binary..."
 wails build -platform darwin/universal
 
+# Wails creates the bundle with the 'name' field from wails.json (pdf_wizard.app)
+# We need to rename it to "PDF Wizard.app" for proper display name
 if [ ! -d "$BUILD_DIR/pdf_wizard.app" ]; then
     echo "❌ Build failed: pdf_wizard.app not found"
+    exit 1
+fi
+
+# Rename the bundle to "PDF Wizard.app" for proper display in Applications folder
+if [ -d "$BUILD_DIR/pdf_wizard.app" ]; then
+    echo "Renaming app bundle to 'PDF Wizard.app'..."
+    mv "$BUILD_DIR/pdf_wizard.app" "$BUILD_DIR/PDF Wizard.app"
+fi
+
+if [ ! -d "$BUILD_DIR/PDF Wizard.app" ]; then
+    echo "❌ Failed to rename app bundle"
     exit 1
 fi
 
@@ -34,12 +47,12 @@ mkdir -p "$OUTPUT_DIR"
 
 # Remove quarantine attributes
 echo "Removing quarantine attributes..."
-xattr -cr "$BUILD_DIR/pdf_wizard.app"
+xattr -cr "$BUILD_DIR/PDF Wizard.app"
 
 # Create ZIP archive
 echo "Creating ZIP archive..."
 cd "$BUILD_DIR"
-zip -r "$OUTPUT_DIR/pdf_wizard-macos-universal.zip" pdf_wizard.app
+zip -r "$OUTPUT_DIR/pdf_wizard-macos-universal.zip" "PDF Wizard.app"
 echo "✅ Created: $OUTPUT_DIR/pdf_wizard-macos-universal.zip"
 
 # Create DMG with Applications folder (professional installer)
@@ -51,7 +64,7 @@ if command -v hdiutil &> /dev/null; then
     trap "rm -rf '$DMG_TEMP_DIR'" EXIT
     
     # Copy app to temp directory
-    cp -R "$BUILD_DIR/pdf_wizard.app" "$DMG_TEMP_DIR/"
+    cp -R "$BUILD_DIR/PDF Wizard.app" "$DMG_TEMP_DIR/"
     
     # Create Applications folder link (symbolic link)
     ln -s /Applications "$DMG_TEMP_DIR/Applications"
@@ -79,14 +92,14 @@ PDF Wizard - Installation Instructions
 
 QUICK START (DMG):
 1. Double-click the DMG file to mount it
-2. Drag pdf_wizard.app to the Applications folder (shown in the DMG window)
+2. Drag PDF Wizard.app to the Applications folder (shown in the DMG window)
 3. Open Applications folder and launch PDF Wizard
 4. On first launch: Right-click → Open → Click "Open" to bypass security warning
 
 QUICK START (ZIP):
 1. Extract the ZIP file
-2. Right-click pdf_wizard.app → Open → Click "Open"
-3. Or run in Terminal: xattr -cr pdf_wizard.app
+2. Right-click PDF Wizard.app → Open → Click "Open"
+3. Or run in Terminal: xattr -cr "PDF Wizard.app"
 
 SYSTEM REQUIREMENTS:
 - macOS 10.13 or later
@@ -95,7 +108,7 @@ SYSTEM REQUIREMENTS:
 TROUBLESHOOTING:
 If you see "App is damaged and can't be opened":
 1. Right-click the app → Open → Click "Open"
-2. Or run: xattr -cr pdf_wizard.app
+2. Or run: xattr -cr "PDF Wizard.app"
 
 If the app won't run:
 1. Check System Settings → Privacy & Security

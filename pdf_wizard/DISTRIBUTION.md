@@ -20,14 +20,14 @@ Or build for a specific architecture:
 
 ### Step 2: Prepare for Distribution
 
-The built app will be in `build/bin/pdf_wizard.app`. To make it portable:
+The built app will be in `build/bin/PDF Wizard.app`. To make it portable:
 
 #### Option A: Remove Quarantine Attributes (Recommended for Personal Use)
 
 On the target machine, after copying the app, run:
 
 ```bash
-xattr -cr /path/to/pdf_wizard.app
+xattr -cr "/path/to/PDF Wizard.app"
 ```
 
 Then open it normally.
@@ -44,21 +44,21 @@ For distribution to other users, you should code sign the app:
 2. **Sign the app:**
 
    ```bash
-   codesign --deep --force --verify --verbose --sign "Developer ID Application: Your Name" build/bin/pdf_wizard.app
+   codesign --deep --force --verify --verbose --sign "Developer ID Application: Your Name" "build/bin/PDF Wizard.app"
    ```
 
 3. **Verify signing:**
    ```bash
-   codesign --verify --verbose build/bin/pdf_wizard.app
+   codesign --verify --verbose "build/bin/PDF Wizard.app"
    ```
 
 ## Distribution Methods
 
 ### Method 1: Direct .app Bundle (Simplest)
 
-1. Copy `build/bin/pdf_wizard.app` to the target machine
+1. Copy `build/bin/PDF Wizard.app` to the target machine
 2. Right-click the app → Open → Click "Open" to bypass security warning
-3. Or run: `xattr -cr pdf_wizard.app` then double-click
+3. Or run: `xattr -cr "PDF Wizard.app"` then double-click
 
 ### Method 2: Create a Disk Image (.dmg)
 
@@ -67,7 +67,7 @@ Create a professional-looking DMG file with Applications folder:
 ```bash
 # Create temporary directory
 DMG_TEMP=$(mktemp -d)
-cp -R build/bin/pdf_wizard.app "$DMG_TEMP/"
+cp -R "build/bin/PDF Wizard.app" "$DMG_TEMP/"
 ln -s /Applications "$DMG_TEMP/Applications"
 
 # Create DMG
@@ -96,7 +96,7 @@ Simple compression:
 
 ```bash
 cd build/bin
-zip -r pdf_wizard.zip pdf_wizard.app
+zip -r pdf_wizard.zip "PDF Wizard.app"
 ```
 
 Users extract and run the app.
@@ -110,7 +110,7 @@ This is a macOS security feature. Solutions:
 1. **Remove quarantine (quick fix):**
 
    ```bash
-   xattr -cr pdf_wizard.app
+   xattr -cr "PDF Wizard.app"
    ```
 
 2. **Right-click → Open (first time only):**
@@ -137,7 +137,7 @@ wails build -platform darwin/universal
 Ensure all resources are embedded:
 
 - Check `wails.json` configuration
-- Verify `build/bin/pdf_wizard.app/Contents/Resources/` contains necessary files
+- Verify `build/bin/PDF Wizard.app/Contents/Resources/` contains necessary files
 
 ## Best Practices
 

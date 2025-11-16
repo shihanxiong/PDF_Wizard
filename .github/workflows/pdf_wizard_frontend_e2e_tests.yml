@@ -4,12 +4,12 @@ on:
   push:
     branches: ['master', 'main']
     paths:
-      - 'pdf_wizard/frontend/**'
+      - 'pdf_wizard/**'
       - '.github/workflows/pdf_wizard_frontend_e2e_tests.yml'
   pull_request:
     branches: ['master', 'main']
     paths:
-      - 'pdf_wizard/frontend/**'
+      - 'pdf_wizard/**'
       - '.github/workflows/pdf_wizard_frontend_e2e_tests.yml'
 
 permissions:
