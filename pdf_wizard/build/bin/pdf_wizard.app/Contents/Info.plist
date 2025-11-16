@@ -5,8 +5,10 @@
         <string>APPL</string>
         <key>CFBundleName</key>
         <string>PDF Wizard</string>
+        <key>CFBundleDisplayName</key>
+        <string>PDF Wizard</string>
         <key>CFBundleExecutable</key>
-        <string>pdf_wizard</string>
+        <string>PDF Wizard</string>
         <key>CFBundleIdentifier</key>
         <string>com.wails.pdf_wizard</string>
         <key>CFBundleVersion</key>
@@ -25,5 +27,10 @@
         <string>Copyright © 2024</string>
         
         
+        <key>NSAppTransportSecurity</key>
+        <dict>
+            <key>NSAllowsLocalNetworking</key>
+            <true/>
+        </dict>
     </dict>
 </plist>
