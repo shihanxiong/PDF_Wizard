@@ -2,16 +2,27 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"os"
+	"path/filepath"
 
 	"pdf_wizard/models"
 	"pdf_wizard/services"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct acts as a thin wrapper around services for Wails binding
 type App struct {
+	ctx         context.Context
 	fileService *services.FileService
 	pdfService  *services.PDFService
 }
+
+const (
+	configFileName  = "pdf_wizard_config.json"
+	defaultLanguage = "en"
+)
 
 // NewApp creates a new App application struct
 func NewApp() *App {
@@ -21,12 +32,86 @@ func NewApp() *App {
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
+	// Save context for runtime operations
+	a.ctx = ctx
+
 	// Initialize services with context
 	fileService := services.NewFileService(ctx)
 	pdfService := services.NewPDFService(fileService)
 
 	a.fileService = fileService
 	a.pdfService = pdfService
+}
+
+// EmitSettingsEvent emits an event to show the settings dialog
+func (a *App) EmitSettingsEvent() {
+	if a.ctx != nil {
+		runtime.EventsEmit(a.ctx, "show-settings")
+	}
+}
+
+// getConfigPath returns the path to the config file
+func (a *App) getConfigPath() (string, error) {
+	userConfigDir, err := os.UserConfigDir()
+	if err != nil {
+		return "", err
+	}
+	configDir := filepath.Join(userConfigDir, "PDF Wizard")
+	// Create directory if it doesn't exist
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return "", err
+	}
+	return filepath.Join(configDir, configFileName), nil
+}
+
+// Config represents the application configuration
+type Config struct {
+	Language string `json:"language"`
+}
+
+// GetLanguage returns the current language setting (default: "en")
+func (a *App) GetLanguage() (string, error) {
+	configPath, err := a.getConfigPath()
+	if err != nil {
+		return defaultLanguage, nil // Return default on error
+	}
+
+	// Read config file
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		// File doesn't exist, return default
+		return defaultLanguage, nil
+	}
+
+	var config Config
+	if err := json.Unmarshal(data, &config); err != nil {
+		return defaultLanguage, nil
+	}
+
+	if config.Language == "" {
+		return defaultLanguage, nil
+	}
+
+	return config.Language, nil
+}
+
+// SetLanguage saves the language preference
+func (a *App) SetLanguage(language string) error {
+	configPath, err := a.getConfigPath()
+	if err != nil {
+		return err
+	}
+
+	config := Config{
+		Language: language,
+	}
+
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(configPath, data, 0644)
 }
 
 // SelectPDFFiles opens a file dialog to select multiple PDF files

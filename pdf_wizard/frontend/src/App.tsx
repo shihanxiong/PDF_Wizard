@@ -4,8 +4,11 @@ import { Box, Tabs, Tab, AppBar, Toolbar, Typography } from '@mui/material';
 import { MergeTab } from './components/MergeTab';
 import { SplitTab } from './components/SplitTab';
 import { RotateTab } from './components/RotateTab';
+import { SettingsDialog } from './components/SettingsDialog';
 import logo from './assets/img/app_logo.png';
-import { OnFileDrop } from '../wailsjs/runtime/runtime';
+import { OnFileDrop, EventsOn } from '../wailsjs/runtime/runtime';
+import { GetLanguage, SetLanguage } from '../wailsjs/go/main/App';
+import { t, setLanguage, type Language } from './utils/i18n';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -32,10 +35,39 @@ function TabPanel(props: TabPanelProps) {
 
 export const App = () => {
   const [tabValue, setTabValue] = useState(0);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [, forceUpdate] = useState({});
   const tabValueRef = useRef(0);
   const mergeTabDropHandler = useRef<((paths: string[]) => void) | null>(null);
   const splitTabDropHandler = useRef<((paths: string[]) => void) | null>(null);
   const rotateTabDropHandler = useRef<((paths: string[]) => void) | null>(null);
+
+  // Load language on startup
+  useEffect(() => {
+    const loadLanguage = async () => {
+      try {
+        const lang = await GetLanguage();
+        const language = (lang === 'zh' ? 'zh' : 'en') as Language;
+        setLanguage(language);
+        forceUpdate({}); // Force re-render to update UI
+      } catch (err) {
+        console.error('Failed to load language:', err);
+      }
+    };
+    loadLanguage();
+  }, []);
+
+  // Listen for settings event from menu
+  useEffect(() => {
+    const unsubscribe = EventsOn('show-settings', () => {
+      setSettingsOpen(true);
+    });
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, []);
 
   // Update ref when tab changes
   useEffect(() => {
@@ -95,6 +127,11 @@ export const App = () => {
     setTabValue(newValue);
   };
 
+  const handleLanguageChange = (language: Language) => {
+    setLanguage(language);
+    forceUpdate({}); // Force re-render to update all translated text
+  };
+
   return (
     <Box id="App" sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
       <AppBar position="static" sx={{ bgcolor: 'background.paper', color: 'text.primary', boxShadow: 1 }}>
@@ -102,14 +139,14 @@ export const App = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', mr: 3 }}>
             <img src={logo} alt="PDF Wizard Logo" style={{ height: '40px', width: '40px', marginRight: '12px' }} />
             <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
-              PDF Wizard
+              {t('appTitle')}
             </Typography>
           </Box>
           <Box sx={{ flexGrow: 1 }}>
             <Tabs value={tabValue} onChange={handleTabChange} aria-label="PDF Wizard tabs" sx={{ minHeight: 'auto' }}>
-              <Tab label="Merge PDF" id="pdf-wizard-tab-0" aria-controls="pdf-wizard-tabpanel-0" />
-              <Tab label="Split PDF" id="pdf-wizard-tab-1" aria-controls="pdf-wizard-tabpanel-1" />
-              <Tab label="Rotate PDF" id="pdf-wizard-tab-2" aria-controls="pdf-wizard-tabpanel-2" />
+              <Tab label={t('mergeTab')} id="pdf-wizard-tab-0" aria-controls="pdf-wizard-tabpanel-0" />
+              <Tab label={t('splitTab')} id="pdf-wizard-tab-1" aria-controls="pdf-wizard-tabpanel-1" />
+              <Tab label={t('rotateTab')} id="pdf-wizard-tab-2" aria-controls="pdf-wizard-tabpanel-2" />
             </Tabs>
           </Box>
         </Toolbar>
@@ -125,6 +162,11 @@ export const App = () => {
           <RotateTab onFileDrop={(handler: (paths: string[]) => void) => (rotateTabDropHandler.current = handler)} />
         </TabPanel>
       </Box>
+      <SettingsDialog
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onLanguageChange={handleLanguageChange}
+      />
     </Box>
   );
 };

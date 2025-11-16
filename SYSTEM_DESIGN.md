@@ -14,6 +14,7 @@ PDF Wizard is a desktop application built with Wails v2 that provides PDF manipu
 - **Build Tool**: Wails CLI
 - **UI Framework**: Material-UI
 - **Drag and Drop**: `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities` for file reordering (replaced deprecated react-beautiful-dnd)
+- **Internationalization**: Custom i18n system supporting English and Chinese (Simplified)
 
 ### Project Structure
 
@@ -32,9 +33,12 @@ pdf_wizard/
 │   │   ├── components/    # React components
 │   │   │   ├── MergeTab.tsx
 │   │   │   ├── SplitTab.tsx
-│   │   │   └── RotateTab.tsx
+│   │   │   ├── RotateTab.tsx
+│   │   │   └── SettingsDialog.tsx
 │   │   ├── types/         # TypeScript type definitions
-│   │   └── utils/         # Utility functions (formatters)
+│   │   └── utils/         # Utility functions
+│   │       ├── formatters.ts
+│   │       └── i18n.ts    # Internationalization utilities
 │   └── wailsjs/           # Auto-generated Wails bindings
 └── go.mod                  # Go dependencies
 ```
@@ -69,6 +73,85 @@ Drag and drop file handling is implemented at the App level to work anywhere on 
 - The handler routes dropped files to the appropriate tab based on the currently active tab
 - Each tab component registers its own drop handler via a callback prop
 - Browser default drag-and-drop behavior is prevented to avoid PDF preview
+
+### Internationalization (i18n)
+
+The application supports multiple languages through a custom internationalization system:
+
+- **Supported Languages**: English (en) and Chinese Simplified (zh)
+- **Language Selection**: Available through the Settings dialog (accessible via menu bar)
+- **Language Persistence**: User's language preference is saved to a configuration file in the user's config directory
+- **Translation System**: All UI text uses translation keys accessed via the `t()` function from `utils/i18n.ts`
+- **Dynamic Updates**: UI updates immediately when language is changed
+- **Default Language**: English (en) is the default if no preference is set
+
+#### Settings Dialog
+
+- Accessible via the "Settings" menu item in the application menu bar
+- Allows users to select between English and Chinese
+- Changes are saved immediately and persist across application restarts
+- Uses Material-UI Dialog component for consistent UI
+- Language preference is loaded on application startup
+- Frontend listens for "show-settings" event from backend to open dialog
+
+#### Menu Configuration
+
+The application menu is configured in `main.go`:
+
+```go
+// Create menu with AppMenu (includes "About PDF Wizard" automatically)
+appMenu := menu.NewMenu()
+appMenu.Append(menu.AppMenu())
+
+// Add Settings menu item
+settingsSubMenu := menu.NewMenu()
+settingsSubMenu.Append(menu.Text("Settings", nil, func(_ *menu.CallbackData) {
+    // Emit event to frontend to show settings dialog
+    app.EmitSettingsEvent()
+}))
+appMenu.Append(menu.SubMenu("Settings", settingsSubMenu))
+
+appMenu.Append(menu.EditMenu())
+appMenu.Append(menu.WindowMenu())
+```
+
+- Settings menu item triggers `EmitSettingsEvent()` which emits a "show-settings" event
+- Frontend listens for this event using `EventsOn('show-settings', ...)` and opens the Settings dialog
+- Menu is native on macOS (appears in the menu bar at the top of the screen)
+
+#### Configuration File
+
+Language preference is stored in a JSON configuration file:
+
+- **Location**: `<UserConfigDir>/PDF Wizard/pdf_wizard_config.json`
+  - On macOS: `~/Library/Application Support/PDF Wizard/pdf_wizard_config.json`
+  - On Windows: `%AppData%\PDF Wizard\pdf_wizard_config.json`
+  - On Linux: `~/.config/PDF Wizard/pdf_wizard_config.json`
+- **Structure**:
+  ```json
+  {
+    "language": "en"
+  }
+  ```
+- **Default**: If the file doesn't exist or is invalid, the default language is "en" (English)
+- **Persistence**: The config directory is created automatically if it doesn't exist
+
+#### i18n Implementation
+
+The internationalization system is implemented in `frontend/src/utils/i18n.ts`:
+
+- **Translation Keys**: All UI text is accessed via the `t(key)` function
+- **Supported Languages**: English (`en`) and Chinese Simplified (`zh`)
+- **Translation Object**: Contains all translatable strings organized by feature area
+- **Language State**: Current language is stored in a module-level variable
+- **Functions**:
+  - `t(key)`: Returns translated string for current language
+  - `setLanguage(lang)`: Sets the current language
+  - `getLanguage()`: Returns the current language
+  - `getTranslations()`: Returns all translations for current language
+- **Usage in Components**: All tab components import and use `t()` for UI text
+- **Language Loading**: On app startup, `GetLanguage()` is called to load saved preference
+- **Dynamic Updates**: When language changes, components re-render to show new translations
 
 ## Merge PDFs Tab - Detailed Design
 
@@ -158,6 +241,11 @@ interface MergeTabState {
 #### Go Methods (bound to frontend)
 
 ```go
+// Language settings
+GetLanguage() (string, error)                   // Returns current language preference ("en" or "zh")
+SetLanguage(language string) error             // Saves language preference to config file
+EmitSettingsEvent()                             // Emits event to show settings dialog
+
 // File selection and metadata
 SelectPDFFiles() ([]string, error)              // Opens file dialog, returns paths
 GetFileMetadata(path string) (PDFMetadata, error)  // Gets file info (TotalPages=0 for merge operations)
@@ -316,6 +404,7 @@ type PDFMetadata struct {
 - Material-UI: `Box`, `Button`, `Typography`, `TextField`, `Paper`, `Alert`, `CircularProgress`, `IconButton`, `List`, `ListItem`
 - Icons: `DeleteIcon`, `DragIndicatorIcon`, `CloudUploadIcon`, `FolderIcon`
 - Utilities: `formatFileSize()`, `formatDate()`, `convertToSelectedFile()` from `utils/formatters`
+- Internationalization: `t()` function from `utils/i18n` for all UI text
 
 **State Management:**
 
@@ -485,17 +574,42 @@ func (s *PDFService) RotatePDF(inputPath string, rotations []models.RotateDefini
 ```go
 // App struct acts as a thin wrapper around services for Wails binding
 type App struct {
+    ctx         context.Context
     fileService *services.FileService
     pdfService  *services.PDFService
 }
 
+const (
+    configFileName  = "pdf_wizard_config.json"
+    defaultLanguage = "en"
+)
+
 func (a *App) startup(ctx context.Context) {
+    // Save context for runtime operations
+    a.ctx = ctx
+
     // Initialize services with context
     fileService := services.NewFileService(ctx)
     pdfService := services.NewPDFService(fileService)
 
     a.fileService = fileService
     a.pdfService = pdfService
+}
+
+// Language management
+func (a *App) GetLanguage() (string, error) {
+    // Reads language preference from config file in user config directory
+    // Returns "en" or "zh", defaults to "en" if not set
+}
+
+func (a *App) SetLanguage(language string) error {
+    // Saves language preference to config file
+    // Config file location: <UserConfigDir>/PDF Wizard/pdf_wizard_config.json
+}
+
+func (a *App) EmitSettingsEvent() {
+    // Emits "show-settings" event to frontend to open settings dialog
+    runtime.EventsEmit(a.ctx, "show-settings")
 }
 
 // All methods delegate to services
@@ -649,6 +763,7 @@ interface SplitTabState {
   - Disable inputs during processing
 - Maximum of 10 splits allowed
 - Disable "Add Split" button when maximum reached
+- All UI text uses translation keys from `utils/i18n`
 
 ### Backend API Design
 
@@ -808,6 +923,15 @@ type SplitDefinition struct {
 
 #### Frontend Implementation
 
+**Key Implementation Details:**
+
+- Uses `onFileDrop` prop callback to register drag-and-drop handler with App component
+- Split removal and editing handled entirely in frontend state
+- Error and success messages displayed using Material-UI `Alert` components
+- Splits list rendered in scrollable `Card` components
+- Button shows `CircularProgress` spinner during processing
+- All UI text uses translation keys from `utils/i18n` for internationalization
+
 ```typescript
 // SplitTab.tsx structure
 import { useState, useMemo } from 'react';
@@ -816,6 +940,7 @@ import { OnFileDrop } from '../wailsjs/runtime/runtime';
 import { Button, Box, TextField, Typography, IconButton, Card, CardContent } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { t } from '../utils/i18n';
 
 const MAX_SPLITS = 10;
 
@@ -1441,12 +1566,14 @@ type RotateDefinition struct {
 - Rotations list rendered in scrollable `Paper` component
 - Button shows `CircularProgress` spinner during processing
 - PDF cleared, rotations cleared, and filename reset after successful rotation
+- All UI text uses translation keys from `utils/i18n` for internationalization
 
 **Main Components Used:**
 
 - Material-UI: `Box`, `Button`, `Typography`, `TextField`, `Paper`, `Alert`, `CircularProgress`, `IconButton`, `Card`, `CardContent`, `Select`, `MenuItem`, `FormControl`, `InputLabel`
 - Icons: `DeleteIcon`, `AddIcon`, `CloudUploadIcon`, `FolderIcon`
 - Utilities: `formatFileSize()`, `formatDate()` from `utils/formatters`
+- Internationalization: `t()` function from `utils/i18n` for all UI text
 
 **State Management:**
 
@@ -1606,8 +1733,10 @@ func copyFile(src, dst string) error {
 
 - `github.com/wailsapp/wails/v2` - Wails framework
 - `github.com/wailsapp/wails/v2/pkg/runtime` - File dialogs and runtime operations
+- `github.com/wailsapp/wails/v2/pkg/menu` - Application menu
 - `github.com/pdfcpu/pdfcpu/pkg/api` - PDF processing library
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model` - Configuration models
+- Standard library: `encoding/json`, `os`, `path/filepath` - For configuration management
 
 **Frontend:**
 
@@ -1616,6 +1745,7 @@ func copyFile(src, dst string) error {
 - TypeScript
 - Wails runtime bindings
 - `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities` - For drag-and-drop file reordering (replaced deprecated react-beautiful-dnd)
+- Custom i18n system (`utils/i18n.ts`) - For internationalization
 
 ### Error Handling
 
@@ -1698,3 +1828,7 @@ func copyFile(src, dst string) error {
 - Service-based architecture for separation of concerns
 - pdfcpu library for all PDF processing operations (merge, split, rotate)
 - @dnd-kit library for drag-and-drop file reordering in Merge tab (modern replacement for deprecated react-beautiful-dnd)
+- Custom i18n system for internationalization (English and Chinese Simplified)
+- Language preference stored in JSON config file: `<UserConfigDir>/PDF Wizard/pdf_wizard_config.json`
+- Settings accessible via application menu bar (native menu on macOS)
+- Wails Events API used for communication between menu and frontend (show-settings event)
