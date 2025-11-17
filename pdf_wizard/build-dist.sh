@@ -157,6 +157,11 @@ elif [ "$OS" = "windows" ]; then
     # Create output directory
     mkdir -p "$OUTPUT_DIR"
     
+    # Copy standalone executable to dist with naming convention matching macOS
+    echo "Copying standalone executable to dist..."
+    cp "$BUILD_DIR/$EXE_NAME" "$OUTPUT_DIR/pdf_wizard-windows.exe"
+    echo "✅ Created: $OUTPUT_DIR/pdf_wizard-windows.exe"
+    
     # Check if NSIS installer was created
     NSIS_INSTALLER="$BUILD_DIR/PDF Wizard Installer.exe"
     if [ -f "$NSIS_INSTALLER" ]; then
@@ -189,6 +194,10 @@ elif [ "$OS" = "windows" ]; then
     cat > "$OUTPUT_DIR/README-Windows.txt" << 'EOF'
 PDF Wizard - Windows Installation Instructions
 ===============================================
+
+QUICK START (Standalone Executable):
+1. Double-click "pdf_wizard-windows.exe" to run
+2. No installation required - it's portable!
 
 QUICK START (Installer):
 1. Double-click "pdf_wizard-windows-installer.exe"
@@ -232,7 +241,8 @@ echo "Files created:"
 if [ "$OS" = "darwin" ]; then
     ls -lh "$OUTPUT_DIR" | tail -n +2 | grep -E "\.(dmg|zip|txt)$"
 elif [ "$OS" = "windows" ]; then
-    ls -lh "$OUTPUT_DIR" | tail -n +2 | grep -E "\.(exe|zip|txt)$"
+    # List Windows files: .exe (standalone and installer) and .zip
+    ls -lh "$OUTPUT_DIR" | tail -n +2 | grep -E "pdf_wizard-windows"
 fi
 echo ""
 echo "✅ Ready for distribution!"
