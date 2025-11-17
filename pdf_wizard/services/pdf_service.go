@@ -73,13 +73,27 @@ func (s *PDFService) MergePDFs(inputPaths []string, outputDirectory string, outp
 		}
 	}
 
+	// Validate each PDF can be read before attempting merge
+	// This helps identify which PDF has issues (e.g., invalid font encoding)
+	for i, path := range inputPaths {
+		_, err := api.ReadContextFile(path)
+		if err != nil {
+			// Extract filename for better error message
+			filename := filepath.Base(path)
+			return fmt.Errorf("PDF file %d (%s) has issues and cannot be processed: %w. This file may have invalid font encoding or be corrupted. Please try repairing the PDF or use a different file", i+1, filename, err)
+		}
+	}
+
 	// Use pdfcpu to merge PDFs
 	config := model.NewDefaultConfiguration()
-
 	// Merge the PDF files
 	// dividerPage: false means no divider pages between merged PDFs
 	err = api.MergeCreateFile(inputPaths, outputPath, false, config)
 	if err != nil {
+		// Provide more helpful error message for font encoding issues
+		if strings.Contains(err.Error(), "validateFontEncoding") || strings.Contains(err.Error(), "Encoding") {
+			return fmt.Errorf("failed to merge PDFs due to font encoding issues: %w. One or more PDFs may have invalid font encoding (e.g., NULL encoding). Please try repairing the problematic PDF(s) before merging", err)
+		}
 		return fmt.Errorf("failed to merge PDFs: %w", err)
 	}
 

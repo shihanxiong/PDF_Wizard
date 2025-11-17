@@ -65,7 +65,6 @@ const SortableFileItem = ({ file, index, onRemove }: SortableFileItemProps) => {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
       sx={{
         borderBottom: '1px solid',
         borderColor: 'divider',
@@ -73,10 +72,19 @@ const SortableFileItem = ({ file, index, onRemove }: SortableFileItemProps) => {
         display: 'flex',
         alignItems: 'center',
         p: 2,
-        cursor: isDragging ? 'grabbing' : 'grab',
       }}
     >
-      <Box sx={{ mr: 2, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>
+      {/* Drag handle - only this area is draggable */}
+      <Box
+        {...listeners}
+        sx={{
+          mr: 2,
+          display: 'flex',
+          alignItems: 'center',
+          cursor: isDragging ? 'grabbing' : 'grab',
+          touchAction: 'none',
+        }}
+      >
         <DragIndicatorIcon color="action" />
       </Box>
       <Box sx={{ mr: 2, minWidth: 40 }}>
@@ -99,6 +107,7 @@ const SortableFileItem = ({ file, index, onRemove }: SortableFileItemProps) => {
         edge="end"
         onClick={(e) => {
           e.stopPropagation();
+          e.preventDefault();
           onRemove();
         }}
         color="error"

@@ -29,6 +29,10 @@ test.describe('PDF Wizard E2E Tests', () => {
         OnFileDropOff: () => {
           return;
         },
+        WindowSetBackgroundColour: (R: number, G: number, B: number, A: number) => {
+          // Mock window background color setting
+          return;
+        },
         CanResolveFilePaths: () => {
           return false;
         },
@@ -402,6 +406,10 @@ test.describe('PDF Wizard i18n E2E Tests', () => {
           return;
         },
         OnFileDropOff: () => {
+          return;
+        },
+        WindowSetBackgroundColour: (R: number, G: number, B: number, A: number) => {
+          // Mock window background color setting
           return;
         },
         CanResolveFilePaths: () => {

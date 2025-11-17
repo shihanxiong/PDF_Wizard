@@ -1,11 +1,12 @@
 html {
-    /* background-color: rgba(27, 38, 54, 1); */
+    background-color: #ffffff;
     text-align: center;
     color: black;
 }
 
 body {
     margin: 0;
+    background-color: #ffffff;
     color: black;
     font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
     "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
@@ -20,7 +21,15 @@ body {
     url("assets/fonts/nunito-v16-latin-regular.woff2") format("woff2");
 }
 
+#root {
+    height: 100vh;
+    background-color: #ffffff;
+    /* Ensure root can receive drag and drop events */
+    position: relative;
+}
+
 #app {
     height: 100vh;
     text-align: center;
+    background-color: #ffffff;
 }

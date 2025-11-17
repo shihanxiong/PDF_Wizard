@@ -100,9 +100,9 @@ Pre-built installers are available in the [`pdf_wizard/dist/`](https://github.co
 
 ## Prerequisites
 
-- Go 1.21 or higher
-- Node.js 20+ and npm (Vite 7 requires Node.js 20.19+ or 22.12+)
-- Wails CLI v2.8.1 or higher
+- **Go 1.24.0** (specified in `go.mod`)
+- **Node.js 22.21.1** (required by the project)
+- **Wails CLI v2.11.0** (matches `github.com/wailsapp/wails/v2 v2.11.0` in `go.mod`)
 
 ## Quick Start
 
@@ -133,9 +133,9 @@ If you prefer to install dependencies manually:
    go install github.com/wailsapp/wails/v2/cmd/wails@latest
    ```
 
-3. **Verify Node.js**: Ensure Node.js 20+ is installed:
+3. **Verify Node.js**: Ensure Node.js 22.21.1 is installed:
    ```bash
-   node --version
+   node --version  # Should show v22.21.1
    npm --version
    ```
 
@@ -378,8 +378,8 @@ To add a new language:
 
 ### Backend
 
-- **Go 1.21+**: High-performance backend services
-- **Wails v2**: Desktop application framework
+- **Go 1.24.0**: High-performance backend services
+- **Wails v2.11.0**: Desktop application framework
 - **pdfcpu**: PDF manipulation library for merging, splitting, and rotating
 - **JSON Config**: Language preference stored in user config directory
 
