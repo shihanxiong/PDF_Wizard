@@ -1171,3 +1171,231 @@ func TestRotatePDF_OverwriteExisting(t *testing.T) {
 		t.Error("Output file does not appear to be a valid PDF after overwrite")
 	}
 }
+
+// Language Management Tests
+
+func TestGetLanguage_DefaultWhenNoConfig(t *testing.T) {
+	app := NewApp()
+	app.startup(context.Background())
+
+	// Get the config path
+	configPath, err := app.getConfigPath()
+	if err != nil {
+		t.Fatalf("getConfigPath failed: %v", err)
+	}
+
+	// Remove config file if it exists
+	os.Remove(configPath)
+
+	// Test GetLanguage should return default
+	language, err := app.GetLanguage()
+	if err != nil {
+		t.Fatalf("GetLanguage failed: %v", err)
+	}
+
+	if language != defaultLanguage {
+		t.Errorf("Expected default language '%s', got '%s'", defaultLanguage, language)
+	}
+}
+
+func TestGetLanguage_ExistingConfig(t *testing.T) {
+	app := NewApp()
+	app.startup(context.Background())
+
+	// Set language first
+	err := app.SetLanguage("zh")
+	if err != nil {
+		t.Fatalf("SetLanguage failed: %v", err)
+	}
+
+	// Test GetLanguage should return the saved language
+	language, err := app.GetLanguage()
+	if err != nil {
+		t.Fatalf("GetLanguage failed: %v", err)
+	}
+
+	if language != "zh" {
+		t.Errorf("Expected language 'zh', got '%s'", language)
+	}
+
+	// Clean up: reset to default
+	app.SetLanguage(defaultLanguage)
+}
+
+func TestSetLanguage_SaveAndRead(t *testing.T) {
+	app := NewApp()
+	app.startup(context.Background())
+
+	// Test setting to Chinese
+	err := app.SetLanguage("zh")
+	if err != nil {
+		t.Fatalf("SetLanguage failed: %v", err)
+	}
+
+	// Verify it was saved
+	language, err := app.GetLanguage()
+	if err != nil {
+		t.Fatalf("GetLanguage failed: %v", err)
+	}
+
+	if language != "zh" {
+		t.Errorf("Expected language 'zh', got '%s'", language)
+	}
+
+	// Test setting back to English
+	err = app.SetLanguage("en")
+	if err != nil {
+		t.Fatalf("SetLanguage failed: %v", err)
+	}
+
+	// Verify it was saved
+	language, err = app.GetLanguage()
+	if err != nil {
+		t.Fatalf("GetLanguage failed: %v", err)
+	}
+
+	if language != "en" {
+		t.Errorf("Expected language 'en', got '%s'", language)
+	}
+}
+
+func TestGetLanguage_InvalidConfigFile(t *testing.T) {
+	app := NewApp()
+	app.startup(context.Background())
+
+	// Get the config path
+	configPath, err := app.getConfigPath()
+	if err != nil {
+		t.Fatalf("getConfigPath failed: %v", err)
+	}
+
+	// Ensure config directory exists
+	configDir := filepath.Dir(configPath)
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		t.Fatalf("Failed to create config directory: %v", err)
+	}
+
+	// Write invalid JSON to config file
+	invalidJSON := []byte("{ invalid json }")
+	if err := os.WriteFile(configPath, invalidJSON, 0644); err != nil {
+		t.Fatalf("Failed to write invalid config: %v", err)
+	}
+
+	// Test GetLanguage should return default when config is invalid
+	language, err := app.GetLanguage()
+	if err != nil {
+		t.Fatalf("GetLanguage failed: %v", err)
+	}
+
+	if language != defaultLanguage {
+		t.Errorf("Expected default language '%s' for invalid config, got '%s'", defaultLanguage, language)
+	}
+
+	// Clean up
+	os.Remove(configPath)
+}
+
+func TestGetLanguage_EmptyLanguageInConfig(t *testing.T) {
+	app := NewApp()
+	app.startup(context.Background())
+
+	// Get the config path
+	configPath, err := app.getConfigPath()
+	if err != nil {
+		t.Fatalf("getConfigPath failed: %v", err)
+	}
+
+	// Ensure config directory exists
+	configDir := filepath.Dir(configPath)
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		t.Fatalf("Failed to create config directory: %v", err)
+	}
+
+	// Write config with empty language
+	emptyConfig := []byte(`{"language": ""}`)
+	if err := os.WriteFile(configPath, emptyConfig, 0644); err != nil {
+		t.Fatalf("Failed to write empty language config: %v", err)
+	}
+
+	// Test GetLanguage should return default when language is empty
+	language, err := app.GetLanguage()
+	if err != nil {
+		t.Fatalf("GetLanguage failed: %v", err)
+	}
+
+	if language != defaultLanguage {
+		t.Errorf("Expected default language '%s' for empty language config, got '%s'", defaultLanguage, language)
+	}
+
+	// Clean up
+	os.Remove(configPath)
+}
+
+func TestSetLanguage_CreatesConfigDirectory(t *testing.T) {
+	app := NewApp()
+	app.startup(context.Background())
+
+	// Get the config path
+	configPath, err := app.getConfigPath()
+	if err != nil {
+		t.Fatalf("getConfigPath failed: %v", err)
+	}
+
+	// Remove config file and directory if they exist
+	configDir := filepath.Dir(configPath)
+	os.RemoveAll(configDir)
+
+	// Test SetLanguage should create the directory
+	err = app.SetLanguage("zh")
+	if err != nil {
+		t.Fatalf("SetLanguage failed: %v", err)
+	}
+
+	// Verify directory was created
+	if _, err := os.Stat(configDir); os.IsNotExist(err) {
+		t.Error("Config directory was not created")
+	}
+
+	// Verify config file was created
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		t.Error("Config file was not created")
+	}
+
+	// Clean up
+	os.RemoveAll(configDir)
+}
+
+func TestSetLanguage_OverwritesExistingConfig(t *testing.T) {
+	app := NewApp()
+	app.startup(context.Background())
+
+	// Set language to Chinese
+	err := app.SetLanguage("zh")
+	if err != nil {
+		t.Fatalf("SetLanguage failed: %v", err)
+	}
+
+	// Verify it's Chinese
+	language, err := app.GetLanguage()
+	if err != nil {
+		t.Fatalf("GetLanguage failed: %v", err)
+	}
+	if language != "zh" {
+		t.Errorf("Expected language 'zh', got '%s'", language)
+	}
+
+	// Overwrite with English
+	err = app.SetLanguage("en")
+	if err != nil {
+		t.Fatalf("SetLanguage failed: %v", err)
+	}
+
+	// Verify it's now English
+	language, err = app.GetLanguage()
+	if err != nil {
+		t.Fatalf("GetLanguage failed: %v", err)
+	}
+	if language != "en" {
+		t.Errorf("Expected language 'en', got '%s'", language)
+	}
+}

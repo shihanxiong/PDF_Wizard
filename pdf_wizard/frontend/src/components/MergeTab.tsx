@@ -36,6 +36,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { SelectPDFFiles, GetFileMetadata, SelectOutputDirectory, MergePDFs } from '../../wailsjs/go/main/App';
 import { SelectedFile } from '../types';
 import { formatFileSize, formatDate, convertToSelectedFile } from '../utils/formatters';
+import { t } from '../utils/i18n';
 
 interface MergeTabProps {
   onFileDrop: (handler: (paths: string[]) => void) => void;
@@ -91,7 +92,7 @@ const SortableFileItem = ({ file, index, onRemove }: SortableFileItemProps) => {
           {file.path}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          {formatFileSize(file.size)} • Modified: {formatDate(file.lastModified)}
+          {formatFileSize(file.size)} • {t('modified')} {formatDate(file.lastModified)}
         </Typography>
       </Box>
       <IconButton
@@ -127,7 +128,7 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
   const handleDroppedFiles = async (paths: string[]) => {
     const pdfPaths = paths.filter((path) => path.toLowerCase().endsWith('.pdf'));
     if (pdfPaths.length === 0) {
-      setError('No PDF files found in dropped files');
+      setError(t('noPDFFilesFound'));
       return;
     }
 
@@ -138,7 +139,7 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
       setFiles((prev) => [...prev, ...newFiles]);
       setError(null);
     } catch (err: any) {
-      setError(`Failed to load files: ${err.message}`);
+      setError(`${t('failedToLoadFiles')} ${err.message}`);
     }
   };
 
@@ -153,7 +154,7 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
         setError(null);
       }
     } catch (err: any) {
-      setError(`Failed to select files: ${err.message}`);
+      setError(`${t('failedToSelectFiles')} ${err.message}`);
     }
   };
 
@@ -165,7 +166,7 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
         setError(null);
       }
     } catch (err: any) {
-      setError(`Failed to select output directory: ${err.message}`);
+      setError(`${t('failedToSelectOutputDirectory')} ${err.message}`);
     }
   };
 
@@ -202,13 +203,13 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
     try {
       const filePaths = files.map((f) => f.path);
       await MergePDFs(filePaths, outputDirectory, outputFilename.trim());
-      setSuccess(`PDFs merged successfully! Output: ${outputDirectory}/${outputFilename}.pdf`);
+      setSuccess(`${t('pdfsMergedSuccessfully')} ${outputDirectory}/${outputFilename}.pdf`);
       // Clear files after successful merge
       setFiles([]);
       setOutputFilename('merged');
     } catch (err: any) {
       const errorMessage = err?.message || err?.toString() || 'Unknown error occurred';
-      setError(`Merge failed: ${errorMessage}`);
+      setError(`${t('mergeFailed')} ${errorMessage}`);
     } finally {
       setIsProcessing(false);
     }
@@ -221,10 +222,10 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
       {/* File Selection Section */}
       <Box sx={{ mb: 3 }}>
         <Button variant="contained" startIcon={<CloudUploadIcon />} onClick={handleSelectFiles} sx={{ mb: 2 }}>
-          Select PDF Files
+          {t('selectPDFFiles')}
         </Button>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Or drag and drop PDF files anywhere on the window
+          {t('dragDropHint')}
         </Typography>
       </Box>
 
@@ -251,7 +252,7 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
       >
         {files.length === 0 ? (
           <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>
-            <Typography>No files selected</Typography>
+            <Typography>{t('noFilesSelected')}</Typography>
           </Box>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -268,7 +269,7 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
       <Box sx={{ mt: 'auto', pt: 2, pb: 2, borderTop: '1px solid', borderColor: 'divider', flexShrink: 0 }}>
         <Box sx={{ mb: 2 }}>
           <Button variant="outlined" startIcon={<FolderIcon />} onClick={handleSelectOutputDirectory} sx={{ mb: 1 }}>
-            Select Output Directory
+            {t('selectOutputDirectory')}
           </Button>
           {outputDirectory && (
             <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
@@ -278,7 +279,7 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-          <Typography variant="body2">Output Filename:</Typography>
+          <Typography variant="body2">{t('outputFilename')}</Typography>
           <TextField
             value={outputFilename}
             onChange={(e) => setOutputFilename(e.target.value)}
@@ -298,7 +299,7 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
           sx={{ py: 1.5, mb: 2 }}
           startIcon={isProcessing ? <CircularProgress size={16} color="inherit" /> : undefined}
         >
-          {isProcessing ? 'Merging...' : 'Merge PDF'}
+          {isProcessing ? t('merging') : t('mergePDF')}
         </Button>
       </Box>
     </Box>

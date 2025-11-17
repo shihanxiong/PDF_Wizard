@@ -19,6 +19,7 @@ import { SelectPDFFile, GetPDFMetadata, SelectOutputDirectory, SplitPDF } from '
 import { SelectedPDF, SplitDefinition } from '../types';
 import { formatFileSize, formatDate } from '../utils/formatters';
 import { models } from '../../wailsjs/go/models';
+import { t } from '../utils/i18n';
 
 const MAX_SPLITS = 10;
 
@@ -43,11 +44,11 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
   const handleDroppedPDF = async (paths: string[]) => {
     const pdfPaths = paths.filter((path) => path.toLowerCase().endsWith('.pdf'));
     if (pdfPaths.length === 0) {
-      setError('No PDF files found in dropped files');
+      setError(t('noPDFFilesFound'));
       return;
     }
     if (pdfPaths.length > 1) {
-      setError('Please drop only one PDF file');
+      setError(t('pleaseDropOnlyOnePDF'));
       return;
     }
 
@@ -65,7 +66,7 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
       setSplits([]);
       setError(null);
     } catch (err: any) {
-      setError(`Failed to load PDF: ${err.message}`);
+      setError(`${t('failedToLoadPDF')} ${err.message}`);
     }
   };
 
@@ -86,7 +87,7 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
         setError(null);
       }
     } catch (err: any) {
-      setError(`Failed to select PDF: ${err.message}`);
+      setError(`${t('failedToSelectPDF')} ${err.message}`);
     }
   };
 
@@ -133,7 +134,7 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
         setError(null);
       }
     } catch (err: any) {
-      setError(`Failed to select output directory: ${err.message}`);
+      setError(`${t('failedToSelectOutputDirectorySplit')} ${err.message}`);
     }
   };
 
@@ -143,7 +144,7 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
     // Validate all splits
     const invalidSplits = splits.filter((split) => !validateSplit(split));
     if (invalidSplits.length > 0) {
-      setError('Please fix invalid split configurations before proceeding');
+      setError(t('pleaseFixInvalidSplits'));
       return;
     }
 
@@ -160,12 +161,12 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
 
       await SplitPDF(selectedPDF.path, splitDefinitions, outputDirectory);
       const outputFiles = splits.map((s) => `${s.filename.trim()}.pdf`).join(', ');
-      setSuccess(`PDF split successfully! Created ${splits.length} file(s): ${outputFiles}`);
+      setSuccess(`${t('pdfSplitSuccessfully')} ${splits.length} ${t('createdFiles')} ${outputFiles}`);
       // Clear splits after successful split
       setSplits([]);
     } catch (err: any) {
       const errorMessage = err?.message || err?.toString() || 'Unknown error occurred';
-      setError(`Split failed: ${errorMessage}`);
+      setError(`${t('splitFailed')} ${errorMessage}`);
     } finally {
       setIsProcessing(false);
     }
@@ -190,10 +191,10 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
           sx={{ mb: 2 }}
           disabled={isProcessing}
         >
-          Select PDF File
+          {t('selectPDFFile')}
         </Button>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Or drag and drop a PDF file anywhere on the window
+          {t('dragDropPDFHint')}
         </Typography>
       </Box>
 
@@ -221,7 +222,7 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
                 {selectedPDF.path}
               </Typography>
               <Typography variant="body2">
-                {formatFileSize(selectedPDF.size)} • {selectedPDF.totalPages} pages • Modified:{' '}
+                {formatFileSize(selectedPDF.size)} • {selectedPDF.totalPages} {t('pages')} • {t('modified')}{' '}
                 {formatDate(selectedPDF.lastModified)}
               </Typography>
             </CardContent>
@@ -230,10 +231,10 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
           {/* Add Split Button */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <Button onClick={handleAddSplit} disabled={!canAddSplit} startIcon={<AddIcon />} variant="outlined">
-              Add Split
+              {t('addSplit')}
             </Button>
             <Typography variant="body2" color="text.secondary">
-              {splits.length} / {MAX_SPLITS} splits
+              {splits.length} / {MAX_SPLITS} {t('splits')}
             </Typography>
           </Box>
 
@@ -249,7 +250,7 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
           >
             {splits.length === 0 ? (
               <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>
-                <Typography>No splits defined. Click "Add Split" to create one.</Typography>
+                <Typography>{t('noSplitsDefined')}</Typography>
               </Box>
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -274,7 +275,9 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
                             mb: 2,
                           }}
                         >
-                          <Typography variant="subtitle1">Split {index + 1}</Typography>
+                          <Typography variant="subtitle1">
+                            {t('split')} {index + 1}
+                          </Typography>
                           <IconButton
                             onClick={() => handleRemoveSplit(split.id)}
                             size="small"
@@ -287,7 +290,7 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
 
                         <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
                           <TextField
-                            label="Start Page"
+                            label={t('startPage')}
                             type="number"
                             value={split.startPage}
                             onChange={(e) => handleUpdateSplit(split.id, 'startPage', parseInt(e.target.value) || 1)}
@@ -298,7 +301,7 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
                             sx={{ width: '120px' }}
                           />
                           <TextField
-                            label="End Page"
+                            label={t('endPage')}
                             type="number"
                             value={split.endPage}
                             onChange={(e) => handleUpdateSplit(split.id, 'endPage', parseInt(e.target.value) || 1)}
@@ -311,7 +314,7 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
                             sx={{ width: '120px' }}
                           />
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="body2">File Name:</Typography>
+                            <Typography variant="body2">{t('fileName')}</Typography>
                             <TextField
                               value={split.filename}
                               onChange={(e) => handleUpdateSplit(split.id, 'filename', e.target.value)}
@@ -326,7 +329,8 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
                         </Box>
 
                         <Typography variant="body2" color="text.secondary">
-                          Pages {split.startPage}-{split.endPage} ({pageCount} {pageCount === 1 ? 'page' : 'pages'})
+                          {t('pages')} {split.startPage}-{split.endPage} ({pageCount}{' '}
+                          {pageCount === 1 ? t('page') : t('pages')})
                         </Typography>
                       </CardContent>
                     </Card>
@@ -357,7 +361,7 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
             sx={{ mb: 1 }}
             disabled={isProcessing}
           >
-            Select Output Directory
+            {t('selectOutputDirectorySplit')}
           </Button>
           {outputDirectory && (
             <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
@@ -374,7 +378,7 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
           sx={{ py: 1.5, mb: 2 }}
           startIcon={isProcessing ? <CircularProgress size={16} color="inherit" /> : undefined}
         >
-          {isProcessing ? 'Splitting...' : 'Split PDF'}
+          {isProcessing ? t('splitting') : t('splitPDF')}
         </Button>
       </Box>
     </Box>

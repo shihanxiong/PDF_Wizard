@@ -20,6 +20,15 @@ func main() {
 	// Create menu with AppMenu (includes "About PDF Wizard" automatically)
 	appMenu := menu.NewMenu()
 	appMenu.Append(menu.AppMenu())
+
+	// Add Settings menu item
+	settingsSubMenu := menu.NewMenu()
+	settingsSubMenu.Append(menu.Text("Settings", nil, func(_ *menu.CallbackData) {
+		// Emit event to frontend to show settings dialog
+		app.EmitSettingsEvent()
+	}))
+	appMenu.Append(menu.SubMenu("Settings", settingsSubMenu))
+
 	appMenu.Append(menu.EditMenu())
 	appMenu.Append(menu.WindowMenu())
 
@@ -41,7 +50,7 @@ func main() {
 		Mac: &mac.Options{
 			About: &mac.AboutInfo{
 				Title:   "PDF Wizard",
-				Message: "A modern PDF toolkit built with Wails v2\n\nVersion 1.0.0\nCopyright © 2024",
+				Message: "A modern PDF toolkit built with Wails v2\n\nAutho: Hanxiong Shi\nVersion 1.0.0\nCopyright © 2025",
 			},
 		},
 		OnStartup: app.startup,

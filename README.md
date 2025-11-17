@@ -10,6 +10,13 @@ A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backe
 - **Split PDFs**: Divide a PDF into multiple files based on page ranges
 - **Rotate PDFs**: Rotate specific page ranges in a PDF (90°, -90°, or 180°)
 
+**Features:**
+
+- 🌍 **Internationalization**: Supports English and Chinese (Simplified) with easy language switching
+- 🎨 **Modern UI**: Built with Material-UI for a polished, responsive interface
+- 🖱️ **Drag & Drop**: Intuitive file handling with drag-and-drop support
+- ⚡ **Fast Performance**: Native Go backend ensures quick PDF processing
+
 ## Screenshots
 
 ### Merge PDFs Tab
@@ -190,12 +197,33 @@ cd pdf_wizard
 go test -v -run TestGetFileMetadata
 ```
 
+Run language management tests:
+
+```bash
+cd pdf_wizard
+go test -v -run "TestGetLanguage|TestSetLanguage"
+```
+
 Run tests with race detection:
 
 ```bash
 cd pdf_wizard
 go test -v -race ./...
 ```
+
+**Backend Test Coverage:**
+
+The backend test suite includes:
+
+- PDF file operations (merge, split, rotate)
+- File metadata retrieval
+- Page count operations
+- Error handling and validation
+- **Language management**:
+  - Language preference storage and retrieval
+  - Config file handling
+  - Default language fallback
+  - Invalid config handling
 
 ### Frontend E2E Tests
 
@@ -254,8 +282,34 @@ The E2E test suite includes:
 - User interactions (form inputs, buttons)
 - State management
 - Material-UI component rendering
+- Internationalization (i18n) functionality:
+  - Language switching (English/Chinese)
+  - Settings dialog functionality
+  - UI text translation updates
+  - Language persistence across navigation
 
 For more details, see the [E2E Testing README](pdf_wizard/frontend/e2e/README.md).
+
+## Features
+
+### Internationalization (i18n)
+
+PDF Wizard supports multiple languages with an easy-to-use translation system:
+
+- **Supported Languages**: English (en) and Chinese Simplified (zh)
+- **Language Selection**: Accessible via the Settings menu in the application menu bar
+- **Language Persistence**: Your language preference is saved and persists across application restarts
+- **Modular Structure**: Translations are organized in separate language files for easy maintenance and extension
+
+**Adding New Languages:**
+
+To add a new language:
+
+1. Create a new file in `pdf_wizard/frontend/src/utils/i18n/` (e.g., `fr.ts` for French)
+2. Export a `Translations` object with all required translation keys (see `types.ts` for the interface)
+3. Add the language to the `translations` record in `i18n/index.ts`
+4. Update the `Language` type in `i18n/types.ts`
+5. Add the language option to the Settings dialog component
 
 ## Technology Stack
 
@@ -264,6 +318,7 @@ For more details, see the [E2E Testing README](pdf_wizard/frontend/e2e/README.md
 - **Go 1.21+**: High-performance backend services
 - **Wails v2**: Desktop application framework
 - **pdfcpu**: PDF manipulation library for merging, splitting, and rotating
+- **JSON Config**: Language preference stored in user config directory
 
 ### Frontend
 
@@ -272,6 +327,10 @@ For more details, see the [E2E Testing README](pdf_wizard/frontend/e2e/README.md
 - **Material-UI (MUI) v7**: Component library for modern UI
 - **@dnd-kit**: Modern drag-and-drop library (replaced deprecated react-beautiful-dnd)
 - **Vite**: Fast build tool and dev server
+- **Custom i18n System**: Internationalization support with modular language files
+  - Language files: `i18n/en.ts`, `i18n/zh.ts`
+  - Type definitions: `i18n/types.ts`
+  - Main logic: `i18n/index.ts`
 
 ### Testing
 
@@ -286,14 +345,47 @@ PDF_Wizard/
 │   ├── frontend/        # React/TypeScript frontend
 │   │   ├── e2e/         # Playwright E2E tests
 │   │   ├── src/         # React source code
+│   │   │   ├── components/    # React components
+│   │   │   │   ├── MergeTab.tsx
+│   │   │   │   ├── SplitTab.tsx
+│   │   │   │   ├── RotateTab.tsx
+│   │   │   │   └── SettingsDialog.tsx
+│   │   │   ├── utils/         # Utility functions
+│   │   │   │   ├── i18n/      # Internationalization
+│   │   │   │   │   ├── index.ts    # Main i18n logic
+│   │   │   │   │   ├── types.ts    # TypeScript types
+│   │   │   │   │   ├── en.ts       # English translations
+│   │   │   │   │   └── zh.ts       # Chinese translations
+│   │   │   │   └── formatters.ts
+│   │   │   └── App.tsx        # Main application component
 │   │   └── dist/        # Built frontend assets
 │   ├── services/        # Go service layer
 │   ├── models/          # Data models
-│   ├── app.go           # Go application entry
+│   ├── app.go           # Go application entry (includes language management)
 │   └── main.go          # Wails main file
 ├── assets/              # Application assets
 └── .github/workflows/   # GitHub Actions CI/CD workflows
 ```
+
+## Configuration
+
+### Language Settings
+
+PDF Wizard stores your language preference in a configuration file:
+
+- **macOS**: `~/Library/Application Support/PDF Wizard/pdf_wizard_config.json`
+- **Windows**: `%AppData%\PDF Wizard\pdf_wizard_config.json`
+- **Linux**: `~/.config/PDF Wizard/pdf_wizard_config.json`
+
+The config file is automatically created when you change the language. You can also manually edit it:
+
+```json
+{
+  "language": "en"
+}
+```
+
+Valid values are `"en"` (English) or `"zh"` (Chinese Simplified).
 
 ## Troubleshooting
 
@@ -329,6 +421,14 @@ Navigate to the frontend directory and install manually:
 cd pdf_wizard/frontend
 npm install
 ```
+
+### Language not changing
+
+If the language doesn't update after changing it in Settings:
+
+1. Check that the config file was created in the correct location (see [Configuration](#configuration))
+2. Restart the application
+3. Verify the config file contains valid JSON with a `"language"` field set to `"en"` or `"zh"`
 
 ## Contributing
 
