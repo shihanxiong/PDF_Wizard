@@ -12,7 +12,7 @@ A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backe
 
 **Features:**
 
-- 🌍 **Internationalization**: Supports 9 languages (English, Chinese, Arabic, French, Japanese, Hindi, Spanish, Portuguese, Russian) with easy language switching
+- 🌍 **Internationalization**: Supports 12 languages (English, Chinese Simplified, Chinese Traditional, Arabic, French, Japanese, Hindi, Spanish, Portuguese, Russian, Korean, German) with easy language switching
 - 🎨 **Modern UI**: Built with Material-UI for a polished, responsive interface
 - 🖱️ **Drag & Drop**: Intuitive file handling with drag-and-drop support
 - ⚡ **Fast Performance**: Native Go backend ensures quick PDF processing
@@ -374,7 +374,7 @@ The E2E test suite includes:
 - State management
 - Material-UI component rendering
 - Internationalization (i18n) functionality:
-  - Language switching (all 9 supported languages)
+  - Language switching (all 12 supported languages)
   - Settings dialog functionality
   - UI text translation updates
   - Language persistence across navigation
@@ -390,6 +390,7 @@ PDF Wizard supports multiple languages with an easy-to-use translation system:
 - **Supported Languages**:
   - English (en)
   - Chinese Simplified (zh)
+  - Chinese Traditional (zh-TW)
   - Arabic (ar)
   - French (fr)
   - Japanese (ja)
@@ -397,6 +398,8 @@ PDF Wizard supports multiple languages with an easy-to-use translation system:
   - Spanish (es)
   - Portuguese (pt)
   - Russian (ru)
+  - Korean (ko)
+  - German (de)
 - **Language Selection**: Accessible via the Settings menu in the application menu bar
 - **Language Persistence**: Your language preference is saved and persists across application restarts
 - **Modular Structure**: Translations are organized in separate language files for easy maintenance and extension
@@ -413,6 +416,8 @@ To add a new language:
 5. Update the `Language` type in `i18n/types.ts` to include the new language code
 6. Add the language to the `getNativeLanguageName` function in `i18n/index.ts`
 7. Add the language option to the Settings dialog component (`SettingsDialog.tsx`)
+8. Update the validation arrays in `App.tsx` and `SettingsDialog.tsx` to include the new language code
+9. Update the backend validation in `app.go` (`GetLanguage()` and `SetLanguage()` functions) to include the new language code
 
 ## Technology Stack
 
@@ -431,7 +436,7 @@ To add a new language:
 - **@dnd-kit**: Modern drag-and-drop library (replaced deprecated react-beautiful-dnd)
 - **Vite**: Fast build tool and dev server
 - **Custom i18n System**: Internationalization support with modular language files
-  - Language files: `i18n/en.ts`, `i18n/zh.ts`, `i18n/ar.ts`, `i18n/fr.ts`, `i18n/ja.ts`, `i18n/hi.ts`, `i18n/es.ts`, `i18n/pt.ts`, `i18n/ru.ts`
+  - Language files: `i18n/en.ts`, `i18n/zh.ts`, `i18n/zh-TW.ts`, `i18n/ar.ts`, `i18n/fr.ts`, `i18n/ja.ts`, `i18n/hi.ts`, `i18n/es.ts`, `i18n/pt.ts`, `i18n/ru.ts`, `i18n/ko.ts`, `i18n/de.ts`
   - Type definitions: `i18n/types.ts`
   - Main logic: `i18n/index.ts` (includes `getNativeLanguageName` helper)
 
@@ -458,14 +463,17 @@ PDF_Wizard/
 │   │   │   │   │   ├── index.ts    # Main i18n logic
 │   │   │   │   │   ├── types.ts    # TypeScript types
 │   │   │   │   │   ├── en.ts       # English translations
-│   │   │   │   │   ├── zh.ts       # Chinese translations
+│   │   │   │   │   ├── zh.ts       # Chinese Simplified translations
+│   │   │   │   │   ├── zh-TW.ts    # Chinese Traditional translations
 │   │   │   │   │   ├── ar.ts       # Arabic translations
 │   │   │   │   │   ├── fr.ts       # French translations
 │   │   │   │   │   ├── ja.ts       # Japanese translations
 │   │   │   │   │   ├── hi.ts       # Hindi translations
 │   │   │   │   │   ├── es.ts       # Spanish translations
 │   │   │   │   │   ├── pt.ts       # Portuguese translations
-│   │   │   │   │   └── ru.ts       # Russian translations
+│   │   │   │   │   ├── ru.ts       # Russian translations
+│   │   │   │   │   ├── ko.ts       # Korean translations
+│   │   │   │   │   └── de.ts       # German translations
 │   │   │   │   └── formatters.ts
 │   │   │   └── App.tsx        # Main application component
 │   │   └── dist/        # Built frontend assets
@@ -499,6 +507,7 @@ Valid values are:
 
 - `"en"` - English
 - `"zh"` - Chinese Simplified
+- `"zh-TW"` - Chinese Traditional
 - `"ar"` - Arabic
 - `"fr"` - French
 - `"ja"` - Japanese
@@ -506,6 +515,8 @@ Valid values are:
 - `"es"` - Spanish
 - `"pt"` - Portuguese
 - `"ru"` - Russian
+- `"ko"` - Korean
+- `"de"` - German
 
 ## Troubleshooting
 

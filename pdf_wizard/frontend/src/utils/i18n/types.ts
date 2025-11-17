@@ -1,5 +1,5 @@
 // Translation keys and their translations
-export type Language = 'en' | 'zh' | 'ar' | 'fr' | 'ja' | 'hi' | 'es' | 'pt' | 'ru';
+export type Language = 'en' | 'zh' | 'zh-TW' | 'ar' | 'fr' | 'ja' | 'hi' | 'es' | 'pt' | 'ru' | 'ko' | 'de';
 
 export interface Translations {
   // App
