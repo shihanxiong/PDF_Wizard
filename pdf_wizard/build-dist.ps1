@@ -34,6 +34,11 @@ Write-Host "✅ Build successful!" -ForegroundColor Green
 # Create output directory
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 
+# Copy standalone executable to dist with naming convention matching macOS
+Write-Host "Copying standalone executable to dist..." -ForegroundColor Cyan
+Copy-Item $ExePath (Join-Path $OutputDir "pdf_wizard-windows.exe")
+Write-Host "✅ Created: pdf_wizard-windows.exe" -ForegroundColor Green
+
 # Check if NSIS installer was created
 $NsisInstaller = Join-Path $BuildDir "PDF Wizard Installer.exe"
 if (Test-Path $NsisInstaller) {

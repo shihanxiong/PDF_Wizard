@@ -72,17 +72,26 @@ Pre-built installers are available in the [`pdf_wizard/dist/`](https://github.co
 
 ### Windows
 
-- **Installer**: [`pdf_wizard-windows-installer.exe`](https://github.com/shihanxiong/PDF_Wizard/raw/master/pdf_wizard/dist/pdf_wizard-windows-installer.exe) - NSIS installer for easy installation
-- **Portable ZIP**: [`pdf_wizard-windows-portable.zip`](https://github.com/shihanxiong/PDF_Wizard/raw/master/pdf_wizard/dist/pdf_wizard-windows-portable.zip) - Portable executable, no installation required
+- **Standalone Executable**: [`pdf_wizard-windows.exe`](https://github.com/shihanxiong/PDF_Wizard/raw/master/pdf_wizard/dist/pdf_wizard-windows.exe) - Portable executable, no installation required
+- **Installer** (optional): [`pdf_wizard-windows-installer.exe`](https://github.com/shihanxiong/PDF_Wizard/raw/master/pdf_wizard/dist/pdf_wizard-windows-installer.exe) - NSIS installer for easy installation (only created if NSIS is installed)
+- **Portable ZIP**: [`pdf_wizard-windows-portable.zip`](https://github.com/shihanxiong/PDF_Wizard/raw/master/pdf_wizard/dist/pdf_wizard-windows-portable.zip) - ZIP archive containing the executable
 
 **Windows Installation Instructions:**
 
-**Installer (Recommended):**
+**Standalone Executable (Recommended for Quick Start):**
+
+1. Download `pdf_wizard-windows.exe` from the [dist folder](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist)
+2. Double-click `pdf_wizard-windows.exe` to run
+3. No installation required - it's portable!
+
+**Installer** (optional, requires NSIS to be installed during build):
 
 1. Download the installer from the [dist folder](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist)
 2. Double-click `pdf_wizard-windows-installer.exe`
 3. Follow the installation wizard
 4. Launch PDF Wizard from the Start menu or desktop shortcut
+
+> **Note**: The installer is only created if NSIS (Nullsoft Scriptable Installer System) is installed on the build machine. If you don't see this file, use the standalone executable or ZIP archive instead.
 
 **Portable ZIP:**
 
@@ -183,10 +192,28 @@ cd pdf_wizard
 wails build
 ```
 
-This will create:
+This will create in `build/bin`:
 
 - `PDF Wizard.exe` - Standalone executable
 - `PDF Wizard Installer.exe` - NSIS installer (if NSIS is installed)
+
+For distribution packages in the `dist` directory, use the build script:
+
+```bash
+cd pdf_wizard
+./build-dist.sh
+```
+
+This will create in `dist`:
+
+- `pdf_wizard-windows.exe` - Standalone executable (matches macOS naming convention)
+- `pdf_wizard-windows-installer.exe` - NSIS installer (only if NSIS is installed on the build machine)
+- `pdf_wizard-windows-portable.zip` - ZIP archive containing the executable
+
+> **Note**: To create the NSIS installer, you need to install NSIS first:
+> - Download from: https://nsis.sourceforge.io/Download
+> - Or install via Chocolatey (as Administrator): `choco install nsis`
+> - After installing NSIS, rebuild the project to generate the installer
 
 **Quick Distribution Build:**
 
