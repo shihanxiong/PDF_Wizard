@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # PDF Wizard Distribution Builder
-# This script builds and packages PDF Wizard for macOS distribution
+# This script builds and packages PDF Wizard for macOS and Windows distribution
 
 set -e
 
@@ -9,7 +9,27 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="$SCRIPT_DIR/build/bin"
 OUTPUT_DIR="$SCRIPT_DIR/dist"
 
-echo "🔨 Building PDF Wizard..."
+# Detect operating system
+detect_os() {
+    case "$(uname -s)" in
+        Darwin*)
+            echo "darwin"
+            ;;
+        Linux*)
+            echo "linux"
+            ;;
+        MINGW*|MSYS*|CYGWIN*)
+            echo "windows"
+            ;;
+        *)
+            echo "unknown"
+            ;;
+    esac
+}
+
+OS=$(detect_os)
+
+echo "🔨 Building PDF Wizard for $OS..."
 cd "$SCRIPT_DIR"
 
 # Clean previous build
@@ -18,77 +38,79 @@ if [ -d "$BUILD_DIR" ]; then
     rm -rf "$BUILD_DIR"
 fi
 
-# Build for universal binary (Intel + Apple Silicon)
-echo "Building universal binary..."
-wails build -platform darwin/universal
-
-# Wails creates the bundle with the 'name' field from wails.json (pdf_wizard.app)
-# We need to rename it to "PDF Wizard.app" for proper display name
-if [ ! -d "$BUILD_DIR/pdf_wizard.app" ]; then
-    echo "❌ Build failed: pdf_wizard.app not found"
-    exit 1
-fi
-
-# Rename the bundle to "PDF Wizard.app" for proper display in Applications folder
-if [ -d "$BUILD_DIR/pdf_wizard.app" ]; then
-    echo "Renaming app bundle to 'PDF Wizard.app'..."
-    mv "$BUILD_DIR/pdf_wizard.app" "$BUILD_DIR/PDF Wizard.app"
-fi
-
-if [ ! -d "$BUILD_DIR/PDF Wizard.app" ]; then
-    echo "❌ Failed to rename app bundle"
-    exit 1
-fi
-
-echo "✅ Build successful!"
-
-# Create output directory
-mkdir -p "$OUTPUT_DIR"
-
-# Remove quarantine attributes
-echo "Removing quarantine attributes..."
-xattr -cr "$BUILD_DIR/PDF Wizard.app"
-
-# Create ZIP archive
-echo "Creating ZIP archive..."
-cd "$BUILD_DIR"
-zip -r "$OUTPUT_DIR/pdf_wizard-macos-universal.zip" "PDF Wizard.app"
-echo "✅ Created: $OUTPUT_DIR/pdf_wizard-macos-universal.zip"
-
-# Create DMG with Applications folder (professional installer)
-if command -v hdiutil &> /dev/null; then
-    echo "Creating DMG installer with Applications folder..."
+# Build based on OS
+if [ "$OS" = "darwin" ]; then
+    # macOS build
+    echo "Building universal binary for macOS..."
+    wails build -platform darwin/universal
     
-    # Create a temporary directory for DMG contents
-    DMG_TEMP_DIR=$(mktemp -d)
-    trap "rm -rf '$DMG_TEMP_DIR'" EXIT
-    
-    # Copy app to temp directory
-    cp -R "$BUILD_DIR/PDF Wizard.app" "$DMG_TEMP_DIR/"
-    
-    # Create Applications folder link (symbolic link)
-    ln -s /Applications "$DMG_TEMP_DIR/Applications"
-    
-    # Create DMG
-    hdiutil create -volname "PDF Wizard" \
-        -fs HFS+ \
-        -srcfolder "$DMG_TEMP_DIR" \
-        -ov -format UDZO \
-        "$OUTPUT_DIR/pdf_wizard-macos-universal.dmg"
-    
-    if [ -f "$OUTPUT_DIR/pdf_wizard-macos-universal.dmg" ]; then
-        echo "✅ Created: $OUTPUT_DIR/pdf_wizard-macos-universal.dmg"
-        echo "   Users can drag the app to the Applications folder to install"
+    # Wails creates the bundle with the 'name' field from wails.json (pdf_wizard.app)
+    # We need to rename it to "PDF Wizard.app" for proper display name
+    if [ ! -d "$BUILD_DIR/pdf_wizard.app" ]; then
+        echo "❌ Build failed: pdf_wizard.app not found"
+        exit 1
     fi
     
-    # Cleanup
-    rm -rf "$DMG_TEMP_DIR"
-fi
-
-# Create README for distribution
-cat > "$OUTPUT_DIR/README.txt" << 'EOF'
-PDF Wizard - Installation Instructions
-=====================================
+    # Rename the bundle to "PDF Wizard.app" for proper display in Applications folder
+    if [ -d "$BUILD_DIR/pdf_wizard.app" ]; then
+        echo "Renaming app bundle to 'PDF Wizard.app'..."
+        mv "$BUILD_DIR/pdf_wizard.app" "$BUILD_DIR/PDF Wizard.app"
+    fi
+    
+    if [ ! -d "$BUILD_DIR/PDF Wizard.app" ]; then
+        echo "❌ Failed to rename app bundle"
+        exit 1
+    fi
+    
+    echo "✅ Build successful!"
+    
+    # Create output directory
+    mkdir -p "$OUTPUT_DIR"
+    
+    # Remove quarantine attributes
+    echo "Removing quarantine attributes..."
+    xattr -cr "$BUILD_DIR/PDF Wizard.app"
+    
+    # Create ZIP archive
+    echo "Creating ZIP archive..."
+    cd "$BUILD_DIR"
+    zip -r "$OUTPUT_DIR/pdf_wizard-macos-universal.zip" "PDF Wizard.app"
+    echo "✅ Created: $OUTPUT_DIR/pdf_wizard-macos-universal.zip"
+    
+    # Create DMG with Applications folder (professional installer)
+    if command -v hdiutil &> /dev/null; then
+        echo "Creating DMG installer with Applications folder..."
+        
+        # Create a temporary directory for DMG contents
+        DMG_TEMP_DIR=$(mktemp -d)
+        trap "rm -rf '$DMG_TEMP_DIR'" EXIT
+        
+        # Copy app to temp directory
+        cp -R "$BUILD_DIR/PDF Wizard.app" "$DMG_TEMP_DIR/"
+        
+        # Create Applications folder link (symbolic link)
+        ln -s /Applications "$DMG_TEMP_DIR/Applications"
+        
+        # Create DMG
+        hdiutil create -volname "PDF Wizard" \
+            -fs HFS+ \
+            -srcfolder "$DMG_TEMP_DIR" \
+            -ov -format UDZO \
+            "$OUTPUT_DIR/pdf_wizard-macos-universal.dmg"
+        
+        if [ -f "$OUTPUT_DIR/pdf_wizard-macos-universal.dmg" ]; then
+            echo "✅ Created: $OUTPUT_DIR/pdf_wizard-macos-universal.dmg"
+            echo "   Users can drag the app to the Applications folder to install"
+        fi
+        
+        # Cleanup
+        rm -rf "$DMG_TEMP_DIR"
+    fi
+    
+    # Create README for macOS distribution
+    cat > "$OUTPUT_DIR/README-macOS.txt" << 'EOF'
+PDF Wizard - macOS Installation Instructions
+===========================================
 
 QUICK START (DMG):
 1. Double-click the DMG file to mount it
@@ -118,11 +140,99 @@ If the app won't run:
 For more information, visit: https://github.com/your-repo/pdf_wizard
 EOF
 
+elif [ "$OS" = "windows" ]; then
+    # Windows build
+    echo "Building Windows executable..."
+    wails build
+    
+    # Check for executable
+    EXE_NAME="PDF Wizard.exe"
+    if [ ! -f "$BUILD_DIR/$EXE_NAME" ]; then
+        echo "❌ Build failed: $EXE_NAME not found"
+        exit 1
+    fi
+    
+    echo "✅ Build successful!"
+    
+    # Create output directory
+    mkdir -p "$OUTPUT_DIR"
+    
+    # Check if NSIS installer was created
+    NSIS_INSTALLER="$BUILD_DIR/PDF Wizard Installer.exe"
+    if [ -f "$NSIS_INSTALLER" ]; then
+        echo "NSIS installer found, copying to dist..."
+        cp "$NSIS_INSTALLER" "$OUTPUT_DIR/pdf_wizard-windows-installer.exe"
+        echo "✅ Created: $OUTPUT_DIR/pdf_wizard-windows-installer.exe"
+    else
+        echo "⚠️  NSIS installer not found. Make sure NSIS is installed:"
+        echo "   Download from: https://nsis.sourceforge.io/Download"
+        echo "   Or install via: choco install nsis"
+    fi
+    
+    # Create ZIP archive with executable
+    echo "Creating ZIP archive..."
+    cd "$BUILD_DIR"
+    
+    # Use zip if available (Git Bash, WSL)
+    if command -v zip &> /dev/null; then
+        zip -r "$OUTPUT_DIR/pdf_wizard-windows-portable.zip" "$EXE_NAME"
+        echo "✅ Created: $OUTPUT_DIR/pdf_wizard-windows-portable.zip"
+    # Use PowerShell if zip is not available
+    elif command -v powershell.exe &> /dev/null; then
+        powershell.exe -Command "Compress-Archive -Path '$EXE_NAME' -DestinationPath '$OUTPUT_DIR/pdf_wizard-windows-portable.zip' -Force"
+        echo "✅ Created: $OUTPUT_DIR/pdf_wizard-windows-portable.zip"
+    else
+        echo "⚠️  Neither zip nor PowerShell found. Please manually create ZIP archive."
+    fi
+    
+    # Create README for Windows distribution
+    cat > "$OUTPUT_DIR/README-Windows.txt" << 'EOF'
+PDF Wizard - Windows Installation Instructions
+===============================================
+
+QUICK START (Installer):
+1. Double-click "pdf_wizard-windows-installer.exe"
+2. Follow the installation wizard
+3. Launch PDF Wizard from the Start menu or desktop shortcut
+
+QUICK START (Portable ZIP):
+1. Extract the ZIP file to a folder of your choice
+2. Double-click "PDF Wizard.exe" to run
+3. No installation required - it's portable!
+
+SYSTEM REQUIREMENTS:
+- Windows 10 or later
+- Works on both 32-bit and 64-bit Windows
+
+TROUBLESHOOTING:
+If Windows Defender or SmartScreen blocks the app:
+1. Click "More info" on the warning screen
+2. Click "Run anyway"
+3. The app is safe - it's just not code-signed
+
+If the app won't run:
+1. Check Windows Defender → Virus & threat protection
+2. Add an exclusion for the PDF Wizard folder if needed
+3. Ensure you have Windows 10 or later
+4. Install Visual C++ Redistributable if prompted
+
+For more information, visit: https://github.com/your-repo/pdf_wizard
+EOF
+
+else
+    echo "❌ Unsupported operating system: $OS"
+    echo "Supported OS: macOS (darwin), Windows (MINGW/MSYS/CYGWIN)"
+    exit 1
+fi
+
 echo ""
 echo "📦 Distribution packages created in: $OUTPUT_DIR"
 echo ""
 echo "Files created:"
-ls -lh "$OUTPUT_DIR" | tail -n +2
+if [ "$OS" = "darwin" ]; then
+    ls -lh "$OUTPUT_DIR" | tail -n +2 | grep -E "\.(dmg|zip|txt)$"
+elif [ "$OS" = "windows" ]; then
+    ls -lh "$OUTPUT_DIR" | tail -n +2 | grep -E "\.(exe|zip|txt)$"
+fi
 echo ""
 echo "✅ Ready for distribution!"
-

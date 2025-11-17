@@ -39,20 +39,20 @@ A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backe
 
 ## Downloads
 
-### macOS Installer
+Pre-built installers are available in the [`pdf_wizard/dist/`](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist) folder.
 
-Pre-built installers are available in the [`pdf_wizard/dist/`](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist) folder:
+### macOS
 
 - **DMG Installer**: [`pdf_wizard-macos-universal.dmg`](https://github.com/shihanxiong/PDF_Wizard/raw/master/pdf_wizard/dist/pdf_wizard-macos-universal.dmg) - Universal binary for both Intel and Apple Silicon Macs
 - **ZIP Archive**: [`pdf_wizard-macos-universal.zip`](https://github.com/shihanxiong/PDF_Wizard/raw/master/pdf_wizard/dist/pdf_wizard-macos-universal.zip) - ZIP file containing the application bundle
 
-**Installation Instructions:**
+**macOS Installation Instructions:**
 
 **DMG Installation (Recommended):**
 
 1. Download the DMG file from the [dist folder](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist)
 2. Double-click the DMG file to mount it
-3. Drag `pdf_wizard.app` to the Applications folder (shown in the DMG window)
+3. Drag `PDF Wizard.app` to the Applications folder (shown in the DMG window)
 4. Open Applications folder and launch PDF Wizard
 5. On first launch: Right-click → Open → Click "Open" to bypass macOS security warning
 
@@ -60,15 +60,43 @@ Pre-built installers are available in the [`pdf_wizard/dist/`](https://github.co
 
 1. Download the ZIP file from the [dist folder](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist)
 2. Extract the ZIP file
-3. Right-click `pdf_wizard.app` → Open → Click "Open"
-4. Or run in Terminal: `xattr -cr pdf_wizard.app`
+3. Right-click `PDF Wizard.app` → Open → Click "Open"
+4. Or run in Terminal: `xattr -cr "PDF Wizard.app"`
 
-**System Requirements:**
+**macOS System Requirements:**
 
 - macOS 10.13 or later
 - Works on Intel and Apple Silicon Macs (universal binary)
 
-> **Note**: If you see "App is damaged and can't be opened", right-click the app → Open → Click "Open", or run `xattr -cr pdf_wizard.app` in Terminal.
+> **Note**: If you see "App is damaged and can't be opened", right-click the app → Open → Click "Open", or run `xattr -cr "PDF Wizard.app"` in Terminal.
+
+### Windows
+
+- **Installer**: [`pdf_wizard-windows-installer.exe`](https://github.com/shihanxiong/PDF_Wizard/raw/master/pdf_wizard/dist/pdf_wizard-windows-installer.exe) - NSIS installer for easy installation
+- **Portable ZIP**: [`pdf_wizard-windows-portable.zip`](https://github.com/shihanxiong/PDF_Wizard/raw/master/pdf_wizard/dist/pdf_wizard-windows-portable.zip) - Portable executable, no installation required
+
+**Windows Installation Instructions:**
+
+**Installer (Recommended):**
+
+1. Download the installer from the [dist folder](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist)
+2. Double-click `pdf_wizard-windows-installer.exe`
+3. Follow the installation wizard
+4. Launch PDF Wizard from the Start menu or desktop shortcut
+
+**Portable ZIP:**
+
+1. Download the ZIP file from the [dist folder](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist)
+2. Extract the ZIP file to a folder of your choice
+3. Double-click `PDF Wizard.exe` to run
+4. No installation required - it's portable!
+
+**Windows System Requirements:**
+
+- Windows 10 or later
+- Works on both 32-bit and 64-bit Windows
+
+> **Note**: If Windows Defender or SmartScreen blocks the app, click "More info" → "Run anyway". The app is safe - it's just not code-signed.
 
 ## Prerequisites
 
@@ -146,16 +174,51 @@ wails build -platform darwin/universal
 
 For distribution to other Mac machines, see [Distribution Guide](pdf_wizard/DISTRIBUTION.md).
 
+**Build for Windows Distribution:**
+
+To create a Windows executable:
+
+```bash
+cd pdf_wizard
+wails build
+```
+
+This will create:
+
+- `PDF Wizard.exe` - Standalone executable
+- `PDF Wizard Installer.exe` - NSIS installer (if NSIS is installed)
+
 **Quick Distribution Build:**
 
-Use the automated build script:
+Use the automated build script (cross-platform):
+
+**On macOS/Linux:**
 
 ```bash
 cd pdf_wizard
 ./build-dist.sh
 ```
 
-This creates a ZIP file and DMG ready for distribution in the `pdf_wizard/dist` directory.
+**On Windows (PowerShell):**
+
+```powershell
+cd pdf_wizard
+.\build-dist.ps1
+```
+
+**On Windows (Git Bash/WSL):**
+
+```bash
+cd pdf_wizard
+./build-dist.sh
+```
+
+The script automatically detects your operating system and creates:
+
+- **macOS**: DMG installer and ZIP archive
+- **Windows**: NSIS installer (if NSIS is installed) and portable ZIP archive
+
+All distribution files are created in the `pdf_wizard/dist` directory.
 
 ## Testing
 
