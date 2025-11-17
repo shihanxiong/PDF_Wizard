@@ -2,19 +2,25 @@
 
 ## Overview
 
-PDF Wizard is a desktop application built with Wails v2 that provides PDF manipulation capabilities, including merging, splitting, and rotating PDF files. The application uses a Go backend for file operations and a React/TypeScript frontend with Material-UI for the user interface.
+PDF Wizard is a cross-platform desktop application built with Wails v2 that provides PDF manipulation capabilities, including merging, splitting, and rotating PDF files. The application uses a Go backend for file operations and a React/TypeScript frontend with Material-UI for the user interface.
+
+**Supported Platforms:**
+
+- macOS (Intel and Apple Silicon - universal binary)
+- Windows (32-bit and 64-bit)
 
 ## Architecture
 
 ### Technology Stack
 
-- **Backend**: Go 1.21+ with Wails v2.8.1+
+- **Backend**: Go 1.24.0 with Wails v2.11.0
 - **Frontend**: React 18+ with TypeScript, Material-UI (MUI) v7
 - **PDF Processing**: `github.com/pdfcpu/pdfcpu` - Native Go PDF library
-- **Build Tool**: Wails CLI
+- **Build Tool**: Wails CLI v2.11.0
 - **UI Framework**: Material-UI
 - **Drag and Drop**: `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities` for file reordering (replaced deprecated react-beautiful-dnd)
 - **Internationalization**: Custom i18n system supporting English and Chinese (Simplified)
+- **Node.js**: 22.21.1 (required by the project)
 
 ### Project Structure
 
@@ -301,3 +307,39 @@ For detailed design information, refer to the following documents:
 - Settings accessible via application menu bar (native menu on macOS)
   - Settings menu is separate from AppMenu (which includes "About PDF Wizard" automatically)
 - Wails Events API used for communication between menu and frontend (show-settings event)
+
+## Building and Distribution
+
+### Build Requirements
+
+- **Go**: 1.24.0 (specified in `go.mod`)
+- **Node.js**: 22.21.1 (required by the project)
+- **Wails CLI**: v2.11.0 (matches `github.com/wailsapp/wails/v2 v2.11.0` in `go.mod`)
+- **NSIS** (Windows only, optional): Required to generate Windows installer
+
+### Build Commands
+
+**Development:**
+
+```bash
+wails dev
+```
+
+**Production Build:**
+
+```bash
+# macOS (universal binary)
+wails build -platform darwin/universal
+
+# Windows
+wails build
+```
+
+### Distribution
+
+PDF Wizard includes automated build scripts for creating distribution packages:
+
+- **macOS**: `build-dist.sh` - Creates DMG installer and ZIP archive
+- **Windows**: `build-dist.sh` (Git Bash/WSL) or `build-dist.ps1` (PowerShell) - Creates standalone executable, NSIS installer (if NSIS installed), and portable ZIP
+
+For detailed distribution instructions, see [DISTRIBUTION.md](DISTRIBUTION.md).

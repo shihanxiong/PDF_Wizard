@@ -34,37 +34,19 @@ func (s *PDFService) MergePDFs(inputPaths []string, outputDirectory string, outp
 		if path == "" {
 			return fmt.Errorf("empty file path at index %d", i)
 		}
-		info, err := os.Stat(path)
-		if os.IsNotExist(err) {
-			return fmt.Errorf("file not found: %s", path)
-		}
-		if err != nil {
-			return fmt.Errorf("error accessing file %s: %w", path, err)
-		}
-		if info.IsDir() {
-			return fmt.Errorf("path is a directory, not a file: %s", path)
-		}
-		// Check if file has .pdf extension
-		if strings.ToLower(filepath.Ext(path)) != ".pdf" {
-			return fmt.Errorf("file is not a PDF: %s", path)
+		if err := validatePDFFile(path); err != nil {
+			return fmt.Errorf("input file %d: %w", i+1, err)
 		}
 	}
 
 	// Validate output directory exists and is writable
-	info, err := os.Stat(outputDirectory)
-	if os.IsNotExist(err) {
-		return fmt.Errorf("output directory does not exist: %s", outputDirectory)
-	}
-	if err != nil {
-		return fmt.Errorf("error accessing output directory: %w", err)
-	}
-	if !info.IsDir() {
-		return fmt.Errorf("output path is not a directory: %s", outputDirectory)
+	if err := validateOutputDirectory(outputDirectory); err != nil {
+		return err
 	}
 
 	// outputFilename from frontend does not include .pdf extension
 	// Always append .pdf extension
-	outputPath := filepath.Join(outputDirectory, outputFilename+".pdf")
+	outputPath := filepath.Join(outputDirectory, outputFilename+PDFExtension)
 
 	// Remove existing output file if it exists (pdfcpu may have issues overwriting)
 	if _, err := os.Stat(outputPath); err == nil {
@@ -88,7 +70,7 @@ func (s *PDFService) MergePDFs(inputPaths []string, outputDirectory string, outp
 	config := model.NewDefaultConfiguration()
 	// Merge the PDF files
 	// dividerPage: false means no divider pages between merged PDFs
-	err = api.MergeCreateFile(inputPaths, outputPath, false, config)
+	err := api.MergeCreateFile(inputPaths, outputPath, false, config)
 	if err != nil {
 		// Provide more helpful error message for font encoding issues
 		if strings.Contains(err.Error(), "validateFontEncoding") || strings.Contains(err.Error(), "Encoding") {
@@ -107,26 +89,14 @@ func (s *PDFService) MergePDFs(inputPaths []string, outputDirectory string, outp
 
 // SplitPDF splits the given PDF according to split definitions
 func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition, outputDirectory string) error {
-	// Validate input file exists
-	if _, err := os.Stat(inputPath); os.IsNotExist(err) {
-		return fmt.Errorf("input file not found: %s", inputPath)
-	}
-
-	// Check if file has .pdf extension
-	if strings.ToLower(filepath.Ext(inputPath)) != ".pdf" {
-		return fmt.Errorf("input file is not a PDF: %s", inputPath)
+	// Validate input file exists and is a PDF
+	if err := validatePDFFile(inputPath); err != nil {
+		return fmt.Errorf("input file: %w", err)
 	}
 
 	// Validate output directory exists and is writable
-	info, err := os.Stat(outputDirectory)
-	if os.IsNotExist(err) {
-		return fmt.Errorf("output directory does not exist: %s", outputDirectory)
-	}
-	if err != nil {
-		return fmt.Errorf("error accessing output directory: %w", err)
-	}
-	if !info.IsDir() {
-		return fmt.Errorf("output path is not a directory: %s", outputDirectory)
+	if err := validateOutputDirectory(outputDirectory); err != nil {
+		return err
 	}
 
 	// Get PDF page count for validation
@@ -151,7 +121,7 @@ func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition,
 	// Check for duplicate filenames
 	filenameMap := make(map[string]bool)
 	for _, split := range splits {
-		filename := strings.TrimSpace(split.Filename) + ".pdf"
+		filename := strings.TrimSpace(split.Filename) + PDFExtension
 		if filenameMap[filename] {
 			return fmt.Errorf("duplicate filename: %s", filename)
 		}
@@ -164,7 +134,7 @@ func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition,
 	// Process each split
 	for i, split := range splits {
 		// Create output path
-		outputPath := filepath.Join(outputDirectory, strings.TrimSpace(split.Filename)+".pdf")
+		outputPath := filepath.Join(outputDirectory, strings.TrimSpace(split.Filename)+PDFExtension)
 
 		// Remove existing output file if it exists
 		if _, err := os.Stat(outputPath); err == nil {
@@ -192,26 +162,14 @@ func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition,
 
 // RotatePDF rotates specified page ranges in a PDF file
 func (s *PDFService) RotatePDF(inputPath string, rotations []models.RotateDefinition, outputDirectory string, outputFilename string) error {
-	// Validate input file exists
-	if _, err := os.Stat(inputPath); os.IsNotExist(err) {
-		return fmt.Errorf("input file not found: %s", inputPath)
-	}
-
-	// Check if file has .pdf extension
-	if strings.ToLower(filepath.Ext(inputPath)) != ".pdf" {
-		return fmt.Errorf("input file is not a PDF: %s", inputPath)
+	// Validate input file exists and is a PDF
+	if err := validatePDFFile(inputPath); err != nil {
+		return fmt.Errorf("input file: %w", err)
 	}
 
 	// Validate output directory exists and is writable
-	info, err := os.Stat(outputDirectory)
-	if os.IsNotExist(err) {
-		return fmt.Errorf("output directory does not exist: %s", outputDirectory)
-	}
-	if err != nil {
-		return fmt.Errorf("error accessing output directory: %w", err)
-	}
-	if !info.IsDir() {
-		return fmt.Errorf("output path is not a directory: %s", outputDirectory)
+	if err := validateOutputDirectory(outputDirectory); err != nil {
+		return err
 	}
 
 	// Validate output filename
@@ -241,7 +199,7 @@ func (s *PDFService) RotatePDF(inputPath string, rotations []models.RotateDefini
 
 	// outputFilename from frontend does not include .pdf extension
 	// Always append .pdf extension
-	outputPath := filepath.Join(outputDirectory, outputFilename+".pdf")
+	outputPath := filepath.Join(outputDirectory, outputFilename+PDFExtension)
 
 	// Create a temporary copy of the input file for rotation operations
 	// pdfcpu RotatePages modifies the file in place, so we need to work with a copy
