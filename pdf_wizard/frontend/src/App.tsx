@@ -48,7 +48,7 @@ export const App = () => {
       try {
         const lang = await GetLanguage();
         // Validate language code and default to 'en' if invalid
-        const validLanguages: Language[] = ['en', 'zh', 'ar', 'fr', 'ja'];
+        const validLanguages: Language[] = ['en', 'zh', 'ar', 'fr', 'ja', 'hi', 'es', 'pt', 'ru'];
         const language = (validLanguages.includes(lang as Language) ? lang : 'en') as Language;
         setLanguage(language);
         forceUpdate({}); // Force re-render to update UI

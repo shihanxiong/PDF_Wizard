@@ -4,6 +4,10 @@ import { zh } from './zh';
 import { ar } from './ar';
 import { fr } from './fr';
 import { ja } from './ja';
+import { hi } from './hi';
+import { es } from './es';
+import { pt } from './pt';
+import { ru } from './ru';
 
 const translations: Record<Language, Translations> = {
   en,
@@ -11,6 +15,10 @@ const translations: Record<Language, Translations> = {
   ar,
   fr,
   ja,
+  hi,
+  es,
+  pt,
+  ru,
 };
 
 let currentLanguage: Language = 'en';
@@ -40,6 +48,10 @@ export const getNativeLanguageName = (lang: Language): string => {
     ar: 'العربية',
     fr: 'Français',
     ja: '日本語',
+    hi: 'हिन्दी',
+    es: 'Español',
+    pt: 'Português',
+    ru: 'Русский',
   };
   return nativeNames[lang] || lang;
 };

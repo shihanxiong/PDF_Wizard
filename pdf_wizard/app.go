@@ -93,13 +93,17 @@ func (a *App) GetLanguage() (string, error) {
 		return defaultLanguage, nil
 	}
 
-	// Validate language code (en, zh, ar, fr, ja)
+	// Validate language code (en, zh, ar, fr, ja, hi, es, pt, ru)
 	validLanguages := map[string]bool{
 		"en": true,
 		"zh": true,
 		"ar": true,
 		"fr": true,
 		"ja": true,
+		"hi": true,
+		"es": true,
+		"pt": true,
+		"ru": true,
 	}
 	if !validLanguages[config.Language] {
 		return defaultLanguage, nil

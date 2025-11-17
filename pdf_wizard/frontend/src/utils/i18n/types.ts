@@ -1,5 +1,5 @@
 // Translation keys and their translations
-export type Language = 'en' | 'zh' | 'ar' | 'fr' | 'ja';
+export type Language = 'en' | 'zh' | 'ar' | 'fr' | 'ja' | 'hi' | 'es' | 'pt' | 'ru';
 
 export interface Translations {
   // App
@@ -82,4 +82,3 @@ export interface Translations {
   cancel: string;
   save: string;
 }
-

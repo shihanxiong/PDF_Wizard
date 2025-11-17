@@ -12,7 +12,7 @@ A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backe
 
 **Features:**
 
-- 🌍 **Internationalization**: Supports English and Chinese (Simplified) with easy language switching
+- 🌍 **Internationalization**: Supports 9 languages (English, Chinese, Arabic, French, Japanese, Hindi, Spanish, Portuguese, Russian) with easy language switching
 - 🎨 **Modern UI**: Built with Material-UI for a polished, responsive interface
 - 🖱️ **Drag & Drop**: Intuitive file handling with drag-and-drop support
 - ⚡ **Fast Performance**: Native Go backend ensures quick PDF processing
@@ -211,6 +211,7 @@ This will create in `dist`:
 - `pdf_wizard-windows-portable.zip` - ZIP archive containing the executable
 
 > **Note**: To create the NSIS installer, you need to install NSIS first:
+>
 > - Download from: https://nsis.sourceforge.io/Download
 > - Or install via Chocolatey (as Administrator): `choco install nsis`
 > - After installing NSIS, rebuild the project to generate the installer
@@ -373,7 +374,7 @@ The E2E test suite includes:
 - State management
 - Material-UI component rendering
 - Internationalization (i18n) functionality:
-  - Language switching (English/Chinese)
+  - Language switching (all 9 supported languages)
   - Settings dialog functionality
   - UI text translation updates
   - Language persistence across navigation
@@ -386,20 +387,32 @@ For more details, see the [E2E Testing README](pdf_wizard/frontend/e2e/README.md
 
 PDF Wizard supports multiple languages with an easy-to-use translation system:
 
-- **Supported Languages**: English (en) and Chinese Simplified (zh)
+- **Supported Languages**:
+  - English (en)
+  - Chinese Simplified (zh)
+  - Arabic (ar)
+  - French (fr)
+  - Japanese (ja)
+  - Hindi (hi)
+  - Spanish (es)
+  - Portuguese (pt)
+  - Russian (ru)
 - **Language Selection**: Accessible via the Settings menu in the application menu bar
 - **Language Persistence**: Your language preference is saved and persists across application restarts
 - **Modular Structure**: Translations are organized in separate language files for easy maintenance and extension
+- **Native Language Names**: Language options are displayed in their native script for better user experience
 
 **Adding New Languages:**
 
 To add a new language:
 
-1. Create a new file in `pdf_wizard/frontend/src/utils/i18n/` (e.g., `fr.ts` for French)
+1. Create a new file in `pdf_wizard/frontend/src/utils/i18n/` (e.g., `de.ts` for German)
 2. Export a `Translations` object with all required translation keys (see `types.ts` for the interface)
-3. Add the language to the `translations` record in `i18n/index.ts`
-4. Update the `Language` type in `i18n/types.ts`
-5. Add the language option to the Settings dialog component
+3. Import the new language file in `i18n/index.ts`
+4. Add the language to the `translations` record in `i18n/index.ts`
+5. Update the `Language` type in `i18n/types.ts` to include the new language code
+6. Add the language to the `getNativeLanguageName` function in `i18n/index.ts`
+7. Add the language option to the Settings dialog component (`SettingsDialog.tsx`)
 
 ## Technology Stack
 
@@ -418,9 +431,9 @@ To add a new language:
 - **@dnd-kit**: Modern drag-and-drop library (replaced deprecated react-beautiful-dnd)
 - **Vite**: Fast build tool and dev server
 - **Custom i18n System**: Internationalization support with modular language files
-  - Language files: `i18n/en.ts`, `i18n/zh.ts`
+  - Language files: `i18n/en.ts`, `i18n/zh.ts`, `i18n/ar.ts`, `i18n/fr.ts`, `i18n/ja.ts`, `i18n/hi.ts`, `i18n/es.ts`, `i18n/pt.ts`, `i18n/ru.ts`
   - Type definitions: `i18n/types.ts`
-  - Main logic: `i18n/index.ts`
+  - Main logic: `i18n/index.ts` (includes `getNativeLanguageName` helper)
 
 ### Testing
 
@@ -445,7 +458,14 @@ PDF_Wizard/
 │   │   │   │   │   ├── index.ts    # Main i18n logic
 │   │   │   │   │   ├── types.ts    # TypeScript types
 │   │   │   │   │   ├── en.ts       # English translations
-│   │   │   │   │   └── zh.ts       # Chinese translations
+│   │   │   │   │   ├── zh.ts       # Chinese translations
+│   │   │   │   │   ├── ar.ts       # Arabic translations
+│   │   │   │   │   ├── fr.ts       # French translations
+│   │   │   │   │   ├── ja.ts       # Japanese translations
+│   │   │   │   │   ├── hi.ts       # Hindi translations
+│   │   │   │   │   ├── es.ts       # Spanish translations
+│   │   │   │   │   ├── pt.ts       # Portuguese translations
+│   │   │   │   │   └── ru.ts       # Russian translations
 │   │   │   │   └── formatters.ts
 │   │   │   └── App.tsx        # Main application component
 │   │   └── dist/        # Built frontend assets
@@ -475,7 +495,17 @@ The config file is automatically created when you change the language. You can a
 }
 ```
 
-Valid values are `"en"` (English) or `"zh"` (Chinese Simplified).
+Valid values are:
+
+- `"en"` - English
+- `"zh"` - Chinese Simplified
+- `"ar"` - Arabic
+- `"fr"` - French
+- `"ja"` - Japanese
+- `"hi"` - Hindi
+- `"es"` - Spanish
+- `"pt"` - Portuguese
+- `"ru"` - Russian
 
 ## Troubleshooting
 
@@ -518,7 +548,7 @@ If the language doesn't update after changing it in Settings:
 
 1. Check that the config file was created in the correct location (see [Configuration](#configuration))
 2. Restart the application
-3. Verify the config file contains valid JSON with a `"language"` field set to `"en"` or `"zh"`
+3. Verify the config file contains valid JSON with a `"language"` field set to one of the supported language codes (see [Configuration](#configuration) for valid values)
 
 ## Contributing
 
