@@ -32,12 +32,16 @@ test.describe('PDF Wizard E2E Tests', () => {
         CanResolveFilePaths: () => {
           return false;
         },
-        EventsOn: (event: string, callback: () => void) => {
+        EventsOnMultiple: (event: string, callback: () => void, maxCallbacks?: number) => {
           if (!(window as any).__wailsEventHandlers) {
             (window as any).__wailsEventHandlers = {};
           }
           (window as any).__wailsEventHandlers[event] = callback;
-          return () => {};
+          return () => {}; // Return unsubscribe function
+        },
+        EventsOn: (event: string, callback: () => void) => {
+          // EventsOn calls EventsOnMultiple internally
+          return (window as any).runtime.EventsOnMultiple(event, callback, -1);
         },
         EventsEmit: (event: string, data?: any) => {
           if ((window as any).__wailsEventHandlers && (window as any).__wailsEventHandlers[event]) {
@@ -77,26 +81,16 @@ test.describe('PDF Wizard E2E Tests', () => {
       };
     });
 
-    // Capture all console messages for debugging
-    const consoleMessages: string[] = [];
+    // Ignore console errors from Wails runtime (not available in Vite-only mode)
     page.on('console', (msg) => {
       const text = msg.text();
-      const type = msg.type();
-
-      // Store all errors for debugging
-      if (type === 'error') {
-        consoleMessages.push(`[${type}] ${text}`);
-        // Log to help debug
-        if (!text.includes('wails') && !text.includes('runtime') && !text.includes('OnFileDrop')) {
-          console.log('Console error:', text);
-        }
+      if (
+        msg.type() === 'error' &&
+        (text.includes('wails') || text.includes('runtime') || text.includes('OnFileDrop'))
+      ) {
+        // Ignore Wails-related errors when testing UI only
+        return;
       }
-    });
-
-    // Also capture page errors
-    page.on('pageerror', (error) => {
-      consoleMessages.push(`[pageerror] ${error.message}`);
-      console.log('Page error:', error.message, error.stack);
     });
 
     // Navigate to the app (Vite dev server)
@@ -113,16 +107,11 @@ test.describe('PDF Wizard E2E Tests', () => {
     try {
       await page.waitForSelector('[role="tab"]', { timeout: 15000 });
     } catch (error) {
-      // If tabs don't appear, get more debug info
+      // If tabs don't appear, check what's actually on the page
       const bodyText = await page.textContent('body');
       const html = await page.content();
-      const consoleErrors = await page.evaluate(() => {
-        return (window as any).__testConsoleErrors || [];
-      });
       throw new Error(
-        `React app failed to render. Body content: ${bodyText?.substring(0, 200)}. HTML length: ${
-          html.length
-        }. Console errors: ${JSON.stringify(consoleErrors)}`,
+        `React app failed to render. Body content: ${bodyText?.substring(0, 200)}. HTML length: ${html.length}`,
       );
     }
   });
@@ -418,12 +407,16 @@ test.describe('PDF Wizard i18n E2E Tests', () => {
         CanResolveFilePaths: () => {
           return false;
         },
-        EventsOn: (event: string, callback: () => void) => {
+        EventsOnMultiple: (event: string, callback: () => void, maxCallbacks?: number) => {
           if (!(window as any).__wailsEventHandlers) {
             (window as any).__wailsEventHandlers = {};
           }
           (window as any).__wailsEventHandlers[event] = callback;
-          return () => {};
+          return () => {}; // Return unsubscribe function
+        },
+        EventsOn: (event: string, callback: () => void) => {
+          // EventsOn calls EventsOnMultiple internally
+          return (window as any).runtime.EventsOnMultiple(event, callback, -1);
         },
         EventsEmit: (event: string, data?: any) => {
           if ((window as any).__wailsEventHandlers && (window as any).__wailsEventHandlers[event]) {
@@ -463,17 +456,15 @@ test.describe('PDF Wizard i18n E2E Tests', () => {
       };
     });
 
-    // Ignore console errors from Wails runtime
+    // Ignore console errors from Wails runtime (not available in Vite-only mode)
     page.on('console', (msg) => {
       const text = msg.text();
       if (
         msg.type() === 'error' &&
         (text.includes('wails') || text.includes('runtime') || text.includes('OnFileDrop'))
       ) {
+        // Ignore Wails-related errors when testing UI only
         return;
-      }
-      if (msg.type() === 'error') {
-        console.log('Console error:', text);
       }
     });
 
@@ -553,14 +544,16 @@ test.describe('PDF Wizard i18n E2E Tests', () => {
     const settingsDialog = page.locator('[role="dialog"]').filter({ hasText: /Settings|设置/ });
     await expect(settingsDialog).toBeVisible({ timeout: 5000 });
 
-    // Verify language selector is present
-    const languageLabel = settingsDialog.getByText(/Language|语言/);
-    await expect(languageLabel).toBeVisible();
+    // Verify language selector is present - check that dialog contains language-related text
+    // Use a more flexible approach to avoid strict mode violations
+    await expect(settingsDialog.getByLabel(/Language|语言/)).toBeVisible();
 
-    // Verify language options are available
-    // Note: The select might be rendered differently, so we check for the dialog content
-    await expect(settingsDialog.getByText(/English|英语/)).toBeVisible();
-    await expect(settingsDialog.getByText(/Chinese|中文/)).toBeVisible();
+    // Verify language selector dropdown exists (options are only visible when dropdown is open)
+    // Check for the select element by its ID or role
+    const languageSelect = settingsDialog
+      .locator('#language-select, [role="combobox"]')
+      .filter({ hasText: /English|英语|Chinese|中文/ });
+    await expect(languageSelect).toBeVisible();
   });
 
   test('should update UI text when language changes in settings', async ({ page }) => {
