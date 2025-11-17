@@ -42,15 +42,43 @@ This will:
 
 ## Test Structure
 
-The test suite (`pdf-wizard.spec.ts`) includes tests for:
+The test suite is organized into multiple files by functionality:
 
-1. **App Loading**: Verifies the application loads with correct title and logo
-2. **Tab Navigation**: Tests that all three tabs (Merge, Split, and Rotate) are visible and functional
-3. **Merge Tab Content**: Verifies all UI elements in the Merge tab
-4. **Tab Switching**: Tests navigation between all tabs (Merge, Split, and Rotate)
-5. **User Interactions**: Tests form input and button interactions
-6. **State Management**: Verifies tab state is maintained correctly
-7. **UI Structure**: Validates Material-UI components render correctly
+### Test Files
+
+1. **`app.spec.ts`** - App Loading and Basic Structure
+
+   - Verifies the application loads with correct title and logo
+   - Validates Material-UI components render correctly
+   - Tests basic UI structure
+
+2. **`tabs.spec.ts`** - Tab Navigation and Content
+
+   - Tests that all three tabs (Merge, Split, and Rotate) are visible and functional
+   - Verifies tab switching works correctly
+   - Tests tab content display when tabs are active
+   - Verifies tab state is maintained correctly
+
+3. **`components.spec.ts`** - UI Components and Interactions
+
+   - Tests form input and button interactions
+   - Verifies buttons are enabled/disabled based on state
+   - Tests error and success state handling
+   - Validates component interactions
+
+4. **`i18n.spec.ts`** - Internationalization
+   - Tests default language (English) display
+   - Verifies language switching functionality
+   - Tests settings dialog functionality
+   - Verifies language persistence across navigation
+   - Tests translated UI elements
+
+### Shared Utilities
+
+- **`helpers/test-setup.ts`** - Common test setup utilities
+  - `setupWailsMocks()` - Sets up Wails runtime and Go bindings mocks
+  - `setupTestPage()` - Common beforeEach setup for all tests
+  - Reduces code duplication across test files
 
 ## Configuration
 
