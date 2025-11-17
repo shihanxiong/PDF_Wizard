@@ -93,17 +93,20 @@ func (a *App) GetLanguage() (string, error) {
 		return defaultLanguage, nil
 	}
 
-	// Validate language code (en, zh, ar, fr, ja, hi, es, pt, ru)
+	// Validate language code (en, zh, zh-TW, ar, fr, ja, hi, es, pt, ru, ko, de)
 	validLanguages := map[string]bool{
-		"en": true,
-		"zh": true,
-		"ar": true,
-		"fr": true,
-		"ja": true,
-		"hi": true,
-		"es": true,
-		"pt": true,
-		"ru": true,
+		"en":    true,
+		"zh":    true,
+		"zh-TW": true,
+		"ar":    true,
+		"fr":    true,
+		"ja":    true,
+		"hi":    true,
+		"es":    true,
+		"pt":    true,
+		"ru":    true,
+		"ko":    true,
+		"de":    true,
 	}
 	if !validLanguages[config.Language] {
 		return defaultLanguage, nil
@@ -116,11 +119,18 @@ func (a *App) GetLanguage() (string, error) {
 func (a *App) SetLanguage(language string) error {
 	// Validate language code
 	validLanguages := map[string]bool{
-		"en": true,
-		"zh": true,
-		"ar": true,
-		"fr": true,
-		"ja": true,
+		"en":    true,
+		"zh":    true,
+		"zh-TW": true,
+		"ar":    true,
+		"fr":    true,
+		"ja":    true,
+		"hi":    true,
+		"es":    true,
+		"pt":    true,
+		"ru":    true,
+		"ko":    true,
+		"de":    true,
 	}
 	if !validLanguages[language] {
 		return fmt.Errorf("invalid language code: %s", language)

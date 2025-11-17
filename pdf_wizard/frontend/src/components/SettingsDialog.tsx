@@ -35,7 +35,7 @@ export const SettingsDialog = ({ open, onClose, onLanguageChange }: SettingsDial
     try {
       const lang = await GetLanguage();
       // Validate language code and default to 'en' if invalid
-      const validLanguages: Language[] = ['en', 'zh', 'ar', 'fr', 'ja', 'hi', 'es', 'pt', 'ru'];
+      const validLanguages: Language[] = ['en', 'zh', 'zh-TW', 'ar', 'fr', 'ja', 'hi', 'es', 'pt', 'ru', 'ko', 'de'];
       const language = (validLanguages.includes(lang as Language) ? lang : 'en') as Language;
       setSelectedLanguage(language);
     } catch (err) {
@@ -85,6 +85,7 @@ export const SettingsDialog = ({ open, onClose, onLanguageChange }: SettingsDial
             >
               <MenuItem value="en">{getNativeLanguageName('en')}</MenuItem>
               <MenuItem value="zh">{getNativeLanguageName('zh')}</MenuItem>
+              <MenuItem value="zh-TW">{getNativeLanguageName('zh-TW')}</MenuItem>
               <MenuItem value="ar">{getNativeLanguageName('ar')}</MenuItem>
               <MenuItem value="fr">{getNativeLanguageName('fr')}</MenuItem>
               <MenuItem value="ja">{getNativeLanguageName('ja')}</MenuItem>
@@ -92,6 +93,8 @@ export const SettingsDialog = ({ open, onClose, onLanguageChange }: SettingsDial
               <MenuItem value="es">{getNativeLanguageName('es')}</MenuItem>
               <MenuItem value="pt">{getNativeLanguageName('pt')}</MenuItem>
               <MenuItem value="ru">{getNativeLanguageName('ru')}</MenuItem>
+              <MenuItem value="ko">{getNativeLanguageName('ko')}</MenuItem>
+              <MenuItem value="de">{getNativeLanguageName('de')}</MenuItem>
             </Select>
           </FormControl>
         </Box>
