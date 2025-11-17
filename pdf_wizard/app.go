@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -58,7 +59,7 @@ func (a *App) getConfigPath() (string, error) {
 	}
 	configDir := filepath.Join(userConfigDir, "PDF Wizard")
 	// Create directory if it doesn't exist
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, services.DefaultDirPerm); err != nil {
 		return "", err
 	}
 	return filepath.Join(configDir, configFileName), nil
@@ -92,11 +93,39 @@ func (a *App) GetLanguage() (string, error) {
 		return defaultLanguage, nil
 	}
 
+	// Validate language code (en, zh, ar, fr, ja, hi, es, pt, ru)
+	validLanguages := map[string]bool{
+		"en": true,
+		"zh": true,
+		"ar": true,
+		"fr": true,
+		"ja": true,
+		"hi": true,
+		"es": true,
+		"pt": true,
+		"ru": true,
+	}
+	if !validLanguages[config.Language] {
+		return defaultLanguage, nil
+	}
+
 	return config.Language, nil
 }
 
 // SetLanguage saves the language preference
 func (a *App) SetLanguage(language string) error {
+	// Validate language code
+	validLanguages := map[string]bool{
+		"en": true,
+		"zh": true,
+		"ar": true,
+		"fr": true,
+		"ja": true,
+	}
+	if !validLanguages[language] {
+		return fmt.Errorf("invalid language code: %s", language)
+	}
+
 	configPath, err := a.getConfigPath()
 	if err != nil {
 		return err
@@ -111,7 +140,7 @@ func (a *App) SetLanguage(language string) error {
 		return err
 	}
 
-	return os.WriteFile(configPath, data, 0644)
+	return os.WriteFile(configPath, data, services.DefaultFilePerm)
 }
 
 // SelectPDFFiles opens a file dialog to select multiple PDF files

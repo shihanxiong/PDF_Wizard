@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/pdfcpu/pdfcpu/pkg/api"
@@ -84,21 +83,16 @@ func (s *FileService) GetFileMetadata(path string) (models.PDFMetadata, error) {
 		Name:         filepath.Base(path),
 		Size:         info.Size(),
 		LastModified: info.ModTime().Format(time.RFC3339),
-		IsPDF:        strings.ToLower(filepath.Ext(path)) == ".pdf",
+		IsPDF:        isPDFFile(path),
 		TotalPages:   0, // Not needed for merge operations
 	}, nil
 }
 
 // GetPDFPageCount returns the total number of pages in a PDF file
 func (s *FileService) GetPDFPageCount(path string) (int, error) {
-	// Validate file exists
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return 0, fmt.Errorf("file not found: %s", path)
-	}
-
-	// Check if file has .pdf extension
-	if strings.ToLower(filepath.Ext(path)) != ".pdf" {
-		return 0, fmt.Errorf("file is not a PDF: %s", path)
+	// Validate file exists and is a PDF
+	if err := validatePDFFile(path); err != nil {
+		return 0, err
 	}
 
 	// Use pdfcpu to read the PDF and get page count
@@ -129,8 +123,7 @@ func (s *FileService) GetPDFMetadata(path string) (models.PDFMetadata, error) {
 		Name:         filepath.Base(path),
 		Size:         info.Size(),
 		LastModified: info.ModTime().Format(time.RFC3339),
-		IsPDF:        strings.ToLower(filepath.Ext(path)) == ".pdf",
+		IsPDF:        isPDFFile(path),
 		TotalPages:   pageCount,
 	}, nil
 }
-

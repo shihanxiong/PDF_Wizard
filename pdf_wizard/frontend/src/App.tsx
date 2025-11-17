@@ -6,7 +6,7 @@ import { SplitTab } from './components/SplitTab';
 import { RotateTab } from './components/RotateTab';
 import { SettingsDialog } from './components/SettingsDialog';
 import logo from './assets/img/app_logo.png';
-import { OnFileDrop, EventsOn } from '../wailsjs/runtime/runtime';
+import { OnFileDrop, OnFileDropOff, EventsOn } from '../wailsjs/runtime/runtime';
 import { GetLanguage, SetLanguage } from '../wailsjs/go/main/App';
 import { t, setLanguage, type Language } from './utils/i18n';
 
@@ -47,7 +47,9 @@ export const App = () => {
     const loadLanguage = async () => {
       try {
         const lang = await GetLanguage();
-        const language = (lang === 'zh' ? 'zh' : 'en') as Language;
+        // Validate language code and default to 'en' if invalid
+        const validLanguages: Language[] = ['en', 'zh', 'ar', 'fr', 'ja', 'hi', 'es', 'pt', 'ru'];
+        const language = (validLanguages.includes(lang as Language) ? lang : 'en') as Language;
         setLanguage(language);
         forceUpdate({}); // Force re-render to update UI
       } catch (err) {
@@ -75,9 +77,17 @@ export const App = () => {
   }, [tabValue]);
 
   // Set up drag and drop at app level to work anywhere on the window
+  // Cross-platform implementation that works on both macOS and Windows
   // Register once, not re-register on tab change
   useEffect(() => {
-    OnFileDrop((x: number, y: number, paths: string[]) => {
+    // Register Wails native file drop handler
+    // useDropTarget=false means it works anywhere on the window (no CSS requirement)
+    // This approach works on both macOS and Windows
+    const handleFileDrop = (x: number, y: number, paths: string[]) => {
+      if (!paths || paths.length === 0) {
+        return;
+      }
+
       // Route to the appropriate tab based on active tab (using ref to get current value)
       if (tabValueRef.current === 0 && mergeTabDropHandler.current) {
         // Merge tab is active
@@ -89,36 +99,29 @@ export const App = () => {
         // Rotate tab is active
         rotateTabDropHandler.current(paths);
       }
-    }, false);
-
-    // Prevent default browser drag and drop behavior to avoid PDF preview
-    const preventDefaults = (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
     };
 
-    const handleDragOver = (e: DragEvent) => {
-      preventDefaults(e);
-    };
+    // Register with useDropTarget=false to work anywhere on window
+    // This works on both macOS and Windows
+    // On Windows, DisableWebViewDrop in main.go prevents WebView interference
+    // On macOS, this works natively without interference
+    try {
+      OnFileDrop(handleFileDrop, false);
+    } catch (error) {
+      console.error('Failed to register OnFileDrop:', error);
+    }
 
-    const handleDrop = (e: DragEvent) => {
-      preventDefaults(e);
-      // Wails OnFileDrop handles the actual file processing
-      // We just prevent the browser from trying to open/preview the file
-    };
-
-    // Add event listeners to prevent default browser behavior
-    document.addEventListener('dragover', handleDragOver);
-    document.addEventListener('drop', handleDrop);
-    document.addEventListener('dragenter', preventDefaults);
-    document.addEventListener('dragleave', preventDefaults);
+    // Don't add any browser event handlers - let Wails handle everything natively
+    // Browser handlers interfere with Wails' native drag-and-drop on Windows
+    // and are unnecessary on macOS where Wails handles it natively
 
     // Cleanup
     return () => {
-      document.removeEventListener('dragover', handleDragOver);
-      document.removeEventListener('drop', handleDrop);
-      document.removeEventListener('dragenter', preventDefaults);
-      document.removeEventListener('dragleave', preventDefaults);
+      try {
+        OnFileDropOff();
+      } catch (error) {
+        // Ignore cleanup errors
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only register once on mount
@@ -133,7 +136,10 @@ export const App = () => {
   };
 
   return (
-    <Box id="App" sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <Box
+      id="App"
+      sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', backgroundColor: '#ffffff' }}
+    >
       <AppBar position="static" sx={{ bgcolor: 'background.paper', color: 'text.primary', boxShadow: 1 }}>
         <Toolbar sx={{ px: 2, minHeight: '64px !important' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mr: 3 }}>
@@ -151,7 +157,7 @@ export const App = () => {
           </Box>
         </Toolbar>
       </AppBar>
-      <Box sx={{ flex: 1, overflow: 'hidden' }}>
+      <Box sx={{ flex: 1, overflow: 'hidden', backgroundColor: '#ffffff' }}>
         <TabPanel value={tabValue} index={0}>
           <MergeTab onFileDrop={(handler: (paths: string[]) => void) => (mergeTabDropHandler.current = handler)} />
         </TabPanel>

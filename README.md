@@ -12,7 +12,7 @@ A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backe
 
 **Features:**
 
-- 🌍 **Internationalization**: Supports English and Chinese (Simplified) with easy language switching
+- 🌍 **Internationalization**: Supports 9 languages (English, Chinese, Arabic, French, Japanese, Hindi, Spanish, Portuguese, Russian) with easy language switching
 - 🎨 **Modern UI**: Built with Material-UI for a polished, responsive interface
 - 🖱️ **Drag & Drop**: Intuitive file handling with drag-and-drop support
 - ⚡ **Fast Performance**: Native Go backend ensures quick PDF processing
@@ -39,20 +39,20 @@ A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backe
 
 ## Downloads
 
-### macOS Installer
+Pre-built installers are available in the [`pdf_wizard/dist/`](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist) folder.
 
-Pre-built installers are available in the [`pdf_wizard/dist/`](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist) folder:
+### macOS
 
 - **DMG Installer**: [`pdf_wizard-macos-universal.dmg`](https://github.com/shihanxiong/PDF_Wizard/raw/master/pdf_wizard/dist/pdf_wizard-macos-universal.dmg) - Universal binary for both Intel and Apple Silicon Macs
 - **ZIP Archive**: [`pdf_wizard-macos-universal.zip`](https://github.com/shihanxiong/PDF_Wizard/raw/master/pdf_wizard/dist/pdf_wizard-macos-universal.zip) - ZIP file containing the application bundle
 
-**Installation Instructions:**
+**macOS Installation Instructions:**
 
 **DMG Installation (Recommended):**
 
 1. Download the DMG file from the [dist folder](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist)
 2. Double-click the DMG file to mount it
-3. Drag `pdf_wizard.app` to the Applications folder (shown in the DMG window)
+3. Drag `PDF Wizard.app` to the Applications folder (shown in the DMG window)
 4. Open Applications folder and launch PDF Wizard
 5. On first launch: Right-click → Open → Click "Open" to bypass macOS security warning
 
@@ -60,21 +60,58 @@ Pre-built installers are available in the [`pdf_wizard/dist/`](https://github.co
 
 1. Download the ZIP file from the [dist folder](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist)
 2. Extract the ZIP file
-3. Right-click `pdf_wizard.app` → Open → Click "Open"
-4. Or run in Terminal: `xattr -cr pdf_wizard.app`
+3. Right-click `PDF Wizard.app` → Open → Click "Open"
+4. Or run in Terminal: `xattr -cr "PDF Wizard.app"`
 
-**System Requirements:**
+**macOS System Requirements:**
 
 - macOS 10.13 or later
 - Works on Intel and Apple Silicon Macs (universal binary)
 
-> **Note**: If you see "App is damaged and can't be opened", right-click the app → Open → Click "Open", or run `xattr -cr pdf_wizard.app` in Terminal.
+> **Note**: If you see "App is damaged and can't be opened", right-click the app → Open → Click "Open", or run `xattr -cr "PDF Wizard.app"` in Terminal.
+
+### Windows
+
+- **Standalone Executable**: [`pdf_wizard-windows.exe`](https://github.com/shihanxiong/PDF_Wizard/raw/master/pdf_wizard/dist/pdf_wizard-windows.exe) - Portable executable, no installation required
+- **Installer** (optional): [`pdf_wizard-windows-installer.exe`](https://github.com/shihanxiong/PDF_Wizard/raw/master/pdf_wizard/dist/pdf_wizard-windows-installer.exe) - NSIS installer for easy installation (only created if NSIS is installed)
+- **Portable ZIP**: [`pdf_wizard-windows-portable.zip`](https://github.com/shihanxiong/PDF_Wizard/raw/master/pdf_wizard/dist/pdf_wizard-windows-portable.zip) - ZIP archive containing the executable
+
+**Windows Installation Instructions:**
+
+**Standalone Executable (Recommended for Quick Start):**
+
+1. Download `pdf_wizard-windows.exe` from the [dist folder](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist)
+2. Double-click `pdf_wizard-windows.exe` to run
+3. No installation required - it's portable!
+
+**Installer** (optional, requires NSIS to be installed during build):
+
+1. Download the installer from the [dist folder](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist)
+2. Double-click `pdf_wizard-windows-installer.exe`
+3. Follow the installation wizard
+4. Launch PDF Wizard from the Start menu or desktop shortcut
+
+> **Note**: The installer is only created if NSIS (Nullsoft Scriptable Installer System) is installed on the build machine. If you don't see this file, use the standalone executable or ZIP archive instead.
+
+**Portable ZIP:**
+
+1. Download the ZIP file from the [dist folder](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist)
+2. Extract the ZIP file to a folder of your choice
+3. Double-click `PDF Wizard.exe` to run
+4. No installation required - it's portable!
+
+**Windows System Requirements:**
+
+- Windows 10 or later
+- Works on both 32-bit and 64-bit Windows
+
+> **Note**: If Windows Defender or SmartScreen blocks the app, click "More info" → "Run anyway". The app is safe - it's just not code-signed.
 
 ## Prerequisites
 
-- Go 1.21 or higher
-- Node.js 20+ and npm (Vite 7 requires Node.js 20.19+ or 22.12+)
-- Wails CLI v2.8.1 or higher
+- **Go 1.24.0** (specified in `go.mod`)
+- **Node.js 22.21.1** (required by the project)
+- **Wails CLI v2.11.0** (matches `github.com/wailsapp/wails/v2 v2.11.0` in `go.mod`)
 
 ## Quick Start
 
@@ -105,9 +142,9 @@ If you prefer to install dependencies manually:
    go install github.com/wailsapp/wails/v2/cmd/wails@latest
    ```
 
-3. **Verify Node.js**: Ensure Node.js 20+ is installed:
+3. **Verify Node.js**: Ensure Node.js 22.21.1 is installed:
    ```bash
-   node --version
+   node --version  # Should show v22.21.1
    npm --version
    ```
 
@@ -146,16 +183,70 @@ wails build -platform darwin/universal
 
 For distribution to other Mac machines, see [Distribution Guide](pdf_wizard/DISTRIBUTION.md).
 
-**Quick Distribution Build:**
+**Build for Windows Distribution:**
 
-Use the automated build script:
+To create a Windows executable:
+
+```bash
+cd pdf_wizard
+wails build
+```
+
+This will create in `build/bin`:
+
+- `PDF Wizard.exe` - Standalone executable
+- `PDF Wizard Installer.exe` - NSIS installer (if NSIS is installed)
+
+For distribution packages in the `dist` directory, use the build script:
 
 ```bash
 cd pdf_wizard
 ./build-dist.sh
 ```
 
-This creates a ZIP file and DMG ready for distribution in the `pdf_wizard/dist` directory.
+This will create in `dist`:
+
+- `pdf_wizard-windows.exe` - Standalone executable (matches macOS naming convention)
+- `pdf_wizard-windows-installer.exe` - NSIS installer (only if NSIS is installed on the build machine)
+- `pdf_wizard-windows-portable.zip` - ZIP archive containing the executable
+
+> **Note**: To create the NSIS installer, you need to install NSIS first:
+>
+> - Download from: https://nsis.sourceforge.io/Download
+> - Or install via Chocolatey (as Administrator): `choco install nsis`
+> - After installing NSIS, rebuild the project to generate the installer
+
+**Quick Distribution Build:**
+
+Use the automated build script (cross-platform):
+
+**On macOS/Linux:**
+
+```bash
+cd pdf_wizard
+./build-dist.sh
+```
+
+**On Windows (PowerShell):**
+
+```powershell
+cd pdf_wizard
+.\build-dist.ps1
+```
+
+**On Windows (Git Bash/WSL):**
+
+```bash
+cd pdf_wizard
+./build-dist.sh
+```
+
+The script automatically detects your operating system and creates:
+
+- **macOS**: DMG installer and ZIP archive
+- **Windows**: NSIS installer (if NSIS is installed) and portable ZIP archive
+
+All distribution files are created in the `pdf_wizard/dist` directory.
 
 ## Testing
 
@@ -283,7 +374,7 @@ The E2E test suite includes:
 - State management
 - Material-UI component rendering
 - Internationalization (i18n) functionality:
-  - Language switching (English/Chinese)
+  - Language switching (all 9 supported languages)
   - Settings dialog functionality
   - UI text translation updates
   - Language persistence across navigation
@@ -296,27 +387,39 @@ For more details, see the [E2E Testing README](pdf_wizard/frontend/e2e/README.md
 
 PDF Wizard supports multiple languages with an easy-to-use translation system:
 
-- **Supported Languages**: English (en) and Chinese Simplified (zh)
+- **Supported Languages**:
+  - English (en)
+  - Chinese Simplified (zh)
+  - Arabic (ar)
+  - French (fr)
+  - Japanese (ja)
+  - Hindi (hi)
+  - Spanish (es)
+  - Portuguese (pt)
+  - Russian (ru)
 - **Language Selection**: Accessible via the Settings menu in the application menu bar
 - **Language Persistence**: Your language preference is saved and persists across application restarts
 - **Modular Structure**: Translations are organized in separate language files for easy maintenance and extension
+- **Native Language Names**: Language options are displayed in their native script for better user experience
 
 **Adding New Languages:**
 
 To add a new language:
 
-1. Create a new file in `pdf_wizard/frontend/src/utils/i18n/` (e.g., `fr.ts` for French)
+1. Create a new file in `pdf_wizard/frontend/src/utils/i18n/` (e.g., `de.ts` for German)
 2. Export a `Translations` object with all required translation keys (see `types.ts` for the interface)
-3. Add the language to the `translations` record in `i18n/index.ts`
-4. Update the `Language` type in `i18n/types.ts`
-5. Add the language option to the Settings dialog component
+3. Import the new language file in `i18n/index.ts`
+4. Add the language to the `translations` record in `i18n/index.ts`
+5. Update the `Language` type in `i18n/types.ts` to include the new language code
+6. Add the language to the `getNativeLanguageName` function in `i18n/index.ts`
+7. Add the language option to the Settings dialog component (`SettingsDialog.tsx`)
 
 ## Technology Stack
 
 ### Backend
 
-- **Go 1.21+**: High-performance backend services
-- **Wails v2**: Desktop application framework
+- **Go 1.24.0**: High-performance backend services
+- **Wails v2.11.0**: Desktop application framework
 - **pdfcpu**: PDF manipulation library for merging, splitting, and rotating
 - **JSON Config**: Language preference stored in user config directory
 
@@ -328,9 +431,9 @@ To add a new language:
 - **@dnd-kit**: Modern drag-and-drop library (replaced deprecated react-beautiful-dnd)
 - **Vite**: Fast build tool and dev server
 - **Custom i18n System**: Internationalization support with modular language files
-  - Language files: `i18n/en.ts`, `i18n/zh.ts`
+  - Language files: `i18n/en.ts`, `i18n/zh.ts`, `i18n/ar.ts`, `i18n/fr.ts`, `i18n/ja.ts`, `i18n/hi.ts`, `i18n/es.ts`, `i18n/pt.ts`, `i18n/ru.ts`
   - Type definitions: `i18n/types.ts`
-  - Main logic: `i18n/index.ts`
+  - Main logic: `i18n/index.ts` (includes `getNativeLanguageName` helper)
 
 ### Testing
 
@@ -355,7 +458,14 @@ PDF_Wizard/
 │   │   │   │   │   ├── index.ts    # Main i18n logic
 │   │   │   │   │   ├── types.ts    # TypeScript types
 │   │   │   │   │   ├── en.ts       # English translations
-│   │   │   │   │   └── zh.ts       # Chinese translations
+│   │   │   │   │   ├── zh.ts       # Chinese translations
+│   │   │   │   │   ├── ar.ts       # Arabic translations
+│   │   │   │   │   ├── fr.ts       # French translations
+│   │   │   │   │   ├── ja.ts       # Japanese translations
+│   │   │   │   │   ├── hi.ts       # Hindi translations
+│   │   │   │   │   ├── es.ts       # Spanish translations
+│   │   │   │   │   ├── pt.ts       # Portuguese translations
+│   │   │   │   │   └── ru.ts       # Russian translations
 │   │   │   │   └── formatters.ts
 │   │   │   └── App.tsx        # Main application component
 │   │   └── dist/        # Built frontend assets
@@ -385,7 +495,17 @@ The config file is automatically created when you change the language. You can a
 }
 ```
 
-Valid values are `"en"` (English) or `"zh"` (Chinese Simplified).
+Valid values are:
+
+- `"en"` - English
+- `"zh"` - Chinese Simplified
+- `"ar"` - Arabic
+- `"fr"` - French
+- `"ja"` - Japanese
+- `"hi"` - Hindi
+- `"es"` - Spanish
+- `"pt"` - Portuguese
+- `"ru"` - Russian
 
 ## Troubleshooting
 
@@ -428,7 +548,7 @@ If the language doesn't update after changing it in Settings:
 
 1. Check that the config file was created in the correct location (see [Configuration](#configuration))
 2. Restart the application
-3. Verify the config file contains valid JSON with a `"language"` field set to `"en"` or `"zh"`
+3. Verify the config file contains valid JSON with a `"language"` field set to one of the supported language codes (see [Configuration](#configuration) for valid values)
 
 ## Contributing
 

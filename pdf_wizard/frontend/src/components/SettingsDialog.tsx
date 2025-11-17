@@ -12,7 +12,7 @@ import {
   Box,
 } from '@mui/material';
 import { GetLanguage, SetLanguage } from '../../wailsjs/go/main/App';
-import { t, setLanguage, getLanguage, type Language } from '../utils/i18n';
+import { t, setLanguage, getLanguage, getNativeLanguageName, type Language } from '../utils/i18n';
 
 interface SettingsDialogProps {
   open: boolean;
@@ -34,7 +34,9 @@ export const SettingsDialog = ({ open, onClose, onLanguageChange }: SettingsDial
   const loadLanguage = async () => {
     try {
       const lang = await GetLanguage();
-      const language = (lang === 'zh' ? 'zh' : 'en') as Language;
+      // Validate language code and default to 'en' if invalid
+      const validLanguages: Language[] = ['en', 'zh', 'ar', 'fr', 'ja', 'hi', 'es', 'pt', 'ru'];
+      const language = (validLanguages.includes(lang as Language) ? lang : 'en') as Language;
       setSelectedLanguage(language);
     } catch (err) {
       console.error('Failed to load language:', err);
@@ -81,18 +83,25 @@ export const SettingsDialog = ({ open, onClose, onLanguageChange }: SettingsDial
               onChange={handleLanguageChange}
               disabled={loading}
             >
-              <MenuItem value="en">{t('english')}</MenuItem>
-              <MenuItem value="zh">{t('chinese')}</MenuItem>
+              <MenuItem value="en">{getNativeLanguageName('en')}</MenuItem>
+              <MenuItem value="zh">{getNativeLanguageName('zh')}</MenuItem>
+              <MenuItem value="ar">{getNativeLanguageName('ar')}</MenuItem>
+              <MenuItem value="fr">{getNativeLanguageName('fr')}</MenuItem>
+              <MenuItem value="ja">{getNativeLanguageName('ja')}</MenuItem>
+              <MenuItem value="hi">{getNativeLanguageName('hi')}</MenuItem>
+              <MenuItem value="es">{getNativeLanguageName('es')}</MenuItem>
+              <MenuItem value="pt">{getNativeLanguageName('pt')}</MenuItem>
+              <MenuItem value="ru">{getNativeLanguageName('ru')}</MenuItem>
             </Select>
           </FormControl>
         </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleCancel} disabled={loading}>
-          Cancel
+          {t('cancel')}
         </Button>
         <Button onClick={handleSave} variant="contained" disabled={loading}>
-          Save
+          {t('save')}
         </Button>
       </DialogActions>
     </Dialog>

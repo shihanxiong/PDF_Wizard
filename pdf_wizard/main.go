@@ -44,7 +44,11 @@ func main() {
 		},
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
 		DragAndDrop: &options.DragAndDrop{
-			EnableFileDrop: true,
+			EnableFileDrop:     true,
+			DisableWebViewDrop: true, // Disable WebView's native drag-and-drop to prevent interference
+			// This setting works on both macOS and Windows:
+			// - On Windows: Prevents WebView2 from intercepting drag-and-drop events
+			// - On macOS: Prevents WebKit from interfering with Wails' native handler
 		},
 		Menu: appMenu,
 		Mac: &mac.Options{

@@ -1,5 +1,5 @@
 // Translation keys and their translations
-export type Language = 'en' | 'zh';
+export type Language = 'en' | 'zh' | 'ar' | 'fr' | 'ja' | 'hi' | 'es' | 'pt' | 'ru';
 
 export interface Translations {
   // App
@@ -79,5 +79,6 @@ export interface Translations {
   selectFiles: string;
   selectFile: string;
   selectDirectory: string;
+  cancel: string;
+  save: string;
 }
-

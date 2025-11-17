@@ -65,4 +65,6 @@ export const zh: Translations = {
   selectFiles: '选择文件',
   selectFile: '选择文件',
   selectDirectory: '选择目录',
+  cancel: '取消',
+  save: '保存',
 };

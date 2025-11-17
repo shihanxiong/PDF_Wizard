@@ -65,5 +65,7 @@ export const en: Translations = {
   selectFiles: 'Select Files',
   selectFile: 'Select File',
   selectDirectory: 'Select Directory',
+  cancel: 'Cancel',
+  save: 'Save',
 };
 
