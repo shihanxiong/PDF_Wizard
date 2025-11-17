@@ -506,7 +506,7 @@ test.describe('PDF Wizard i18n E2E Tests', () => {
     await page.waitForSelector('[role="tab"]', { timeout: 15000 });
 
     // Verify Chinese text is displayed
-    await expect(page.getByText('PDF 工具')).toBeVisible();
+    await expect(page.getByText('PDF魔法师')).toBeVisible();
     await expect(page.getByRole('tab', { name: '合并 PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: '拆分 PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: '旋转 PDF' })).toBeVisible();
@@ -597,7 +597,7 @@ test.describe('PDF Wizard i18n E2E Tests', () => {
     await page.waitForSelector('[role="tab"]', { timeout: 15000 });
 
     // Verify Chinese text
-    await expect(page.getByText('PDF 工具')).toBeVisible();
+    await expect(page.getByText('PDF魔法师')).toBeVisible();
 
     // Switch to Split tab
     await page.getByRole('tab', { name: '拆分 PDF' }).click();
@@ -612,7 +612,7 @@ test.describe('PDF Wizard i18n E2E Tests', () => {
     await expect(page.getByRole('tab', { name: '合并 PDF' })).toHaveAttribute('aria-selected', 'true');
 
     // Verify language is still Chinese
-    await expect(page.getByText('PDF 工具')).toBeVisible();
+    await expect(page.getByText('PDF魔法师')).toBeVisible();
   });
 
   test('should display translated button labels in all tabs', async ({ page }) => {
