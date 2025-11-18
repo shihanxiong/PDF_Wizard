@@ -311,7 +311,14 @@ The Watermark PDF tab allows users to add text watermarks to PDF files. This fea
      - Middle Left, Middle Right
      - Bottom Left, Bottom Center, Bottom Right
      - Custom (with X/Y offset inputs)
-   - **Font Family**: Dropdown for font selection (Arial, Times New Roman, Helvetica, etc., default: Arial)
+   - **Font Family**: Dropdown for font selection with **language-specific fonts**:
+     - **Chinese (Simplified/Traditional)**: SimSun (宋体), SimHei (黑体), Microsoft YaHei (微软雅黑), KaiTi (楷体), FangSong (仿宋)
+     - **Japanese**: Mincho (明朝体), Gothic (ゴシック体)
+     - **Korean**: Malgun Gothic (맑은 고딕), Nanum Gothic (나눔고딕)
+     - **Hindi**: Devanagari (देवनागरी)
+     - **Other Languages**: Standard PDF fonts (Helvetica, Times Roman, Courier variants, Symbol)
+     - Font options dynamically update based on the selected application language
+     - Default font is automatically selected based on the current language
 
 4. **Page Range Selection**
 
@@ -481,6 +488,21 @@ All translation keys have been implemented and are available in all 12 supported
 - `watermarkAppliedSuccessfully` - "Watermark applied successfully! Output:"
 - `watermarkFailed` - "Watermark failed:"
 - Position options (center, top-left, top-center, etc.)
+- **Font name translations**: All font names are translated and displayed in the user's selected language (e.g., "SimSun (宋体)" in English, "宋体" in Chinese)
+
+#### Language-Specific Font Selection
+
+The watermark feature includes **intelligent font selection** based on the application's current language:
+
+- **Dynamic Font Lists**: Font options are filtered to show only fonts appropriate for the selected language
+- **Automatic Default Selection**: When the language changes, the default font automatically updates to a font suitable for that language
+- **Font Name Localization**: Font names are displayed in the user's selected language (e.g., "SimSun (宋体)" in English, "宋体" in Chinese)
+- **Font Categories**:
+  - **Chinese (zh, zh-TW)**: SimSun, SimHei, Microsoft YaHei, KaiTi, FangSong
+  - **Japanese (ja)**: Mincho, Gothic
+  - **Korean (ko)**: Malgun Gothic, Nanum Gothic
+  - **Hindi (hi)**: Devanagari
+  - **All Other Languages**: Standard PDF fonts (Helvetica, Times Roman, Courier variants, Symbol)
 
 ### Error Handling
 
@@ -506,6 +528,27 @@ All translation keys have been implemented and are available in all 12 supported
 - Support watermark templates/presets (optional future enhancement)
 - Show watermark preview on first page thumbnail (optional future enhancement)
 - Support for image watermarks (optional future enhancement)
+
+## Testing
+
+PDF Wizard includes comprehensive testing at multiple levels:
+
+### Backend Integration Tests
+
+- **Location**: Go test files alongside service implementations
+- **Coverage**: PDF operations (merge, split, rotate, watermark), file metadata, page count, error handling, language management
+- **Run**: `go test -v ./...` from the `pdf_wizard` directory
+- **Test PDF Generation**: Backend utilities (`createTestPDF`, `createMultiPageTestPDF`) generate minimal valid PDF files for testing
+
+### Frontend E2E Tests
+
+- **Framework**: Playwright
+- **Test Files**: Organized by functionality (app, components, tabs, i18n)
+- **Test PDF**: Uses `e2e/helpers/test.pdf` for testing PDF operations
+- **Mocking**: Wails runtime and Go bindings are mocked for UI-only testing
+- **CI/CD**: GitHub Actions workflow runs tests in parallel using a matrix strategy
+
+For detailed E2E testing information, including test structure, configuration, and CI/CD setup, see [`frontend/e2e/README.md`](frontend/e2e/README.md).
 
 ## Design Documentation
 

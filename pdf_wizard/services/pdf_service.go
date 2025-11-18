@@ -51,10 +51,8 @@ func (s *PDFService) MergePDFs(inputPaths []string, outputDirectory string, outp
 	outputPath := filepath.Join(outputDirectory, outputFilename+PDFExtension)
 
 	// Remove existing output file if it exists (pdfcpu may have issues overwriting)
-	if _, err := os.Stat(outputPath); err == nil {
-		if err := os.Remove(outputPath); err != nil {
-			return fmt.Errorf("failed to remove existing output file: %w", err)
-		}
+	if err := removeIfExists(outputPath); err != nil {
+		return err
 	}
 
 	// Validate each PDF can be read before attempting merge
@@ -139,10 +137,8 @@ func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition,
 		outputPath := filepath.Join(outputDirectory, strings.TrimSpace(split.Filename)+PDFExtension)
 
 		// Remove existing output file if it exists
-		if _, err := os.Stat(outputPath); err == nil {
-			if err := os.Remove(outputPath); err != nil {
-				return fmt.Errorf("failed to remove existing output file: %w", err)
-			}
+		if err := removeIfExists(outputPath); err != nil {
+			return err
 		}
 
 		// Use TrimFile to extract the page range
@@ -228,10 +224,8 @@ func (s *PDFService) RotatePDF(inputPath string, rotations []models.RotateDefini
 	}
 
 	// Remove existing output file if it exists
-	if _, err := os.Stat(outputPath); err == nil {
-		if err := os.Remove(outputPath); err != nil {
-			return fmt.Errorf("failed to remove existing output file: %w", err)
-		}
+	if err := removeIfExists(outputPath); err != nil {
+		return err
 	}
 
 	// Move the temporary file to the final output location
@@ -348,10 +342,8 @@ func (s *PDFService) ApplyWatermark(inputPath string, watermark models.Watermark
 	}
 
 	// Remove existing output file if it exists
-	if _, err := os.Stat(outputPath); err == nil {
-		if err := os.Remove(outputPath); err != nil {
-			return fmt.Errorf("failed to remove existing output file: %w", err)
-		}
+	if err := removeIfExists(outputPath); err != nil {
+		return err
 	}
 
 	// Move the temporary file to the final output location
@@ -522,6 +514,16 @@ func adjustColorOpacity(c color.SimpleColor, opacity float64) color.SimpleColor 
 	b := float32(float64(c.B)*opacity + 1.0*(1.0-opacity))
 
 	return color.SimpleColor{R: r, G: g, B: b}
+}
+
+// removeIfExists removes a file if it exists, returning an error only if removal fails
+func removeIfExists(path string) error {
+	if _, err := os.Stat(path); err == nil {
+		if err := os.Remove(path); err != nil {
+			return fmt.Errorf("failed to remove existing file: %w", err)
+		}
+	}
+	return nil
 }
 
 // copyFile copies a file from src to dst

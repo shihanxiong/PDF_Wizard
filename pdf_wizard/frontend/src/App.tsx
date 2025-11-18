@@ -10,6 +10,7 @@ import logo from './assets/img/app_logo.png';
 import { OnFileDrop, OnFileDropOff, EventsOn } from '../wailsjs/runtime/runtime';
 import { GetLanguage, SetLanguage } from '../wailsjs/go/main/App';
 import { t, setLanguage, type Language } from './utils/i18n';
+import { isValidLanguage } from './utils/i18n/constants';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -50,8 +51,7 @@ export const App = () => {
       try {
         const lang = await GetLanguage();
         // Validate language code and default to 'en' if invalid
-        const validLanguages: Language[] = ['en', 'zh', 'zh-TW', 'ar', 'fr', 'ja', 'hi', 'es', 'pt', 'ru', 'ko', 'de'];
-        const language = (validLanguages.includes(lang as Language) ? lang : 'en') as Language;
+        const language = (isValidLanguage(lang) ? lang : 'en') as Language;
         setLanguage(language);
         forceUpdate({}); // Force re-render to update UI
       } catch (err) {
@@ -180,7 +180,9 @@ export const App = () => {
           <RotateTab onFileDrop={(handler: (paths: string[]) => void) => (rotateTabDropHandler.current = handler)} />
         </TabPanel>
         <TabPanel value={tabValue} index={3}>
-          <WatermarkTab onFileDrop={(handler: (paths: string[]) => void) => (watermarkTabDropHandler.current = handler)} />
+          <WatermarkTab
+            onFileDrop={(handler: (paths: string[]) => void) => (watermarkTabDropHandler.current = handler)}
+          />
         </TabPanel>
       </Box>
       <SettingsDialog

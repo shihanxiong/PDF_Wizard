@@ -1,21 +1,8 @@
 import { useState, useEffect } from 'react';
-import {
-  Box,
-  Button,
-  Typography,
-  TextField,
-  List,
-  ListItem,
-  ListItemText,
-  IconButton,
-  Paper,
-  Alert,
-  CircularProgress,
-} from '@mui/material';
+import { Box, Button, Typography, IconButton, Paper, Alert, CircularProgress } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import FolderIcon from '@mui/icons-material/Folder';
 import {
   DndContext,
   closestCenter,
@@ -33,10 +20,15 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { SelectPDFFiles, GetFileMetadata, SelectOutputDirectory, MergePDFs } from '../../wailsjs/go/main/App';
+import { SelectPDFFiles, GetFileMetadata, MergePDFs } from '../../wailsjs/go/main/App';
 import { SelectedFile } from '../types';
 import { formatFileSize, formatDate, convertToSelectedFile } from '../utils/formatters';
 import { t } from '../utils/i18n';
+import { usePDFDrop } from '../hooks/usePDFDrop';
+import { useOutputDirectory } from '../hooks/useOutputDirectory';
+import { useErrorHandler } from '../hooks/useErrorHandler';
+import { FilenameInput } from './FilenameInput';
+import { OutputDirectorySelector } from './OutputDirectorySelector';
 
 interface MergeTabProps {
   onFileDrop: (handler: (paths: string[]) => void) => void;
@@ -122,35 +114,31 @@ const SortableFileItem = ({ file, index, onRemove }: SortableFileItemProps) => {
 
 export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
   const [files, setFiles] = useState<SelectedFile[]>([]);
-  const [outputDirectory, setOutputDirectory] = useState<string>('');
   const [outputFilename, setOutputFilename] = useState<string>('merged');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const { handlePDFDrop } = usePDFDrop();
+  const { outputDirectory, selectDirectory } = useOutputDirectory('failedToSelectOutputDirectory');
+  const { error, setError, handleError } = useErrorHandler();
 
   // Register drag and drop handler with App component
   useEffect(() => {
+    const handleDroppedFiles = (paths: string[]) => {
+      handlePDFDrop(paths, {
+        allowMultiple: true,
+        onSuccess: (newFiles) => {
+          setFiles((prev) => [...prev, ...(newFiles as SelectedFile[])]);
+          setError(null);
+        },
+        onError: (errorMsg) => {
+          setError(`${t('failedToLoadFiles')} ${errorMsg}`);
+        },
+      });
+    };
     onFileDrop(handleDroppedFiles);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const handleDroppedFiles = async (paths: string[]) => {
-    const pdfPaths = paths.filter((path) => path.toLowerCase().endsWith('.pdf'));
-    if (pdfPaths.length === 0) {
-      setError(t('noPDFFilesFound'));
-      return;
-    }
-
-    try {
-      const metadataPromises = pdfPaths.map((path) => GetFileMetadata(path));
-      const metadataResults = await Promise.all(metadataPromises);
-      const newFiles = metadataResults.map(convertToSelectedFile);
-      setFiles((prev) => [...prev, ...newFiles]);
-      setError(null);
-    } catch (err: any) {
-      setError(`${t('failedToLoadFiles')} ${err.message}`);
-    }
-  };
 
   const handleSelectFiles = async () => {
     try {
@@ -162,20 +150,8 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
         setFiles((prev) => [...prev, ...newFiles]);
         setError(null);
       }
-    } catch (err: any) {
-      setError(`${t('failedToSelectFiles')} ${err.message}`);
-    }
-  };
-
-  const handleSelectOutputDirectory = async () => {
-    try {
-      const dir = await SelectOutputDirectory();
-      if (dir) {
-        setOutputDirectory(dir);
-        setError(null);
-      }
-    } catch (err: any) {
-      setError(`${t('failedToSelectOutputDirectory')} ${err.message}`);
+    } catch (err) {
+      handleError(err, 'failedToSelectFiles');
     }
   };
 
@@ -276,29 +252,19 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
 
       {/* Output Configuration Section */}
       <Box sx={{ mt: 'auto', pt: 2, pb: 2, borderTop: '1px solid', borderColor: 'divider', flexShrink: 0 }}>
-        <Box sx={{ mb: 2 }}>
-          <Button variant="outlined" startIcon={<FolderIcon />} onClick={handleSelectOutputDirectory} sx={{ mb: 1 }}>
-            {t('selectOutputDirectory')}
-          </Button>
-          {outputDirectory && (
-            <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-              {outputDirectory}
-            </Typography>
-          )}
-        </Box>
+        <OutputDirectorySelector
+          directory={outputDirectory}
+          onSelect={selectDirectory}
+          labelKey="selectOutputDirectory"
+          disabled={isProcessing}
+        />
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-          <Typography variant="body2">{t('outputFilename')}</Typography>
-          <TextField
-            value={outputFilename}
-            onChange={(e) => setOutputFilename(e.target.value)}
-            size="small"
-            placeholder="merged"
-            sx={{ width: '200px' }}
-            disabled={isProcessing}
-          />
-          <Typography variant="body2">.pdf</Typography>
-        </Box>
+        <FilenameInput
+          value={outputFilename}
+          onChange={setOutputFilename}
+          placeholder="merged"
+          disabled={isProcessing}
+        />
 
         <Button
           variant="contained"

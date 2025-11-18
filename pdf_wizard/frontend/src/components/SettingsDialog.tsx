@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { GetLanguage, SetLanguage } from '../../wailsjs/go/main/App';
 import { t, setLanguage, getLanguage, getNativeLanguageName, type Language } from '../utils/i18n';
+import { SUPPORTED_LANGUAGES, isValidLanguage } from '../utils/i18n/constants';
 
 interface SettingsDialogProps {
   open: boolean;
@@ -35,8 +36,7 @@ export const SettingsDialog = ({ open, onClose, onLanguageChange }: SettingsDial
     try {
       const lang = await GetLanguage();
       // Validate language code and default to 'en' if invalid
-      const validLanguages: Language[] = ['en', 'zh', 'zh-TW', 'ar', 'fr', 'ja', 'hi', 'es', 'pt', 'ru', 'ko', 'de'];
-      const language = (validLanguages.includes(lang as Language) ? lang : 'en') as Language;
+      const language = (isValidLanguage(lang) ? lang : 'en') as Language;
       setSelectedLanguage(language);
     } catch (err) {
       console.error('Failed to load language:', err);
@@ -83,18 +83,11 @@ export const SettingsDialog = ({ open, onClose, onLanguageChange }: SettingsDial
               onChange={handleLanguageChange}
               disabled={loading}
             >
-              <MenuItem value="en">{getNativeLanguageName('en')}</MenuItem>
-              <MenuItem value="zh">{getNativeLanguageName('zh')}</MenuItem>
-              <MenuItem value="zh-TW">{getNativeLanguageName('zh-TW')}</MenuItem>
-              <MenuItem value="ar">{getNativeLanguageName('ar')}</MenuItem>
-              <MenuItem value="fr">{getNativeLanguageName('fr')}</MenuItem>
-              <MenuItem value="ja">{getNativeLanguageName('ja')}</MenuItem>
-              <MenuItem value="hi">{getNativeLanguageName('hi')}</MenuItem>
-              <MenuItem value="es">{getNativeLanguageName('es')}</MenuItem>
-              <MenuItem value="pt">{getNativeLanguageName('pt')}</MenuItem>
-              <MenuItem value="ru">{getNativeLanguageName('ru')}</MenuItem>
-              <MenuItem value="ko">{getNativeLanguageName('ko')}</MenuItem>
-              <MenuItem value="de">{getNativeLanguageName('de')}</MenuItem>
+              {SUPPORTED_LANGUAGES.map((lang) => (
+                <MenuItem key={lang} value={lang}>
+                  {getNativeLanguageName(lang)}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
         </Box>

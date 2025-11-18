@@ -9,7 +9,7 @@ A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backe
 - **Merge PDFs**: Combine multiple PDF files into a single document
 - **Split PDFs**: Divide a PDF into multiple files based on page ranges
 - **Rotate PDFs**: Rotate specific page ranges in a PDF (90°, -90°, or 180°)
-- **Watermark PDFs**: Add text watermarks to PDFs with customizable font, size, color, opacity, rotation, and position
+- **Watermark PDFs**: Add text watermarks to PDFs with customizable font, size, color, opacity, rotation, and position. Features **language-specific fonts** that automatically adapt based on your selected language (Chinese, Japanese, Korean, Hindi, and standard fonts for other languages)
 
 **Features:**
 
@@ -314,9 +314,22 @@ The backend test suite includes:
 
 The frontend uses Playwright for end-to-end UI testing. These tests verify the application UI, user interactions, and component behavior.
 
-For detailed E2E testing instructions, test structure, and configuration, see the [E2E Testing README](pdf_wizard/frontend/e2e/README.md).
+**Running Tests Locally:**
+
+```bash
+cd pdf_wizard/frontend
+npm run test:e2e
+```
+
+For detailed E2E testing instructions, test structure, configuration, and CI/CD setup, see the [E2E Testing README](pdf_wizard/frontend/e2e/README.md).
 
 ## Features
+
+### Watermark PDFs
+
+The watermark feature includes intelligent font selection based on your application language. Font options automatically filter to show only fonts appropriate for your selected language (Chinese, Japanese, Korean, Hindi, and standard fonts for other languages), with automatic default selection and localized font names.
+
+For detailed information about language-specific fonts and watermark customization options, see [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md#watermark-pdf-tab).
 
 ### Internationalization (i18n)
 
