@@ -68,10 +68,11 @@ The test suite is organized into multiple files by functionality:
 
 4. **`i18n.spec.ts`** - Internationalization
    - Tests default language (English) display
-   - Verifies language switching functionality
+   - Verifies language switching functionality (supports all 12 languages)
    - Tests settings dialog functionality
    - Verifies language persistence across navigation
    - Tests translated UI elements
+   - Validates language switching between English and Chinese (with examples for other languages)
 
 ### Shared Utilities
 
@@ -96,3 +97,4 @@ The Playwright configuration (`playwright.config.ts`) is set to:
 - Tests run against the **development** server, not production builds
 - The Wails runtime messages in the console are expected (tests access the web UI, not the full desktop app)
 - For testing production builds, you would need platform-specific UI automation tools
+- The i18n tests verify language switching for all 12 supported languages, with detailed examples for English and Chinese

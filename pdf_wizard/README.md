@@ -10,6 +10,12 @@ PDF Wizard is a desktop application built with Wails v2 that provides PDF manipu
 - **Split PDFs**: Divide a PDF into multiple files based on page ranges
 - **Rotate PDFs**: Rotate specific page ranges in a PDF (90°, -90°, or 180°)
 
+**Key Features:**
+- 🌍 **Internationalization**: Supports 12 languages (English, Chinese Simplified, Chinese Traditional, Arabic, French, Japanese, Hindi, Spanish, Portuguese, Russian, Korean, German)
+- 🎨 **Modern UI**: Built with Material-UI for a polished, responsive interface
+- 🖱️ **Drag & Drop**: Intuitive file handling with drag-and-drop support
+- ⚡ **Fast Performance**: Native Go backend ensures quick PDF processing
+
 ## Project Configuration
 
 You can configure the project by editing `wails.json`. More information about the project settings can be found

@@ -150,14 +150,7 @@ If you prefer to install dependencies manually:
 
 ## Development
 
-### Running the Application
-
-```bash
-cd pdf_wizard
-wails dev
-```
-
-This will start the development server with hot-reload enabled for both the frontend and backend.
+For development instructions, see [pdf_wizard/README.md](pdf_wizard/README.md).
 
 ## Building
 
@@ -320,66 +313,7 @@ The backend test suite includes:
 
 The frontend uses Playwright for end-to-end UI testing. These tests verify the application UI, user interactions, and component behavior.
 
-**Running E2E Tests:**
-
-Run all E2E tests:
-
-```bash
-cd pdf_wizard/frontend
-npm run test:e2e
-```
-
-This will:
-
-1. Automatically start the Vite dev server
-2. Run all E2E tests in Chromium
-3. Generate HTML reports and screenshots on failure
-
-**Interactive Test Modes:**
-
-- **UI Mode** (recommended for development): Watch tests run step-by-step in a visual UI
-
-  ```bash
-  npm run test:e2e:ui
-  ```
-
-- **Headed Mode**: Run tests with a visible browser window
-
-  ```bash
-  npm run test:e2e:headed
-  ```
-
-- **Debug Mode**: Step through tests with Playwright Inspector
-  ```bash
-  npm run test:e2e:debug
-  ```
-
-**Viewing Test Reports:**
-
-After running tests, view the HTML report:
-
-```bash
-cd pdf_wizard/frontend
-npx playwright show-report
-```
-
-**E2E Test Coverage:**
-
-The E2E test suite includes:
-
-- App loading and initialization
-- Tab navigation (Merge/Split/Rotate tabs)
-- UI component visibility and functionality
-- User interactions (form inputs, buttons)
-- State management
-- Material-UI component rendering
-- Internationalization (i18n) functionality:
-  - Language switching (all 12 supported languages)
-  - Settings dialog functionality
-  - UI text translation updates
-  - Language persistence across navigation
-
-For more details, see the [E2E Testing README](pdf_wizard/frontend/e2e/README.md).
+For detailed E2E testing instructions, test structure, and configuration, see the [E2E Testing README](pdf_wizard/frontend/e2e/README.md).
 
 ## Features
 
@@ -482,6 +416,9 @@ PDF_Wizard/
 │   ├── app.go           # Go application entry (includes language management)
 │   └── main.go          # Wails main file
 ├── assets/              # Application assets
+│   └── img/             # Application images and logos
+│       ├── app_logo_raw.png  # Source logo (high resolution)
+│       └── app_logo.png      # Application logo (128x128)
 └── .github/workflows/   # GitHub Actions CI/CD workflows
 ```
 
