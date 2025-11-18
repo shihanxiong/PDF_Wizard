@@ -20,22 +20,28 @@ A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backe
 
 ## Screenshots
 
-### Merge PDFs Tab
+### Merge PDF Tab
 
 <p align="center">
-  <img src="./assets/img/app_view_1.png" alt="Merge PDFs Tab" width="800" />
+  <img src="./assets/img/app_view_1.png" alt="Merge PDF Tab" width="800" />
 </p>
 
-### Split PDFs Tab
+### Split PDF Tab
 
 <p align="center">
-  <img src="./assets/img/app_view_2.png" alt="Split PDFs Tab" width="800" />
+  <img src="./assets/img/app_view_2.png" alt="Split PDF Tab" width="800" />
 </p>
 
-### Rotate PDFs Tab
+### Rotate PDF Tab
 
 <p align="center">
-  <img src="./assets/img/app_view_3.png" alt="Rotate PDFs Tab" width="800" />
+  <img src="./assets/img/app_view_3.png" alt="Rotate PDF Tab" width="800" />
+</p>
+
+### Watermark PDF Tab
+
+<p align="center">
+  <img src="./assets/img/app_view_4.png" alt="Watermark PDF Tab" width="800" />
 </p>
 
 ## Downloads
