@@ -5,6 +5,7 @@ This document describes the application-level design including the main entry po
 ## Overview
 
 The application is structured with:
+
 - **main.go**: Application entry point, menu configuration, and Wails initialization
 - **app.go**: App struct that provides Wails bindings and delegates to services
 - **models/**: Data models shared between frontend and backend
@@ -45,10 +46,12 @@ func main() {
 The application menu is configured as follows:
 
 1. **AppMenu**: Uses `menu.AppMenu()` which automatically includes:
+
    - "About PDF Wizard" (handled by `mac.About` option)
    - Standard macOS app menu items (Services, Hide, Quit, etc.)
 
 2. **Settings Menu**: Added as a separate menu item
+
    - Contains "Settings" menu item
    - Triggers `EmitSettingsEvent()` which emits "show-settings" event
    - Frontend listens for this event and opens Settings dialog
@@ -63,7 +66,7 @@ The application menu is configured as follows:
 Mac: &mac.Options{
     About: &mac.AboutInfo{
         Title:   "PDF Wizard",
-        Message: "A modern PDF toolkit built with Wails v2\n\nAutho: Hanxiong Shi\nVersion 1.0.0\nCopyright © 2025",
+        Message: "A modern PDF toolkit built with Wails v2\n\nAuthor: Hanxiong Shi\nVersion 1.0.0\nCopyright © 2025",
     },
 }
 ```
@@ -75,6 +78,7 @@ The `mac.About` option automatically adds "About PDF Wizard" to the AppMenu on m
 ### Purpose
 
 The App struct acts as a thin wrapper around services that:
+
 - Provides Wails bindings for frontend access
 - Manages application context
 - Handles language preference persistence
@@ -127,6 +131,7 @@ Returns the current language preference from the configuration file.
 - Creates config directory if it doesn't exist
 
 **Config File Structure:**
+
 ```json
 {
   "language": "en"
@@ -134,6 +139,7 @@ Returns the current language preference from the configuration file.
 ```
 
 **Config File Locations:**
+
 - macOS: `~/Library/Application Support/PDF Wizard/pdf_wizard_config.json`
 - Windows: `%AppData%\PDF Wizard\pdf_wizard_config.json`
 - Linux: `~/.config/PDF Wizard/pdf_wizard_config.json`
@@ -217,6 +223,7 @@ type PDFMetadata struct {
 ```
 
 **Usage:**
+
 - Used for all file metadata operations
 - `TotalPages` is 0 for merge operations (not needed)
 - `TotalPages` includes actual count for split and rotate operations
@@ -235,6 +242,7 @@ type SplitDefinition struct {
 ```
 
 **Usage:**
+
 - Used in `SplitPDF()` to define page ranges and output filenames
 - Page numbers are 1-based (first page is 1)
 - End page is inclusive (pages 1-10 includes both 1 and 10)
@@ -253,6 +261,7 @@ type RotateDefinition struct {
 ```
 
 **Usage:**
+
 - Used in `RotatePDF()` to define page ranges and rotation angles
 - Page numbers are 1-based (first page is 1)
 - End page is inclusive
@@ -363,4 +372,3 @@ The application is configured with the following options:
 - **Assets**: Frontend build embedded via `//go:embed`
 - **Menu**: Custom menu with AppMenu, Settings, Edit, Window
 - **macOS About**: Custom About dialog information
-

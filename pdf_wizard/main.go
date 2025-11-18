@@ -54,7 +54,7 @@ func main() {
 		Mac: &mac.Options{
 			About: &mac.AboutInfo{
 				Title:   "PDF Wizard",
-				Message: "A modern PDF toolkit built with Wails v2\n\nAutho: Hanxiong Shi\nVersion 1.0.0\nCopyright © 2025",
+				Message: "A modern PDF toolkit built with Wails v2\n\nAuthor: Hanxiong Shi\nVersion 1.0.0\nCopyright © 2025",
 			},
 		},
 		OnStartup: app.startup,
