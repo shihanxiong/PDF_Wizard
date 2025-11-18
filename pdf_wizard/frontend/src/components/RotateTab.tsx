@@ -190,7 +190,7 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 3, overflow: 'hidden' }}>
       {/* PDF Selection Section */}
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 1 }}>
         <Button
           variant="contained"
           startIcon={<CloudUploadIcon />}

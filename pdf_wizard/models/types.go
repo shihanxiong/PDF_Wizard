@@ -23,3 +23,20 @@ type RotateDefinition struct {
 	EndPage   int `json:"endPage"`   // 1-based page number (inclusive)
 	Rotation  int `json:"rotation"`  // Rotation angle: 90, -90, or 180
 }
+
+// WatermarkDefinition represents a watermark configuration
+type WatermarkDefinition struct {
+	TextConfig TextWatermarkConfig `json:"textConfig"`
+	PageRange  string              `json:"pageRange"` // "all" or page range string like "1,3,5-10"
+}
+
+// TextWatermarkConfig represents text watermark configuration
+type TextWatermarkConfig struct {
+	Text       string  `json:"text"`
+	FontSize   int     `json:"fontSize"`
+	FontColor  string  `json:"fontColor"` // Hex color code
+	Opacity    float64 `json:"opacity"`   // 0.0-1.0
+	Rotation   int     `json:"rotation"`  // Degrees
+	Position   string  `json:"position"`  // "center", "top-left", etc.
+	FontFamily string  `json:"fontFamily"`
+}

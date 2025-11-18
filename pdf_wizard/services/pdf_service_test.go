@@ -210,3 +210,171 @@ func TestPDFService_RotatePDF(t *testing.T) {
 		t.Error("Output file does not appear to be a valid PDF")
 	}
 }
+
+func TestPDFService_ApplyWatermark(t *testing.T) {
+	fileService := NewFileService(context.Background())
+	service := NewPDFService(fileService)
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	// Create a multi-page PDF (5 pages)
+	inputPDF := filepath.Join(testDir, "input.pdf")
+	if err := createMultiPageTestPDF(inputPDF, 5); err != nil {
+		t.Fatalf("Failed to create multi-page test PDF: %v", err)
+	}
+
+	outputDir := testDir
+	outputFilename := "watermarked"
+
+	// Define watermark configuration
+	watermark := models.WatermarkDefinition{
+		TextConfig: models.TextWatermarkConfig{
+			Text:       "CONFIDENTIAL",
+			FontSize:   24,
+			FontColor:  "#808080",
+			Opacity:    0.5,
+			Rotation:   45,
+			Position:   "center",
+			FontFamily: "Helvetica",
+		},
+		PageRange: "all",
+	}
+
+	// Test ApplyWatermark
+	err := service.ApplyWatermark(inputPDF, watermark, outputDir, outputFilename)
+	if err != nil {
+		t.Fatalf("ApplyWatermark failed: %v", err)
+	}
+
+	// Verify output file was created
+	outputPath := filepath.Join(outputDir, outputFilename+".pdf")
+	info, err := os.Stat(outputPath)
+	if err != nil {
+		t.Fatalf("Output file was not created: %v", err)
+	}
+
+	if info.Size() == 0 {
+		t.Error("Output file is empty")
+	}
+
+	// Verify it's a valid PDF by checking for PDF header
+	content, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("Failed to read output file: %v", err)
+	}
+
+	if len(content) < 4 || string(content[0:4]) != "%PDF" {
+		t.Error("Output file does not appear to be a valid PDF")
+	}
+}
+
+func TestPDFService_ApplyWatermark_SpecificPages(t *testing.T) {
+	fileService := NewFileService(context.Background())
+	service := NewPDFService(fileService)
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	// Create a multi-page PDF (10 pages)
+	inputPDF := filepath.Join(testDir, "input.pdf")
+	if err := createMultiPageTestPDF(inputPDF, 10); err != nil {
+		t.Fatalf("Failed to create multi-page test PDF: %v", err)
+	}
+
+	outputDir := testDir
+	outputFilename := "watermarked_specific"
+
+	// Define watermark configuration for specific pages
+	watermark := models.WatermarkDefinition{
+		TextConfig: models.TextWatermarkConfig{
+			Text:       "DRAFT",
+			FontSize:   18,
+			FontColor:  "#FF0000",
+			Opacity:    0.7,
+			Rotation:   0,
+			Position:   "top-right",
+			FontFamily: "Helvetica",
+		},
+		PageRange: "1,3,5-7",
+	}
+
+	// Test ApplyWatermark
+	err := service.ApplyWatermark(inputPDF, watermark, outputDir, outputFilename)
+	if err != nil {
+		t.Fatalf("ApplyWatermark failed: %v", err)
+	}
+
+	// Verify output file was created
+	outputPath := filepath.Join(outputDir, outputFilename+".pdf")
+	info, err := os.Stat(outputPath)
+	if err != nil {
+		t.Fatalf("Output file was not created: %v", err)
+	}
+
+	if info.Size() == 0 {
+		t.Error("Output file is empty")
+	}
+
+	// Verify it's a valid PDF
+	content, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("Failed to read output file: %v", err)
+	}
+
+	if len(content) < 4 || string(content[0:4]) != "%PDF" {
+		t.Error("Output file does not appear to be a valid PDF")
+	}
+}
+
+func TestPDFService_ApplyWatermark_Validation(t *testing.T) {
+	fileService := NewFileService(context.Background())
+	service := NewPDFService(fileService)
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	// Create a test PDF
+	inputPDF := filepath.Join(testDir, "input.pdf")
+	if err := createTestPDF(inputPDF); err != nil {
+		t.Fatalf("Failed to create test PDF: %v", err)
+	}
+
+	outputDir := testDir
+	outputFilename := "watermarked"
+
+	// Test with empty text
+	watermark := models.WatermarkDefinition{
+		TextConfig: models.TextWatermarkConfig{
+			Text:       "",
+			FontSize:   24,
+			FontColor:  "#000000",
+			Opacity:    0.5,
+			Rotation:   0,
+			Position:   "center",
+			FontFamily: "Helvetica",
+		},
+		PageRange: "all",
+	}
+
+	err := service.ApplyWatermark(inputPDF, watermark, outputDir, outputFilename)
+	if err == nil {
+		t.Error("Expected error for empty watermark text, got nil")
+	}
+
+	// Test with invalid page range
+	watermark.TextConfig.Text = "TEST"
+	watermark.PageRange = "999"
+	err = service.ApplyWatermark(inputPDF, watermark, outputDir, outputFilename)
+	if err == nil {
+		t.Error("Expected error for invalid page range, got nil")
+	}
+
+	// Test with invalid opacity
+	watermark.PageRange = "all"
+	watermark.TextConfig.Opacity = 1.5
+	err = service.ApplyWatermark(inputPDF, watermark, outputDir, outputFilename)
+	if err == nil {
+		t.Error("Expected error for invalid opacity, got nil")
+	}
+}

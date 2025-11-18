@@ -4,6 +4,7 @@ import { Box, Tabs, Tab, AppBar, Toolbar, Typography } from '@mui/material';
 import { MergeTab } from './components/MergeTab';
 import { SplitTab } from './components/SplitTab';
 import { RotateTab } from './components/RotateTab';
+import { WatermarkTab } from './components/WatermarkTab';
 import { SettingsDialog } from './components/SettingsDialog';
 import logo from './assets/img/app_logo.png';
 import { OnFileDrop, OnFileDropOff, EventsOn } from '../wailsjs/runtime/runtime';
@@ -41,6 +42,7 @@ export const App = () => {
   const mergeTabDropHandler = useRef<((paths: string[]) => void) | null>(null);
   const splitTabDropHandler = useRef<((paths: string[]) => void) | null>(null);
   const rotateTabDropHandler = useRef<((paths: string[]) => void) | null>(null);
+  const watermarkTabDropHandler = useRef<((paths: string[]) => void) | null>(null);
 
   // Load language on startup
   useEffect(() => {
@@ -98,6 +100,9 @@ export const App = () => {
       } else if (tabValueRef.current === 2 && rotateTabDropHandler.current) {
         // Rotate tab is active
         rotateTabDropHandler.current(paths);
+      } else if (tabValueRef.current === 3 && watermarkTabDropHandler.current) {
+        // Watermark tab is active
+        watermarkTabDropHandler.current(paths);
       }
     };
 
@@ -159,6 +164,7 @@ export const App = () => {
               <Tab label={t('mergeTab')} id="pdf-wizard-tab-0" aria-controls="pdf-wizard-tabpanel-0" />
               <Tab label={t('splitTab')} id="pdf-wizard-tab-1" aria-controls="pdf-wizard-tabpanel-1" />
               <Tab label={t('rotateTab')} id="pdf-wizard-tab-2" aria-controls="pdf-wizard-tabpanel-2" />
+              <Tab label={t('watermarkTab')} id="pdf-wizard-tab-3" aria-controls="pdf-wizard-tabpanel-3" />
             </Tabs>
           </Box>
         </Toolbar>
@@ -172,6 +178,9 @@ export const App = () => {
         </TabPanel>
         <TabPanel value={tabValue} index={2}>
           <RotateTab onFileDrop={(handler: (paths: string[]) => void) => (rotateTabDropHandler.current = handler)} />
+        </TabPanel>
+        <TabPanel value={tabValue} index={3}>
+          <WatermarkTab onFileDrop={(handler: (paths: string[]) => void) => (watermarkTabDropHandler.current = handler)} />
         </TabPanel>
       </Box>
       <SettingsDialog

@@ -4,11 +4,12 @@
   <img src="./assets/img/app_logo_raw.png" width="350" height="350" />
 </p>
 
-A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backend performance with a React/TypeScript frontend. PDF Wizard provides three main features:
+A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backend performance with a React/TypeScript frontend. PDF Wizard provides four main features:
 
 - **Merge PDFs**: Combine multiple PDF files into a single document
 - **Split PDFs**: Divide a PDF into multiple files based on page ranges
 - **Rotate PDFs**: Rotate specific page ranges in a PDF (90°, -90°, or 180°)
+- **Watermark PDFs**: Add text watermarks to PDFs with customizable font, size, color, opacity, rotation, and position
 
 **Features:**
 

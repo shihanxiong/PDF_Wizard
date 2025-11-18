@@ -9,6 +9,7 @@ export interface Translations {
   mergeTab: string;
   splitTab: string;
   rotateTab: string;
+  watermarkTab: string;
 
   // Settings
   settings: string;
@@ -73,6 +74,35 @@ export interface Translations {
   failedToSelectPDFRotate: string;
   failedToSelectOutputDirectoryRotate: string;
   pleaseFixInvalidRotations: string;
+
+  // Watermark Tab
+  selectPDFFileWatermark: string;
+  watermarkText: string;
+  fontSize: string;
+  fontColor: string;
+  opacity: string;
+  position: string;
+  fontFamily: string;
+  pageRange: string;
+  allPages: string;
+  specificPages: string;
+  selectOutputDirectoryWatermark: string;
+  applyWatermark: string;
+  applying: string;
+  watermarkAppliedSuccessfully: string;
+  watermarkFailed: string;
+  failedToLoadPDFWatermark: string;
+  failedToSelectPDFWatermark: string;
+  failedToSelectOutputDirectoryWatermark: string;
+  positionCenter: string;
+  positionTopLeft: string;
+  positionTopCenter: string;
+  positionTopRight: string;
+  positionMiddleLeft: string;
+  positionMiddleRight: string;
+  positionBottomLeft: string;
+  positionBottomCenter: string;
+  positionBottomRight: string;
 
   // Common
   modified: string;

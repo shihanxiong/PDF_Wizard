@@ -197,3 +197,8 @@ func (a *App) SplitPDF(inputPath string, splits []models.SplitDefinition, output
 func (a *App) RotatePDF(inputPath string, rotations []models.RotateDefinition, outputDirectory string, outputFilename string) error {
 	return a.pdfService.RotatePDF(inputPath, rotations, outputDirectory, outputFilename)
 }
+
+// ApplyWatermark applies a text watermark to the specified PDF file
+func (a *App) ApplyWatermark(inputPath string, watermark models.WatermarkDefinition, outputDirectory string, outputFilename string) error {
+	return a.pdfService.ApplyWatermark(inputPath, watermark, outputDirectory, outputFilename)
+}

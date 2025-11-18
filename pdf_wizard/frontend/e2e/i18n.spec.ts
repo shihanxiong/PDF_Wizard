@@ -38,7 +38,7 @@ test.describe('PDF Wizard - Internationalization', () => {
 
     // Reload page to trigger language loading
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('[role="tab"]', { timeout: 15000 });
+    await page.waitForSelector('[role="tab"]');
 
     // Verify Chinese text is displayed
     await expect(page.getByText('PDF魔法师')).toBeVisible();
@@ -65,7 +65,7 @@ test.describe('PDF Wizard - Internationalization', () => {
     });
 
     // Wait for dialog to appear
-    await expect(settingsDialog).toBeVisible({ timeout: 5000 });
+    await expect(settingsDialog).toBeVisible();
   });
 
   test('should display language selector in settings dialog', async ({ page }) => {
@@ -176,4 +176,3 @@ test.describe('PDF Wizard - Internationalization', () => {
     await expect(rotateTabPanel.getByRole('button', { name: '选择 PDF 文件' })).toBeVisible();
   });
 });
-

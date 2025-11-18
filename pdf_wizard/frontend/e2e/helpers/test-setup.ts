@@ -1,14 +1,24 @@
 import { Page } from '@playwright/test';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * Shared test setup utilities for PDF Wizard E2E tests
  */
+
+// Get the test PDF path relative to the helpers directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const TEST_PDF_PATH = path.join(__dirname, 'test.pdf');
 
 /**
  * Sets up Wails runtime and Go bindings mocks
  * This must be called in addInitScript before the app loads
  */
 export function setupWailsMocks() {
+  // Get test PDF path from window context (set by test setup)
+  const pdfPath = (window as any).__testPDFPath || '';
+
   // Initialize language mock with sessionStorage persistence
   if (!(window as any).__mockLanguage) {
     const savedLang = sessionStorage.getItem('__test_mock_language');
@@ -66,14 +76,32 @@ export function setupWailsMocks() {
           }
         },
         SelectPDFFiles: () => Promise.resolve([]),
-        SelectPDFFile: () => Promise.resolve(''),
-        SelectOutputDirectory: () => Promise.resolve(''),
+        SelectPDFFile: () => Promise.resolve(pdfPath || ''),
+        SelectOutputDirectory: () => Promise.resolve('/tmp'),
         GetFileMetadata: () => Promise.resolve({}),
-        GetPDFMetadata: () => Promise.resolve({}),
-        GetPDFPageCount: () => Promise.resolve(0),
+        GetPDFMetadata: (path: string) => {
+          if (path === pdfPath || path) {
+            return Promise.resolve({
+              path: pdfPath || path,
+              name: 'test.pdf',
+              size: 520,
+              lastModified: new Date().toISOString(),
+              isPDF: true,
+              totalPages: 1,
+            });
+          }
+          return Promise.resolve({});
+        },
+        GetPDFPageCount: (path: string) => {
+          if (path === pdfPath || path) {
+            return Promise.resolve(1);
+          }
+          return Promise.resolve(0);
+        },
         MergePDFs: () => Promise.resolve(),
         SplitPDF: () => Promise.resolve(),
         RotatePDF: () => Promise.resolve(),
+        ApplyWatermark: () => Promise.resolve(),
       },
     },
   };
@@ -85,15 +113,19 @@ export function setupWailsMocks() {
  */
 export async function setupTestPage(page: Page) {
   // Mock Wails runtime and Go bindings BEFORE the app loads
+  // Pass test PDF path to browser context
+  await page.addInitScript(
+    ({ pdfPath }: { pdfPath: string }) => {
+      (window as any).__testPDFPath = pdfPath;
+    },
+    { pdfPath: TEST_PDF_PATH },
+  );
   await page.addInitScript(setupWailsMocks);
 
   // Ignore console errors from Wails runtime (not available in Vite-only mode)
   page.on('console', (msg) => {
     const text = msg.text();
-    if (
-      msg.type() === 'error' &&
-      (text.includes('wails') || text.includes('runtime') || text.includes('OnFileDrop'))
-    ) {
+    if (msg.type() === 'error' && (text.includes('wails') || text.includes('runtime') || text.includes('OnFileDrop'))) {
       // Ignore Wails-related errors when testing UI only
       return;
     }
@@ -103,15 +135,12 @@ export async function setupTestPage(page: Page) {
   await page.goto('/', { waitUntil: 'networkidle' });
 
   // Wait for the root div to exist (basic HTML structure)
-  await page.waitForSelector('#root', { timeout: 10000, state: 'attached' });
-
-  // Wait a bit for React to finish initializing
-  await page.waitForTimeout(500);
+  await page.waitForSelector('#root', { state: 'attached' });
 
   // Wait for React to render - look for any React-rendered content
   // Try tabs first as they're more reliable than #App
   try {
-    await page.waitForSelector('[role="tab"]', { timeout: 15000 });
+    await page.waitForSelector('[role="tab"]');
   } catch (error) {
     // If tabs don't appear, check what's actually on the page
     const bodyText = await page.textContent('body');
@@ -121,4 +150,3 @@ export async function setupTestPage(page: Page) {
     );
   }
 }
-
