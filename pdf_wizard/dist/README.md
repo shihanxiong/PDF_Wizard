@@ -62,4 +62,4 @@
 
 ---
 
-For more information, visit: https://github.com/your-repo/pdf_wizard
+For more information, visit: https://github.com/shihanxiong/PDF_Wizard
