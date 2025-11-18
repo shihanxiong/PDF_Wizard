@@ -16,11 +16,11 @@ test.describe('PDF Wizard - App Loading', () => {
 
   test('should load the application with correct title and logo', async ({ page }) => {
     // Check that the app title is visible (Typography renders as div with h6 variant)
-    await expect(page.getByText('PDF Wizard')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('PDF Wizard')).toBeVisible();
 
     // Check that the logo image is present
     const logo = page.locator('img[alt="PDF Wizard Logo"]');
-    await expect(logo).toBeVisible({ timeout: 5000 });
+    await expect(logo).toBeVisible();
   });
 
   test('should display proper UI structure with Material-UI components', async ({ page }) => {

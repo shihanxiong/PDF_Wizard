@@ -14,14 +14,16 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import FolderIcon from '@mui/icons-material/Folder';
-import { SelectPDFFile, GetPDFMetadata, SelectOutputDirectory, SplitPDF } from '../../wailsjs/go/main/App';
+import { SelectPDFFile, GetPDFMetadata, SplitPDF } from '../../wailsjs/go/main/App';
 import { SelectedPDF, SplitDefinition } from '../types';
-import { formatFileSize, formatDate } from '../utils/formatters';
 import { models } from '../../wailsjs/go/models';
 import { t } from '../utils/i18n';
-
-const MAX_SPLITS = 10;
+import { MAX_SPLITS } from '../utils/constants';
+import { usePDFDrop } from '../hooks/usePDFDrop';
+import { useOutputDirectory } from '../hooks/useOutputDirectory';
+import { useErrorHandler } from '../hooks/useErrorHandler';
+import { PDFInfoCard } from './PDFInfoCard';
+import { OutputDirectorySelector } from './OutputDirectorySelector';
 
 interface SplitTabProps {
   onFileDrop: (handler: (paths: string[]) => void) => void;
@@ -30,45 +32,31 @@ interface SplitTabProps {
 export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
   const [selectedPDF, setSelectedPDF] = useState<SelectedPDF | null>(null);
   const [splits, setSplits] = useState<SplitDefinition[]>([]);
-  const [outputDirectory, setOutputDirectory] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const { handlePDFDrop } = usePDFDrop();
+  const { outputDirectory, selectDirectory } = useOutputDirectory('failedToSelectOutputDirectorySplit');
+  const { error, setError, handleError } = useErrorHandler();
 
   // Register drag and drop handler with App component
   useEffect(() => {
+    const handleDroppedPDF = (paths: string[]) => {
+      handlePDFDrop(paths, {
+        allowMultiple: false,
+        onSuccess: (pdf) => {
+          setSelectedPDF(pdf as SelectedPDF);
+          setSplits([]); // Clear existing splits when new PDF is selected
+          setError(null);
+        },
+        onError: (errorMsg) => {
+          setError(`${t('failedToLoadPDF')} ${errorMsg}`);
+        },
+      });
+    };
     onFileDrop(handleDroppedPDF);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const handleDroppedPDF = async (paths: string[]) => {
-    const pdfPaths = paths.filter((path) => path.toLowerCase().endsWith('.pdf'));
-    if (pdfPaths.length === 0) {
-      setError(t('noPDFFilesFound'));
-      return;
-    }
-    if (pdfPaths.length > 1) {
-      setError(t('pleaseDropOnlyOnePDF'));
-      return;
-    }
-
-    try {
-      const path = pdfPaths[0];
-      const metadata = await GetPDFMetadata(path);
-      setSelectedPDF({
-        path: metadata.path,
-        name: metadata.name,
-        size: metadata.size,
-        lastModified: new Date(metadata.lastModified),
-        totalPages: metadata.totalPages,
-      });
-      // Clear existing splits when new PDF is selected
-      setSplits([]);
-      setError(null);
-    } catch (err: any) {
-      setError(`${t('failedToLoadPDF')} ${err.message}`);
-    }
-  };
 
   const handleSelectPDF = async () => {
     try {
@@ -86,8 +74,8 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
         setSplits([]);
         setError(null);
       }
-    } catch (err: any) {
-      setError(`${t('failedToSelectPDF')} ${err.message}`);
+    } catch (err) {
+      handleError(err, 'failedToSelectPDF');
     }
   };
 
@@ -126,18 +114,6 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
     );
   };
 
-  const handleSelectOutputDirectory = async () => {
-    try {
-      const dir = await SelectOutputDirectory();
-      if (dir) {
-        setOutputDirectory(dir);
-        setError(null);
-      }
-    } catch (err: any) {
-      setError(`${t('failedToSelectOutputDirectorySplit')} ${err.message}`);
-    }
-  };
-
   const handleSplit = async () => {
     if (!selectedPDF || splits.length === 0 || !outputDirectory) return;
 
@@ -164,8 +140,8 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
       setSuccess(`${t('pdfSplitSuccessfully')} ${splits.length} ${t('createdFiles')} ${outputFiles}`);
       // Clear splits after successful split
       setSplits([]);
-    } catch (err: any) {
-      const errorMessage = err?.message || err?.toString() || 'Unknown error occurred';
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : err?.toString() || 'Unknown error occurred';
       setError(`${t('splitFailed')} ${errorMessage}`);
     } finally {
       setIsProcessing(false);
@@ -183,7 +159,7 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 3, overflow: 'hidden' }}>
       {/* PDF Selection Section */}
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 1 }}>
         <Button
           variant="contained"
           startIcon={<CloudUploadIcon />}
@@ -213,20 +189,7 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
       {/* Selected PDF Information */}
       {selectedPDF && (
         <>
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 1 }}>
-                📄 {selectedPDF.name}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                {selectedPDF.path}
-              </Typography>
-              <Typography variant="body2">
-                {formatFileSize(selectedPDF.size)} • {selectedPDF.totalPages} {t('pages')} • {t('modified')}{' '}
-                {formatDate(selectedPDF.lastModified)}
-              </Typography>
-            </CardContent>
-          </Card>
+          <PDFInfoCard pdf={selectedPDF} />
 
           {/* Add Split Button */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -353,22 +316,12 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
           flexShrink: 0,
         }}
       >
-        <Box sx={{ mb: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<FolderIcon />}
-            onClick={handleSelectOutputDirectory}
-            sx={{ mb: 1 }}
-            disabled={isProcessing}
-          >
-            {t('selectOutputDirectorySplit')}
-          </Button>
-          {outputDirectory && (
-            <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-              {outputDirectory}
-            </Typography>
-          )}
-        </Box>
+        <OutputDirectorySelector
+          directory={outputDirectory}
+          onSelect={selectDirectory}
+          labelKey="selectOutputDirectorySplit"
+          disabled={isProcessing}
+        />
 
         <Button
           variant="contained"

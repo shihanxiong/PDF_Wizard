@@ -25,6 +25,22 @@ const (
 	defaultLanguage = "en"
 )
 
+// validLanguages is the single source of truth for supported languages
+var validLanguages = map[string]bool{
+	"en":    true,
+	"zh":    true,
+	"zh-TW": true,
+	"ar":    true,
+	"fr":    true,
+	"ja":    true,
+	"hi":    true,
+	"es":    true,
+	"pt":    true,
+	"ru":    true,
+	"ko":    true,
+	"de":    true,
+}
+
 // NewApp creates a new App application struct
 func NewApp() *App {
 	return &App{}
@@ -93,21 +109,7 @@ func (a *App) GetLanguage() (string, error) {
 		return defaultLanguage, nil
 	}
 
-	// Validate language code (en, zh, zh-TW, ar, fr, ja, hi, es, pt, ru, ko, de)
-	validLanguages := map[string]bool{
-		"en":    true,
-		"zh":    true,
-		"zh-TW": true,
-		"ar":    true,
-		"fr":    true,
-		"ja":    true,
-		"hi":    true,
-		"es":    true,
-		"pt":    true,
-		"ru":    true,
-		"ko":    true,
-		"de":    true,
-	}
+	// Validate language code
 	if !validLanguages[config.Language] {
 		return defaultLanguage, nil
 	}
@@ -118,20 +120,6 @@ func (a *App) GetLanguage() (string, error) {
 // SetLanguage saves the language preference
 func (a *App) SetLanguage(language string) error {
 	// Validate language code
-	validLanguages := map[string]bool{
-		"en":    true,
-		"zh":    true,
-		"zh-TW": true,
-		"ar":    true,
-		"fr":    true,
-		"ja":    true,
-		"hi":    true,
-		"es":    true,
-		"pt":    true,
-		"ru":    true,
-		"ko":    true,
-		"de":    true,
-	}
 	if !validLanguages[language] {
 		return fmt.Errorf("invalid language code: %s", language)
 	}
@@ -196,4 +184,9 @@ func (a *App) SplitPDF(inputPath string, splits []models.SplitDefinition, output
 // RotatePDF rotates specified page ranges in a PDF file
 func (a *App) RotatePDF(inputPath string, rotations []models.RotateDefinition, outputDirectory string, outputFilename string) error {
 	return a.pdfService.RotatePDF(inputPath, rotations, outputDirectory, outputFilename)
+}
+
+// ApplyWatermark applies a text watermark to the specified PDF file
+func (a *App) ApplyWatermark(inputPath string, watermark models.WatermarkDefinition, outputDirectory string, outputFilename string) error {
+	return a.pdfService.ApplyWatermark(inputPath, watermark, outputDirectory, outputFilename)
 }

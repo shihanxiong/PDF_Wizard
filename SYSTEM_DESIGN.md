@@ -2,7 +2,7 @@
 
 ## Overview
 
-PDF Wizard is a cross-platform desktop application built with Wails v2 that provides PDF manipulation capabilities, including merging, splitting, and rotating PDF files. The application uses a Go backend for file operations and a React/TypeScript frontend with Material-UI for the user interface.
+PDF Wizard is a cross-platform desktop application built with Wails v2 that provides PDF manipulation capabilities, including merging, splitting, rotating, and watermarking PDF files. The application uses a Go backend for file operations and a React/TypeScript frontend with Material-UI for the user interface.
 
 **Supported Platforms:**
 
@@ -31,10 +31,10 @@ pdf_wizard/
 ├── DESIGN.md               # Application-level design (menu, config, models)
 ├── services/              # Service layer for business logic
 │   ├── file_service.go    # File selection and metadata operations
-│   ├── pdf_service.go     # PDF processing operations (merge, split, rotate)
+│   ├── pdf_service.go     # PDF processing operations (merge, split, rotate, watermark)
 │   └── DESIGN.md          # Backend services design
 ├── models/                 # Data models
-│   └── types.go           # PDFMetadata, SplitDefinition, RotateDefinition
+│   └── types.go           # PDFMetadata, SplitDefinition, RotateDefinition, WatermarkDefinition
 ├── frontend/
 │   ├── src/
 │   │   ├── App.tsx        # Main application component with tab navigation
@@ -42,6 +42,7 @@ pdf_wizard/
 │   │   │   ├── MergeTab.tsx
 │   │   │   ├── SplitTab.tsx
 │   │   │   ├── RotateTab.tsx
+│   │   │   ├── WatermarkTab.tsx
 │   │   │   ├── SettingsDialog.tsx
 │   │   │   └── DESIGN.md  # Components design
 │   │   ├── types/         # TypeScript type definitions
@@ -71,22 +72,23 @@ pdf_wizard/
 
 ### Tab-Based Layout
 
-The application features a tabbed interface with three main tabs:
+The application features a tabbed interface with four main tabs:
 
 1. **Merge PDF Tab** - For combining multiple PDF files
 2. **Split PDF Tab** - For dividing a PDF into multiple files
 3. **Rotate PDF Tab** - For rotating specific page ranges in a PDF
+4. **Watermark PDF Tab** - For adding text or image watermarks to PDF files
 
 ### Tab Component Structure
 
 ```
-┌─────────────────────────────────────────┐
-│  [Merge PDF] [Split PDF] [Rotate PDF]   │
-├─────────────────────────────────────────┤
-│                                         │
-│  Tab Content Area                       │
-│                                         │
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│  [Merge PDF] [Split PDF] [Rotate PDF] [Watermark PDF] │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  Tab Content Area                                       │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ### Drag and Drop Architecture
@@ -181,11 +183,12 @@ Language preference is stored in a JSON configuration file:
 
 ## Component Design
 
-The application consists of three main tab components:
+The application consists of four main tab components:
 
 1. **MergeTab** - Combines multiple PDF files into one
 2. **SplitTab** - Divides a PDF into multiple files
 3. **RotateTab** - Rotates specific page ranges in a PDF
+4. **WatermarkTab** - Adds text or image watermarks to PDF files
 
 Each component handles its own state, file selection, validation, and processing.
 
@@ -196,7 +199,7 @@ For detailed component design and implementation, see [`frontend/src/components/
 The backend uses a service-based architecture with clear separation of concerns:
 
 - **FileService** - Handles file selection, directory selection, and file metadata operations
-- **PDFService** - Handles all PDF processing operations (merge, split, rotate)
+- **PDFService** - Handles all PDF processing operations (merge, split, rotate, watermark)
 - **App struct** - Thin wrapper that delegates to services and provides Wails bindings
 
 For detailed service implementation, see [`services/DESIGN.md`](services/DESIGN.md).
@@ -269,12 +272,290 @@ For detailed application-level design, see [`DESIGN.md`](DESIGN.md).
 9. **File Validation**: Pre-check PDF files for corruption before processing
 10. **Progress Tracking**: Real-time progress updates for long-running operations
 
+## Watermark PDF Tab
+
+### Overview
+
+The Watermark PDF tab allows users to add text watermarks to PDF files. This feature is **fully implemented** and supports text-based watermarks with customizable font, size, color, opacity, rotation, and position.
+
+### Functional Requirements
+
+1. **PDF Selection**
+
+   - Allow user to select a single PDF file from the local file system
+   - Support both file dialog selection and drag-and-drop
+   - Validate that selected file is a PDF
+   - Once a PDF is selected, display PDF information and show watermark configuration options
+   - Allow user to change/remove selected PDF
+
+2. **PDF Information Display**
+
+   - Display selected PDF metadata:
+     - **File Path**: Full or relative path to the file
+     - **File Size**: Human-readable format (e.g., "2.5 MB", "150 KB")
+     - **Total Pages**: Number of pages in the PDF
+     - **Last Modified**: Timestamp of last modification (formatted date/time)
+   - Show PDF icon/badge
+   - Display information in a clear, prominent card or section
+
+3. **Text Watermark Configuration**
+
+   - **Text Input**: Text field for watermark text content
+   - **Font Size**: Numeric input or slider for font size (e.g., 12-72pt, default: 24pt)
+   - **Font Color**: Color picker or predefined color options (default: gray/black with opacity)
+   - **Opacity**: Slider or numeric input for transparency (0-100%, default: 50%)
+   - **Rotation**: Dropdown or numeric input for text rotation angle (0°, 45°, 90°, -45°, -90°, custom, default: 0°)
+   - **Position**: Dropdown or grid selector for watermark position:
+     - Center
+     - Top Left, Top Center, Top Right
+     - Middle Left, Middle Right
+     - Bottom Left, Bottom Center, Bottom Right
+     - Custom (with X/Y offset inputs)
+   - **Font Family**: Dropdown for font selection with **language-specific fonts**:
+     - **Chinese (Simplified/Traditional)**: SimSun (宋体), SimHei (黑体), Microsoft YaHei (微软雅黑), KaiTi (楷体), FangSong (仿宋)
+     - **Japanese**: Mincho (明朝体), Gothic (ゴシック体)
+     - **Korean**: Malgun Gothic (맑은 고딕), Nanum Gothic (나눔고딕)
+     - **Hindi**: Devanagari (देवनागरी)
+     - **Other Languages**: Standard PDF fonts (Helvetica, Times Roman, Courier variants, Symbol)
+     - Font options dynamically update based on the selected application language
+     - Default font is automatically selected based on the current language
+
+4. **Page Range Selection**
+
+   - Allow user to specify which pages to apply watermark:
+     - **All Pages** (default) - Radio button or checkbox
+     - **Specific Pages** - Text input for page ranges (e.g., "1,3,5-10,15")
+   - Validate page numbers against total PDF pages
+   - Show page range validation errors
+
+5. **Output Configuration**
+
+   - **Output Directory Selection**: Button to select output directory
+   - Display selected output directory path
+   - **Output Filename**: Text input for output filename (without extension)
+   - Static ".pdf" text displayed after filename input
+   - Default filename: "watermarked" (which becomes "watermarked.pdf")
+   - Validate write permissions for selected directory
+
+6. **Watermark Actions**
+   - "Apply Watermark" button displayed at the bottom of the tab
+   - Button is disabled when:
+     - No PDF is selected
+     - Text content is empty
+     - Output directory is not selected
+     - Output filename is empty or invalid
+     - Processing is in progress
+   - Show loading spinner and "Applying watermark..." text during processing
+   - Display success message with output file path when complete
+   - Display error message if watermarking fails
+
+### UI Layout
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  [Select PDF File] or drag-and-drop area                │
+│  (PDF information card when file selected)               │
+├─────────────────────────────────────────────────────────┤
+│  [Text Watermark Configuration]                          │
+│  - Text: [________________]                              │
+│  - Font Size: [24] pt                                    │
+│  - Font Color: [Color Picker]                           │
+│  - Opacity: [====●====] 50%                              │
+│  - Rotation: [0° ▼]                                      │
+│  - Position: [Center ▼]                                 │
+│  - Font Family: [Arial ▼]                               │
+├─────────────────────────────────────────────────────────┤
+│  Page Range: ○ All Pages  ○ Specific Pages              │
+│  Pages: [1,3,5-10] (if specific selected)                │
+├─────────────────────────────────────────────────────────┤
+│  Output Directory: [Select Directory]                   │
+│  Selected: /path/to/output                              │
+│  Output Filename: [watermarked].pdf                     │
+├─────────────────────────────────────────────────────────┤
+│  [Apply Watermark] (button at bottom)                   │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Technical Implementation
+
+#### Frontend Component: WatermarkTab
+
+**Component Structure:**
+
+- Similar pattern to RotateTab (single PDF input)
+- State management for PDF selection, watermark configuration, output settings
+- Form validation before processing
+- Integration with drag-and-drop handler
+
+**State Management:**
+
+```typescript
+const [selectedPDF, setSelectedPDF] = useState<SelectedPDF | null>(null);
+const [textWatermark, setTextWatermark] = useState<TextWatermarkConfig | null>(null);
+const [pageRange, setPageRange] = useState<'all' | 'specific'>('all');
+const [specificPages, setSpecificPages] = useState<string>('');
+const [outputDirectory, setOutputDirectory] = useState<string>('');
+const [outputFilename, setOutputFilename] = useState<string>('watermarked');
+const [isProcessing, setIsProcessing] = useState<boolean>(false);
+const [error, setError] = useState<string | null>(null);
+const [success, setSuccess] = useState<string | null>(null);
+```
+
+**Key Functions:**
+
+- `handleDroppedPDF()` - Processes PDF dropped on window
+- `handleSelectPDF()` - Opens file dialog and loads PDF metadata
+- `handleTextWatermarkChange()` - Updates text watermark configuration
+- `validateWatermarkConfig()` - Validates watermark configuration
+- `parsePageRange()` - Parses and validates page range string
+- `handleApplyWatermark()` - Executes watermark operation
+
+#### Backend Models
+
+**WatermarkDefinition (models/types.go):**
+
+```go
+type WatermarkDefinition struct {
+    TextConfig   TextWatermarkConfig   `json:"textConfig"`
+    PageRange    string                `json:"pageRange"`    // "all" or page range string like "1,3,5-10"
+}
+
+type TextWatermarkConfig struct {
+    Text       string  `json:"text"`
+    FontSize   int     `json:"fontSize"`
+    FontColor  string  `json:"fontColor"`   // Hex color code
+    Opacity    float64 `json:"opacity"`     // 0.0-1.0
+    Rotation   int     `json:"rotation"`    // Degrees
+    Position   string  `json:"position"`    // "center", "top-left", etc.
+    FontFamily string  `json:"fontFamily"`
+}
+```
+
+#### Backend Service: PDFService
+
+**New Method: ApplyWatermark**
+
+```go
+func (s *PDFService) ApplyWatermark(
+    inputPath string,
+    watermark WatermarkDefinition,
+    outputDirectory string,
+    outputFilename string,
+) error
+```
+
+**Implementation:**
+
+- Uses pdfcpu library's `TextWatermark` API for watermark creation
+- Parses page range string to determine which pages to watermark (supports "all" or specific ranges like "1,3,5-10")
+- Renders text with specified font, size, color, opacity (simulated via color blending), rotation, and position
+- Handles errors gracefully with user-friendly error messages
+- Validates page numbers against PDF page count
+- Includes comprehensive integration tests covering all scenarios
+
+#### App Binding (app.go)
+
+**New Method:**
+
+```go
+func (a *App) ApplyWatermark(
+    inputPath string,
+    watermark models.WatermarkDefinition,
+    outputDirectory string,
+    outputFilename string,
+) error
+```
+
+### Internationalization
+
+All translation keys have been implemented and are available in all 12 supported languages:
+
+- `watermarkTab` - "Watermark PDF"
+- `selectPDFFileWatermark` - "Select PDF File"
+- `watermarkText` - "Watermark Text"
+- `fontSize` - "Font Size"
+- `fontColor` - "Font Color"
+- `opacity` - "Opacity"
+- `rotation` - "Rotation"
+- `position` - "Position"
+- `fontFamily` - "Font Family"
+- `pageRange` - "Page Range"
+- `allPages` - "All Pages"
+- `specificPages` - "Specific Pages"
+- `pages` - "Pages"
+- `applyWatermark` - "Apply Watermark"
+- `applying` - "Applying watermark..."
+- `watermarkAppliedSuccessfully` - "Watermark applied successfully! Output:"
+- `watermarkFailed` - "Watermark failed:"
+- Position options (center, top-left, top-center, etc.)
+- **Font name translations**: All font names are translated and displayed in the user's selected language (e.g., "SimSun (宋体)" in English, "宋体" in Chinese)
+
+#### Language-Specific Font Selection
+
+The watermark feature includes **intelligent font selection** based on the application's current language:
+
+- **Dynamic Font Lists**: Font options are filtered to show only fonts appropriate for the selected language
+- **Automatic Default Selection**: When the language changes, the default font automatically updates to a font suitable for that language
+- **Font Name Localization**: Font names are displayed in the user's selected language (e.g., "SimSun (宋体)" in English, "宋体" in Chinese)
+- **Font Categories**:
+  - **Chinese (zh, zh-TW)**: SimSun, SimHei, Microsoft YaHei, KaiTi, FangSong
+  - **Japanese (ja)**: Mincho, Gothic
+  - **Korean (ko)**: Malgun Gothic, Nanum Gothic
+  - **Hindi (hi)**: Devanagari
+  - **All Other Languages**: Standard PDF fonts (Helvetica, Times Roman, Courier variants, Symbol)
+
+### Error Handling
+
+- Validate PDF file exists and is readable
+- Validate page range syntax and page numbers
+- Validate output directory is writable
+- Validate output filename is valid (no invalid characters)
+- Validate text watermark configuration (non-empty text, valid font, etc.)
+- Handle pdfcpu library errors gracefully
+- Provide user-friendly error messages
+
+### Performance Considerations
+
+- Validate page ranges efficiently
+- Process watermarking asynchronously with progress indication
+- Optimize text rendering operations
+- Handle large PDFs efficiently by processing pages in batches if needed
+
+### User Experience Enhancements
+
+- Show live preview of watermark position (optional future enhancement)
+- Allow multiple text watermarks to be added (optional future enhancement)
+- Support watermark templates/presets (optional future enhancement)
+- Show watermark preview on first page thumbnail (optional future enhancement)
+- Support for image watermarks (optional future enhancement)
+
+## Testing
+
+PDF Wizard includes comprehensive testing at multiple levels:
+
+### Backend Integration Tests
+
+- **Location**: Go test files alongside service implementations
+- **Coverage**: PDF operations (merge, split, rotate, watermark), file metadata, page count, error handling, language management
+- **Run**: `go test -v ./...` from the `pdf_wizard` directory
+- **Test PDF Generation**: Backend utilities (`createTestPDF`, `createMultiPageTestPDF`) generate minimal valid PDF files for testing
+
+### Frontend E2E Tests
+
+- **Framework**: Playwright
+- **Test Files**: Organized by functionality (app, components, tabs, i18n)
+- **Test PDF**: Uses `e2e/helpers/test.pdf` for testing PDF operations
+- **Mocking**: Wails runtime and Go bindings are mocked for UI-only testing
+- **CI/CD**: GitHub Actions workflow runs tests in parallel using a matrix strategy
+
+For detailed E2E testing information, including test structure, configuration, and CI/CD setup, see [`frontend/e2e/README.md`](frontend/e2e/README.md).
+
 ## Design Documentation
 
 For detailed design information, refer to the following documents:
 
 - **[Application Design](DESIGN.md)** - Main entry point, app wrapper, menu configuration, models, and configuration management
-- **[Components Design](frontend/src/components/DESIGN.md)** - Detailed design for MergeTab, SplitTab, RotateTab, and SettingsDialog components
+- **[Components Design](frontend/src/components/DESIGN.md)** - Detailed design for MergeTab, SplitTab, RotateTab, WatermarkTab, and SettingsDialog components
 - **[Services Design](services/DESIGN.md)** - Backend service layer architecture and implementation (FileService, PDFService)
 - **[i18n Design](frontend/src/utils/i18n/DESIGN.md)** - Internationalization system architecture and usage
 
@@ -286,7 +567,7 @@ For detailed design information, refer to the following documents:
 - TypeScript for type safety
 - Go structs with JSON tags for data exchange
 - Service-based architecture for separation of concerns
-- pdfcpu library for all PDF processing operations (merge, split, rotate)
+- pdfcpu library for all PDF processing operations (merge, split, rotate, watermark)
 - @dnd-kit library for drag-and-drop file reordering in Merge tab (modern replacement for deprecated react-beautiful-dnd)
 - Custom i18n system for internationalization (12 languages: English, Chinese Simplified, Chinese Traditional, Arabic, French, Japanese, Hindi, Spanish, Portuguese, Russian, Korean, German)
   - Modular structure: `utils/i18n/` directory with separate translation files for each language

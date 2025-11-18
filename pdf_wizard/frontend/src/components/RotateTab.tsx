@@ -18,14 +18,17 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import FolderIcon from '@mui/icons-material/Folder';
-import { SelectPDFFile, GetPDFMetadata, SelectOutputDirectory, RotatePDF } from '../../wailsjs/go/main/App';
+import { SelectPDFFile, GetPDFMetadata, RotatePDF } from '../../wailsjs/go/main/App';
 import { SelectedPDF, RotateDefinition } from '../types';
-import { formatFileSize, formatDate } from '../utils/formatters';
 import { models } from '../../wailsjs/go/models';
 import { t } from '../utils/i18n';
-
-const MAX_ROTATIONS = 10;
+import { MAX_ROTATIONS } from '../utils/constants';
+import { usePDFDrop } from '../hooks/usePDFDrop';
+import { useOutputDirectory } from '../hooks/useOutputDirectory';
+import { useErrorHandler } from '../hooks/useErrorHandler';
+import { PDFInfoCard } from './PDFInfoCard';
+import { FilenameInput } from './FilenameInput';
+import { OutputDirectorySelector } from './OutputDirectorySelector';
 
 interface RotateTabProps {
   onFileDrop: (handler: (paths: string[]) => void) => void;
@@ -34,46 +37,32 @@ interface RotateTabProps {
 export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
   const [selectedPDF, setSelectedPDF] = useState<SelectedPDF | null>(null);
   const [rotations, setRotations] = useState<RotateDefinition[]>([]);
-  const [outputDirectory, setOutputDirectory] = useState<string>('');
   const [outputFilename, setOutputFilename] = useState<string>('rotated');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const { handlePDFDrop } = usePDFDrop();
+  const { outputDirectory, selectDirectory } = useOutputDirectory('failedToSelectOutputDirectoryRotate');
+  const { error, setError, handleError } = useErrorHandler();
 
   // Register drag and drop handler with App component
   useEffect(() => {
+    const handleDroppedPDF = (paths: string[]) => {
+      handlePDFDrop(paths, {
+        allowMultiple: false,
+        onSuccess: (pdf) => {
+          setSelectedPDF(pdf as SelectedPDF);
+          setRotations([]); // Clear existing rotations when new PDF is selected
+          setError(null);
+        },
+        onError: (errorMsg) => {
+          setError(`${t('failedToLoadPDFRotate')} ${errorMsg}`);
+        },
+      });
+    };
     onFileDrop(handleDroppedPDF);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const handleDroppedPDF = async (paths: string[]) => {
-    const pdfPaths = paths.filter((path) => path.toLowerCase().endsWith('.pdf'));
-    if (pdfPaths.length === 0) {
-      setError(t('noPDFFilesFound'));
-      return;
-    }
-    if (pdfPaths.length > 1) {
-      setError(t('pleaseDropOnlyOnePDF'));
-      return;
-    }
-
-    try {
-      const path = pdfPaths[0];
-      const metadata = await GetPDFMetadata(path);
-      setSelectedPDF({
-        path: metadata.path,
-        name: metadata.name,
-        size: metadata.size,
-        lastModified: new Date(metadata.lastModified),
-        totalPages: metadata.totalPages,
-      });
-      // Clear existing rotations when new PDF is selected
-      setRotations([]);
-      setError(null);
-    } catch (err: any) {
-      setError(`${t('failedToLoadPDFRotate')} ${err.message}`);
-    }
-  };
 
   const handleSelectPDF = async () => {
     try {
@@ -91,8 +80,8 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
         setRotations([]);
         setError(null);
       }
-    } catch (err: any) {
-      setError(`${t('failedToSelectPDFRotate')} ${err.message}`);
+    } catch (err) {
+      handleError(err, 'failedToSelectPDFRotate');
     }
   };
 
@@ -131,18 +120,6 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
     );
   };
 
-  const handleSelectOutputDirectory = async () => {
-    try {
-      const dir = await SelectOutputDirectory();
-      if (dir) {
-        setOutputDirectory(dir);
-        setError(null);
-      }
-    } catch (err: any) {
-      setError(`${t('failedToSelectOutputDirectoryRotate')} ${err.message}`);
-    }
-  };
-
   const handleRotate = async () => {
     if (!selectedPDF || rotations.length === 0 || !outputDirectory || !outputFilename.trim()) return;
 
@@ -170,8 +147,8 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
       setSelectedPDF(null);
       setRotations([]);
       setOutputFilename('rotated');
-    } catch (err: any) {
-      const errorMessage = err?.message || err?.toString() || 'Unknown error occurred';
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : err?.toString() || 'Unknown error occurred';
       setError(`${t('rotateFailed')} ${errorMessage}`);
     } finally {
       setIsProcessing(false);
@@ -190,7 +167,7 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 3, overflow: 'hidden' }}>
       {/* PDF Selection Section */}
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 1 }}>
         <Button
           variant="contained"
           startIcon={<CloudUploadIcon />}
@@ -220,20 +197,7 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
       {/* Selected PDF Information */}
       {selectedPDF && (
         <>
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 1 }}>
-                📄 {selectedPDF.name}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                {selectedPDF.path}
-              </Typography>
-              <Typography variant="body2">
-                {formatFileSize(selectedPDF.size)} • {selectedPDF.totalPages} {t('pages')} • {t('modified')}{' '}
-                {formatDate(selectedPDF.lastModified)}
-              </Typography>
-            </CardContent>
-          </Card>
+          <PDFInfoCard pdf={selectedPDF} />
 
           {/* Add Rotate Button */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -369,35 +333,19 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
           flexShrink: 0,
         }}
       >
-        <Box sx={{ mb: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<FolderIcon />}
-            onClick={handleSelectOutputDirectory}
-            sx={{ mb: 1 }}
-            disabled={isProcessing}
-          >
-            {t('selectOutputDirectoryRotate')}
-          </Button>
-          {outputDirectory && (
-            <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-              {outputDirectory}
-            </Typography>
-          )}
-        </Box>
+        <OutputDirectorySelector
+          directory={outputDirectory}
+          onSelect={selectDirectory}
+          labelKey="selectOutputDirectoryRotate"
+          disabled={isProcessing}
+        />
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-          <Typography variant="body2">{t('outputFilename')}</Typography>
-          <TextField
-            value={outputFilename}
-            onChange={(e) => setOutputFilename(e.target.value)}
-            size="small"
-            placeholder="rotated"
-            sx={{ width: '200px' }}
-            disabled={isProcessing}
-          />
-          <Typography variant="body2">.pdf</Typography>
-        </Box>
+        <FilenameInput
+          value={outputFilename}
+          onChange={setOutputFilename}
+          placeholder="rotated"
+          disabled={isProcessing}
+        />
 
         <Button
           variant="contained"

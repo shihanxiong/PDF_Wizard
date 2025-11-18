@@ -4,11 +4,13 @@ import { Box, Tabs, Tab, AppBar, Toolbar, Typography } from '@mui/material';
 import { MergeTab } from './components/MergeTab';
 import { SplitTab } from './components/SplitTab';
 import { RotateTab } from './components/RotateTab';
+import { WatermarkTab } from './components/WatermarkTab';
 import { SettingsDialog } from './components/SettingsDialog';
 import logo from './assets/img/app_logo.png';
 import { OnFileDrop, OnFileDropOff, EventsOn } from '../wailsjs/runtime/runtime';
 import { GetLanguage, SetLanguage } from '../wailsjs/go/main/App';
 import { t, setLanguage, type Language } from './utils/i18n';
+import { isValidLanguage } from './utils/i18n/constants';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -41,6 +43,7 @@ export const App = () => {
   const mergeTabDropHandler = useRef<((paths: string[]) => void) | null>(null);
   const splitTabDropHandler = useRef<((paths: string[]) => void) | null>(null);
   const rotateTabDropHandler = useRef<((paths: string[]) => void) | null>(null);
+  const watermarkTabDropHandler = useRef<((paths: string[]) => void) | null>(null);
 
   // Load language on startup
   useEffect(() => {
@@ -48,8 +51,7 @@ export const App = () => {
       try {
         const lang = await GetLanguage();
         // Validate language code and default to 'en' if invalid
-        const validLanguages: Language[] = ['en', 'zh', 'zh-TW', 'ar', 'fr', 'ja', 'hi', 'es', 'pt', 'ru', 'ko', 'de'];
-        const language = (validLanguages.includes(lang as Language) ? lang : 'en') as Language;
+        const language = (isValidLanguage(lang) ? lang : 'en') as Language;
         setLanguage(language);
         forceUpdate({}); // Force re-render to update UI
       } catch (err) {
@@ -98,6 +100,9 @@ export const App = () => {
       } else if (tabValueRef.current === 2 && rotateTabDropHandler.current) {
         // Rotate tab is active
         rotateTabDropHandler.current(paths);
+      } else if (tabValueRef.current === 3 && watermarkTabDropHandler.current) {
+        // Watermark tab is active
+        watermarkTabDropHandler.current(paths);
       }
     };
 
@@ -143,7 +148,13 @@ export const App = () => {
       <AppBar position="static" sx={{ bgcolor: 'background.paper', color: 'text.primary', boxShadow: 1 }}>
         <Toolbar sx={{ px: 2, minHeight: '64px !important' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mr: 3 }}>
-            <img src={logo} alt="PDF Wizard Logo" style={{ height: '40px', width: '40px', marginRight: '12px' }} />
+            <img
+              src={logo}
+              alt="PDF Wizard Logo"
+              draggable={false}
+              onDragStart={(e) => e.preventDefault()}
+              style={{ height: '40px', width: '40px', marginRight: '12px', userSelect: 'none' }}
+            />
             <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
               {t('appTitle')}
             </Typography>
@@ -153,6 +164,7 @@ export const App = () => {
               <Tab label={t('mergeTab')} id="pdf-wizard-tab-0" aria-controls="pdf-wizard-tabpanel-0" />
               <Tab label={t('splitTab')} id="pdf-wizard-tab-1" aria-controls="pdf-wizard-tabpanel-1" />
               <Tab label={t('rotateTab')} id="pdf-wizard-tab-2" aria-controls="pdf-wizard-tabpanel-2" />
+              <Tab label={t('watermarkTab')} id="pdf-wizard-tab-3" aria-controls="pdf-wizard-tabpanel-3" />
             </Tabs>
           </Box>
         </Toolbar>
@@ -166,6 +178,11 @@ export const App = () => {
         </TabPanel>
         <TabPanel value={tabValue} index={2}>
           <RotateTab onFileDrop={(handler: (paths: string[]) => void) => (rotateTabDropHandler.current = handler)} />
+        </TabPanel>
+        <TabPanel value={tabValue} index={3}>
+          <WatermarkTab
+            onFileDrop={(handler: (paths: string[]) => void) => (watermarkTabDropHandler.current = handler)}
+          />
         </TabPanel>
       </Box>
       <SettingsDialog

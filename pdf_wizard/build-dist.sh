@@ -83,28 +83,87 @@ if [ "$OS" = "darwin" ]; then
         
         # Create a temporary directory for DMG contents
         DMG_TEMP_DIR=$(mktemp -d)
-        trap "rm -rf '$DMG_TEMP_DIR'" EXIT
+        DMG_TEMP_FILE=$(mktemp -u).dmg
+        MOUNT_POINT=""
+        
+        # Combined cleanup function for DMG and temp directory
+        cleanup_dmg() {
+            if [ -n "$MOUNT_POINT" ] && [ -d "$MOUNT_POINT" ]; then
+                hdiutil detach "$MOUNT_POINT" -quiet 2>/dev/null || true
+            fi
+            if [ -f "$DMG_TEMP_FILE" ]; then
+                rm -f "$DMG_TEMP_FILE"
+            fi
+            if [ -d "$DMG_TEMP_DIR" ]; then
+                rm -rf "$DMG_TEMP_DIR"
+            fi
+        }
+        trap cleanup_dmg EXIT
         
         # Copy app to temp directory
         cp -R "$BUILD_DIR/PDF Wizard.app" "$DMG_TEMP_DIR/"
         
-        # Create Applications folder link (symbolic link)
+        # Create Applications folder link (symbolic link) - will be replaced with proper alias
         ln -s /Applications "$DMG_TEMP_DIR/Applications"
         
-        # Create DMG
         hdiutil create -volname "PDF Wizard" \
             -fs HFS+ \
             -srcfolder "$DMG_TEMP_DIR" \
-            -ov -format UDZO \
-            "$OUTPUT_DIR/pdf_wizard-macos-universal.dmg"
+            -ov -format UDRW \
+            "$DMG_TEMP_FILE"
+        
+        # Mount the DMG
+        MOUNT_OUTPUT=$(hdiutil attach -readwrite -noverify -noautoopen "$DMG_TEMP_FILE" 2>&1)
+        # Extract mount point from the line containing Apple_HFS (the actual mounted volume)
+        # The output is tab-separated, so use tab as field separator to preserve spaces in mount point
+        MOUNT_POINT=$(echo "$MOUNT_OUTPUT" | grep "Apple_HFS" | awk -F'\t' '{print $3}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        
+        if [ -z "$MOUNT_POINT" ] || [ ! -d "$MOUNT_POINT" ]; then
+            echo "❌ Failed to mount DMG"
+            echo "   Output: $MOUNT_OUTPUT"
+            echo "   Extracted mount point: '$MOUNT_POINT'"
+            cleanup_dmg
+            exit 1
+        fi
+        
+        # Remove the symlink and create a proper alias with icon
+        rm -f "$MOUNT_POINT/Applications"
+        
+        # Create a proper alias using osascript (preserves icon)
+        osascript <<EOF
+tell application "Finder"
+    set sourceFolder to POSIX file "/Applications"
+    set destFolder to POSIX file "$MOUNT_POINT"
+    make alias file to sourceFolder at destFolder with properties {name:"Applications"}
+end tell
+EOF
+        
+        # Ensure the alias has the correct icon by setting its type
+        # This forces macOS to recognize it as an Applications folder alias
+        if [ -f "$MOUNT_POINT/Applications" ]; then
+            # Set the file type to ensure proper icon display
+            SetFile -a C "$MOUNT_POINT/Applications" 2>/dev/null || true
+        fi
+        
+        # Unmount the DMG
+        hdiutil detach "$MOUNT_POINT" -quiet
+        MOUNT_POINT=""  # Clear mount point so cleanup function doesn't try to unmount again
+        
+        # Convert to compressed format
+        hdiutil convert "$DMG_TEMP_FILE" \
+            -format UDZO \
+            -o "$OUTPUT_DIR/pdf_wizard-macos-universal.dmg" \
+            -ov
+        
+        # Cleanup temporary DMG (trap will handle if script exits early)
+        rm -f "$DMG_TEMP_FILE"
+        rm -rf "$DMG_TEMP_DIR"
+        trap - EXIT  # Remove the cleanup trap since we're done
         
         if [ -f "$OUTPUT_DIR/pdf_wizard-macos-universal.dmg" ]; then
             echo "✅ Created: $OUTPUT_DIR/pdf_wizard-macos-universal.dmg"
             echo "   Users can drag the app to the Applications folder to install"
         fi
-        
-        # Cleanup
-        rm -rf "$DMG_TEMP_DIR"
     fi
     
     # Create README for macOS distribution
