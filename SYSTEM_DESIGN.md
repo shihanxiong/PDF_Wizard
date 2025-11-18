@@ -19,7 +19,7 @@ PDF Wizard is a cross-platform desktop application built with Wails v2 that prov
 - **Build Tool**: Wails CLI v2.11.0
 - **UI Framework**: Material-UI
 - **Drag and Drop**: `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities` for file reordering (replaced deprecated react-beautiful-dnd)
-- **Internationalization**: Custom i18n system supporting English and Chinese (Simplified)
+- **Internationalization**: Custom i18n system supporting 12 languages (English, Chinese Simplified, Chinese Traditional, Arabic, French, Japanese, Hindi, Spanish, Portuguese, Russian, Korean, German)
 - **Node.js**: 22.21.1 (required by the project)
 
 ### Project Structure
@@ -50,8 +50,18 @@ pdf_wizard/
 │   │       └── i18n/       # Internationalization utilities
 │   │           ├── index.ts
 │   │           ├── types.ts
-│   │           ├── en.ts
-│   │           ├── zh.ts
+│   │           ├── en.ts       # English translations
+│   │           ├── zh.ts       # Chinese Simplified translations
+│   │           ├── zh-TW.ts    # Chinese Traditional translations
+│   │           ├── ar.ts       # Arabic translations
+│   │           ├── fr.ts       # French translations
+│   │           ├── ja.ts       # Japanese translations
+│   │           ├── hi.ts       # Hindi translations
+│   │           ├── es.ts       # Spanish translations
+│   │           ├── pt.ts       # Portuguese translations
+│   │           ├── ru.ts       # Russian translations
+│   │           ├── ko.ts       # Korean translations
+│   │           ├── de.ts       # German translations
 │   │           └── DESIGN.md  # i18n system design
 │   └── wailsjs/           # Auto-generated Wails bindings
 └── go.mod                  # Go dependencies
@@ -92,19 +102,33 @@ Drag and drop file handling is implemented at the App level to work anywhere on 
 
 The application supports multiple languages through a custom internationalization system:
 
-- **Supported Languages**: English (en) and Chinese Simplified (zh)
+- **Supported Languages**: 12 languages total
+  - English (en)
+  - Chinese Simplified (zh)
+  - Chinese Traditional (zh-TW)
+  - Arabic (ar)
+  - French (fr)
+  - Japanese (ja)
+  - Hindi (hi)
+  - Spanish (es)
+  - Portuguese (pt)
+  - Russian (ru)
+  - Korean (ko)
+  - German (de)
 - **Language Selection**: Available through the Settings dialog (accessible via menu bar)
 - **Language Persistence**: User's language preference is saved to a configuration file in the user's config directory
 - **Translation System**: All UI text uses translation keys accessed via the `t()` function from `utils/i18n`
 - **Dynamic Updates**: UI updates immediately when language is changed
 - **Default Language**: English (en) is the default if no preference is set
+- **Native Language Names**: Language options are displayed in their native script for better user experience
 
 For detailed i18n implementation, see [`frontend/src/utils/i18n/DESIGN.md`](frontend/src/utils/i18n/DESIGN.md).
 
 #### Settings Dialog
 
 - Accessible via the "Settings" menu item in the application menu bar
-- Allows users to select between English and Chinese
+- Allows users to select from 12 supported languages
+- Language options are displayed in their native script (e.g., "简体中文", "繁體中文", "한국어", "Deutsch")
 - Changes are saved immediately and persist across application restarts
 - Uses Material-UI Dialog component for consistent UI
 - Language preference is loaded on application startup
@@ -209,7 +233,7 @@ For detailed application-level design, see [`DESIGN.md`](DESIGN.md).
 - TypeScript
 - Wails runtime bindings
 - `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities` - For drag-and-drop file reordering (replaced deprecated react-beautiful-dnd)
-- Custom i18n system (`utils/i18n/`) - For internationalization (modular structure with separate translation files)
+- Custom i18n system (`utils/i18n/`) - For internationalization (modular structure with separate translation files for 12 languages)
 
 ### Error Handling
 
@@ -245,43 +269,6 @@ For detailed application-level design, see [`DESIGN.md`](DESIGN.md).
 9. **File Validation**: Pre-check PDF files for corruption before processing
 10. **Progress Tracking**: Real-time progress updates for long-running operations
 
-## Implementation Phases
-
-### Phase 1: Merge Tab - Basic Functionality
-
-1. Tab structure and navigation
-2. File selection dialog and drag-and-drop file selection
-3. File list display with metadata
-4. Output directory selection
-5. Merge button with basic merge functionality
-
-### Phase 2: Merge Tab - Enhanced UI
-
-1. Drag-and-drop file reordering (within list)
-2. Output directory selection UI
-3. Better error handling and validation
-4. Progress indicators and status messages
-5. Success/error notifications
-
-### Phase 3: Split Tab
-
-1. Implement split tab UI
-2. Split functionality
-3. Output configuration
-
-### Phase 4: Rotate Tab
-
-1. Implement rotate tab UI
-2. Rotation functionality
-3. Output configuration
-
-### Phase 5: Polish & Optimization
-
-1. Performance optimization
-2. Enhanced error messages
-3. User feedback improvements
-4. Documentation
-
 ## Design Documentation
 
 For detailed design information, refer to the following documents:
@@ -301,45 +288,11 @@ For detailed design information, refer to the following documents:
 - Service-based architecture for separation of concerns
 - pdfcpu library for all PDF processing operations (merge, split, rotate)
 - @dnd-kit library for drag-and-drop file reordering in Merge tab (modern replacement for deprecated react-beautiful-dnd)
-- Custom i18n system for internationalization (English and Chinese Simplified)
-  - Modular structure: `utils/i18n/` directory with separate files for types, English, and Chinese translations
+- Custom i18n system for internationalization (12 languages: English, Chinese Simplified, Chinese Traditional, Arabic, French, Japanese, Hindi, Spanish, Portuguese, Russian, Korean, German)
+  - Modular structure: `utils/i18n/` directory with separate translation files for each language
   - Language preference stored in JSON config file: `<UserConfigDir>/PDF Wizard/pdf_wizard_config.json`
+  - Language validation in both frontend (TypeScript) and backend (Go) for consistency
+  - Native language names displayed in language selector for better UX
 - Settings accessible via application menu bar (native menu on macOS)
   - Settings menu is separate from AppMenu (which includes "About PDF Wizard" automatically)
 - Wails Events API used for communication between menu and frontend (show-settings event)
-
-## Building and Distribution
-
-### Build Requirements
-
-- **Go**: 1.24.0 (specified in `go.mod`)
-- **Node.js**: 22.21.1 (required by the project)
-- **Wails CLI**: v2.11.0 (matches `github.com/wailsapp/wails/v2 v2.11.0` in `go.mod`)
-- **NSIS** (Windows only, optional): Required to generate Windows installer
-
-### Build Commands
-
-**Development:**
-
-```bash
-wails dev
-```
-
-**Production Build:**
-
-```bash
-# macOS (universal binary)
-wails build -platform darwin/universal
-
-# Windows
-wails build
-```
-
-### Distribution
-
-PDF Wizard includes automated build scripts for creating distribution packages:
-
-- **macOS**: `build-dist.sh` - Creates DMG installer and ZIP archive
-- **Windows**: `build-dist.sh` (Git Bash/WSL) or `build-dist.ps1` (PowerShell) - Creates standalone executable, NSIS installer (if NSIS installed), and portable ZIP
-
-For detailed distribution instructions, see [DISTRIBUTION.md](DISTRIBUTION.md).
