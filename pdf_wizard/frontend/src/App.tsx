@@ -143,7 +143,13 @@ export const App = () => {
       <AppBar position="static" sx={{ bgcolor: 'background.paper', color: 'text.primary', boxShadow: 1 }}>
         <Toolbar sx={{ px: 2, minHeight: '64px !important' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mr: 3 }}>
-            <img src={logo} alt="PDF Wizard Logo" style={{ height: '40px', width: '40px', marginRight: '12px' }} />
+            <img
+              src={logo}
+              alt="PDF Wizard Logo"
+              draggable={false}
+              onDragStart={(e) => e.preventDefault()}
+              style={{ height: '40px', width: '40px', marginRight: '12px', userSelect: 'none' }}
+            />
             <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
               {t('appTitle')}
             </Typography>
