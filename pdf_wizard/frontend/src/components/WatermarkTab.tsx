@@ -17,9 +17,11 @@ import {
   RadioGroup,
   FormControlLabel,
   FormLabel,
+  Paper,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import FolderIcon from '@mui/icons-material/Folder';
+import { NoPDFSelected } from './NoPDFSelected';
 import { SelectPDFFile, GetPDFMetadata, SelectOutputDirectory, ApplyWatermark } from '../../wailsjs/go/main/App';
 import { SelectedPDF } from '../types';
 import { formatFileSize, formatDate } from '../utils/formatters';
@@ -314,7 +316,7 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
       )}
 
       {/* Watermark Configuration - Scrollable Area */}
-      {selectedPDF && (
+      {selectedPDF ? (
         <Box sx={{ flex: 1, overflow: 'auto', mb: 3 }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
@@ -581,6 +583,8 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
             </CardContent>
           </Card>
         </Box>
+      ) : (
+        <NoPDFSelected />
       )}
 
       {/* Output Configuration Section */}
