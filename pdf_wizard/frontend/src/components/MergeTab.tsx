@@ -192,8 +192,9 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
       // Clear files after successful merge
       setFiles([]);
       setOutputFilename('merged');
-    } catch (err: any) {
-      const errorMessage = err?.message || err?.toString() || 'Unknown error occurred';
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : typeof err === 'string' ? err : String(err) || 'Unknown error occurred';
       setError(`${t('mergeFailed')} ${errorMessage}`);
     } finally {
       setIsProcessing(false);
