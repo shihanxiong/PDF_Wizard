@@ -24,6 +24,7 @@ import { useOutputDirectory } from '../hooks/useOutputDirectory';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import { PDFInfoCard } from './PDFInfoCard';
 import { OutputDirectorySelector } from './OutputDirectorySelector';
+import { NoPDFSelected } from './NoPDFSelected';
 
 interface SplitTabProps {
   onFileDrop: (handler: (paths: string[]) => void) => void;
@@ -187,7 +188,7 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
       )}
 
       {/* Selected PDF Information */}
-      {selectedPDF && (
+      {selectedPDF ? (
         <>
           <PDFInfoCard pdf={selectedPDF} />
 
@@ -303,6 +304,8 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
             )}
           </Paper>
         </>
+      ) : (
+        <NoPDFSelected />
       )}
 
       {/* Output Configuration Section */}

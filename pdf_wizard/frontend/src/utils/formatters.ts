@@ -27,13 +27,17 @@ export function formatDate(date: Date): string {
   });
 }
 
+import { models } from '../../wailsjs/go/models';
+import { SelectedFile } from '../types';
+
 /**
  * Convert PDFMetadata from backend to SelectedFile for frontend
  */
-export function convertToSelectedFile(metadata: any): any {
+export function convertToSelectedFile(metadata: models.PDFMetadata): SelectedFile {
   return {
-    ...metadata,
+    path: metadata.path,
+    name: metadata.name,
+    size: metadata.size,
     lastModified: new Date(metadata.lastModified),
   };
 }
-

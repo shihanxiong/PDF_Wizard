@@ -62,46 +62,45 @@ export function setupWailsMocks() {
   (window as any).go = {
     main: {
       App: {
-        GetLanguage: () => {
-          return Promise.resolve((window as any).__mockLanguage || 'en');
+        GetLanguage: async () => {
+          return (window as any).__mockLanguage || 'en';
         },
-        SetLanguage: (lang: string) => {
+        SetLanguage: async (lang: string) => {
           (window as any).__mockLanguage = lang;
           sessionStorage.setItem('__test_mock_language', lang);
-          return Promise.resolve();
         },
         EmitSettingsEvent: () => {
           if ((window as any).runtime && (window as any).runtime.EventsEmit) {
             (window as any).runtime.EventsEmit('show-settings');
           }
         },
-        SelectPDFFiles: () => Promise.resolve([]),
-        SelectPDFFile: () => Promise.resolve(pdfPath || ''),
-        SelectOutputDirectory: () => Promise.resolve('/tmp'),
-        GetFileMetadata: () => Promise.resolve({}),
-        GetPDFMetadata: (path: string) => {
+        SelectPDFFiles: async () => [],
+        SelectPDFFile: async () => pdfPath || '',
+        SelectOutputDirectory: async () => '/tmp',
+        GetFileMetadata: async () => ({}),
+        GetPDFMetadata: async (path: string) => {
           if (path === pdfPath || path) {
-            return Promise.resolve({
+            return {
               path: pdfPath || path,
               name: 'test.pdf',
               size: 520,
               lastModified: new Date().toISOString(),
               isPDF: true,
               totalPages: 1,
-            });
+            };
           }
-          return Promise.resolve({});
+          return {};
         },
-        GetPDFPageCount: (path: string) => {
+        GetPDFPageCount: async (path: string) => {
           if (path === pdfPath || path) {
-            return Promise.resolve(1);
+            return 1;
           }
-          return Promise.resolve(0);
+          return 0;
         },
-        MergePDFs: () => Promise.resolve(),
-        SplitPDF: () => Promise.resolve(),
-        RotatePDF: () => Promise.resolve(),
-        ApplyWatermark: () => Promise.resolve(),
+        MergePDFs: async () => {},
+        SplitPDF: async () => {},
+        RotatePDF: async () => {},
+        ApplyWatermark: async () => {},
       },
     },
   };

@@ -29,6 +29,7 @@ import { useOutputDirectory } from '../hooks/useOutputDirectory';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import { FilenameInput } from './FilenameInput';
 import { OutputDirectorySelector } from './OutputDirectorySelector';
+import { NoPDFSelected } from './NoPDFSelected';
 
 interface MergeTabProps {
   onFileDrop: (handler: (paths: string[]) => void) => void;
@@ -192,8 +193,9 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
       // Clear files after successful merge
       setFiles([]);
       setOutputFilename('merged');
-    } catch (err: any) {
-      const errorMessage = err?.message || err?.toString() || 'Unknown error occurred';
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : typeof err === 'string' ? err : String(err) || 'Unknown error occurred';
       setError(`${t('mergeFailed')} ${errorMessage}`);
     } finally {
       setIsProcessing(false);
@@ -227,19 +229,15 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
       )}
 
       {/* File List */}
-      <Paper
-        sx={{
-          flex: 1,
-          overflow: 'auto',
-          mb: 3,
-          minHeight: 200,
-        }}
-      >
-        {files.length === 0 ? (
-          <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>
-            <Typography>{t('noFilesSelected')}</Typography>
-          </Box>
-        ) : (
+      {files.length > 0 ? (
+        <Paper
+          sx={{
+            flex: 1,
+            overflow: 'auto',
+            mb: 3,
+            minHeight: 200,
+          }}
+        >
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={files.map((f) => f.path)} strategy={verticalListSortingStrategy}>
               {files.map((file, index) => (
@@ -247,8 +245,10 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
               ))}
             </SortableContext>
           </DndContext>
-        )}
-      </Paper>
+        </Paper>
+      ) : (
+        <NoPDFSelected />
+      )}
 
       {/* Output Configuration Section */}
       <Box sx={{ mt: 'auto', pt: 2, pb: 2, borderTop: '1px solid', borderColor: 'divider', flexShrink: 0 }}>

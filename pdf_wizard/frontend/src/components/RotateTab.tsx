@@ -29,6 +29,7 @@ import { useErrorHandler } from '../hooks/useErrorHandler';
 import { PDFInfoCard } from './PDFInfoCard';
 import { FilenameInput } from './FilenameInput';
 import { OutputDirectorySelector } from './OutputDirectorySelector';
+import { NoPDFSelected } from './NoPDFSelected';
 
 interface RotateTabProps {
   onFileDrop: (handler: (paths: string[]) => void) => void;
@@ -195,7 +196,7 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
       )}
 
       {/* Selected PDF Information */}
-      {selectedPDF && (
+      {selectedPDF ? (
         <>
           <PDFInfoCard pdf={selectedPDF} />
 
@@ -320,6 +321,8 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
             )}
           </Paper>
         </>
+      ) : (
+        <NoPDFSelected />
       )}
 
       {/* Output Configuration Section */}

@@ -10,6 +10,7 @@ import {
   Select,
   MenuItem,
   Box,
+  SelectChangeEvent,
 } from '@mui/material';
 import { GetLanguage, SetLanguage } from '../../wailsjs/go/main/App';
 import { t, setLanguage, getLanguage, getNativeLanguageName, type Language } from '../utils/i18n';
@@ -43,7 +44,7 @@ export const SettingsDialog = ({ open, onClose, onLanguageChange }: SettingsDial
     }
   };
 
-  const handleLanguageChange = async (event: any) => {
+  const handleLanguageChange = (event: SelectChangeEvent<string>) => {
     const newLanguage = event.target.value as Language;
     setSelectedLanguage(newLanguage);
   };
