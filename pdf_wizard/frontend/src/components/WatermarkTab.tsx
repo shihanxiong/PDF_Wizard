@@ -17,9 +17,11 @@ import {
   RadioGroup,
   FormControlLabel,
   FormLabel,
+  Paper,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import FolderIcon from '@mui/icons-material/Folder';
+import { NoPDFSelected } from './NoPDFSelected';
 import { SelectPDFFile, GetPDFMetadata, SelectOutputDirectory, ApplyWatermark } from '../../wailsjs/go/main/App';
 import { SelectedPDF } from '../types';
 import { formatFileSize, formatDate } from '../utils/formatters';
@@ -77,8 +79,10 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
         totalPages: metadata.totalPages,
       });
       setError(null);
-    } catch (err: any) {
-      setError(`${t('failedToLoadPDFWatermark')} ${err.message}`);
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error occurred';
+      setError(`${t('failedToLoadPDFWatermark')} ${errorMessage}`);
     }
   };
 
@@ -96,8 +100,10 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
         });
         setError(null);
       }
-    } catch (err: any) {
-      setError(`${t('failedToSelectPDFWatermark')} ${err.message}`);
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error occurred';
+      setError(`${t('failedToSelectPDFWatermark')} ${errorMessage}`);
     }
   };
 
@@ -108,8 +114,10 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
         setOutputDirectory(dir);
         setError(null);
       }
-    } catch (err: any) {
-      setError(`${t('failedToSelectOutputDirectoryWatermark')} ${err.message}`);
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error occurred';
+      setError(`${t('failedToSelectOutputDirectoryWatermark')} ${errorMessage}`);
     }
   };
 
@@ -144,8 +152,9 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
       // Clear selected PDF and reset filename after successful watermark
       setSelectedPDF(null);
       setOutputFilename('watermarked');
-    } catch (err: any) {
-      const errorMessage = err?.message || err?.toString() || 'Unknown error occurred';
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : typeof err === 'string' ? err : String(err) || 'Unknown error occurred';
       setError(`${t('watermarkFailed')} ${errorMessage}`);
     } finally {
       setIsProcessing(false);
@@ -307,7 +316,7 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
       )}
 
       {/* Watermark Configuration - Scrollable Area */}
-      {selectedPDF && (
+      {selectedPDF ? (
         <Box sx={{ flex: 1, overflow: 'auto', mb: 3 }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
@@ -574,6 +583,8 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
             </CardContent>
           </Card>
         </Box>
+      ) : (
+        <NoPDFSelected />
       )}
 
       {/* Output Configuration Section */}
