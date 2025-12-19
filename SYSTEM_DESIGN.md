@@ -15,7 +15,7 @@ PDF Wizard is a cross-platform desktop application built with Wails v2 that prov
 
 - **Backend**: Go 1.24.0 with Wails v2.11.0
 - **Frontend**: React 18+ with TypeScript, Material-UI (MUI) v7
-- **PDF Processing**: `github.com/pdfcpu/pdfcpu` - Native Go PDF library
+- **PDF Processing**: `github.com/pdfcpu/pdfcpu v0.11.1` - Native Go PDF library
 - **Build Tool**: Wails CLI v2.11.0
 - **UI Framework**: Material-UI
 - **Drag and Drop**: `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities` for file reordering (replaced deprecated react-beautiful-dnd)
@@ -32,6 +32,8 @@ pdf_wizard/
 ├── services/              # Service layer for business logic
 │   ├── file_service.go    # File selection and metadata operations
 │   ├── pdf_service.go     # PDF processing operations (merge, split, rotate, watermark)
+│   ├── validation.go      # File and directory validation utilities
+│   ├── constants.go       # Service constants (file extensions, permissions)
 │   └── DESIGN.md          # Backend services design
 ├── models/                 # Data models
 │   └── types.go           # PDFMetadata, SplitDefinition, RotateDefinition, WatermarkDefinition
@@ -95,10 +97,14 @@ The application features a tabbed interface with four main tabs:
 
 Drag and drop file handling is implemented at the App level to work anywhere on the window:
 
-- A single `OnFileDrop` handler is registered at the App component level
-- The handler routes dropped files to the appropriate tab based on the currently active tab
+- A single `OnFileDrop` handler is registered at the App component level with `useDropTarget=false` to work anywhere on the window
+- The handler routes dropped files to the appropriate tab based on the currently active tab (using refs to track current tab)
 - Each tab component registers its own drop handler via a callback prop
+- Cross-platform compatibility:
+  - **Windows**: `DisableWebViewDrop: true` in Wails config prevents WebView2 from intercepting drag-and-drop events
+  - **macOS**: Works natively without interference from WebKit
 - Browser default drag-and-drop behavior is prevented to avoid PDF preview
+- Handler is registered once on mount and cleaned up on unmount
 
 ### Internationalization (i18n)
 
@@ -162,6 +168,36 @@ appMenu.Append(menu.WindowMenu())
 - Frontend listens for this event using `EventsOn('show-settings', ...)` and opens the Settings dialog
 - Menu is native on macOS (appears in the menu bar at the top of the screen)
 
+#### Application Configuration
+
+The application is configured with the following options in `main.go`:
+
+```go
+&options.App{
+    Title:     "PDF Wizard",
+    Width:     1024,
+    Height:    900,
+    MinWidth:  800,
+    MinHeight: 600,
+    BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
+    DragAndDrop: &options.DragAndDrop{
+        EnableFileDrop:     true,
+        DisableWebViewDrop: true, // Prevents WebView interference on Windows and macOS
+    },
+    Mac: &mac.Options{
+        About: &mac.AboutInfo{
+            Title:   "PDF Wizard",
+            Message: "A modern PDF toolkit built with Wails v2\n\nAuthor: Hanxiong Shi\nVersion 1.0.0\nCopyright © 2025",
+        },
+    },
+}
+```
+
+- **Window Size**: 1024x900 pixels (minimum 800x600)
+- **Background Color**: Dark theme (RGB: 27, 38, 54)
+- **Drag and Drop**: Enabled with `DisableWebViewDrop: true` for cross-platform compatibility
+- **macOS About Dialog**: Custom About information with author, version, and copyright
+
 For detailed menu and application configuration, see [`DESIGN.md`](DESIGN.md).
 
 #### Configuration File
@@ -200,7 +236,38 @@ The backend uses a service-based architecture with clear separation of concerns:
 
 - **FileService** - Handles file selection, directory selection, and file metadata operations
 - **PDFService** - Handles all PDF processing operations (merge, split, rotate, watermark)
+- **Validation utilities** (`validation.go`) - File and directory validation functions
+  - `validatePDFFile()` - Validates file exists, is readable, and has PDF extension
+  - `validateOutputDirectory()` - Validates directory exists and is accessible
+  - `isPDFFile()` - Checks if file has PDF extension
+- **Constants** (`constants.go`) - Service-level constants
+  - `PDFExtension = ".pdf"` - Standard PDF file extension
+  - `DefaultFilePerm = 0644` - Default file permissions (rw-r--r--)
+  - `DefaultDirPerm = 0755` - Default directory permissions (rwxr-xr-x)
 - **App struct** - Thin wrapper that delegates to services and provides Wails bindings
+
+### PDF Service Implementation Details
+
+#### MergePDFs
+
+- **Pre-validation**: Validates each PDF can be read using `api.ReadContextFile()` before merging to identify problematic files
+- **Font encoding handling**: Provides specific error messages for font encoding issues (e.g., NULL encoding), suggesting PDF repair
+- **Output file handling**: Removes existing output file before creating new one to avoid pdfcpu overwrite issues
+- **Error messages**: Includes filename and file index in error messages for better debugging
+
+#### RotatePDF
+
+- **Temporary file strategy**: Creates a temporary copy of input file because pdfcpu's `RotateFile` modifies files in place
+- **Sequential rotations**: Multiple rotations are applied sequentially to the same temporary file
+- **Cleanup**: Uses `defer os.Remove()` to ensure temporary file is cleaned up even on error
+- **Final output**: Moves temporary file to final output location after all rotations are applied
+
+#### ApplyWatermark
+
+- **Temporary file strategy**: Similar to RotatePDF, uses temporary file to avoid in-place modification
+- **Page range parsing**: Supports "all" pages or specific ranges like "1,3,5-10,15"
+- **Opacity simulation**: Since pdfcpu doesn't support alpha channel, opacity is simulated by blending color with white
+- **Helper functions**: Includes specialized functions for page range parsing, position conversion, color parsing, and opacity adjustment
 
 For detailed service implementation, see [`services/DESIGN.md`](services/DESIGN.md).
 
@@ -227,7 +294,9 @@ For detailed application-level design, see [`DESIGN.md`](DESIGN.md).
 - `github.com/wailsapp/wails/v2/pkg/menu` - Application menu
 - `github.com/pdfcpu/pdfcpu/pkg/api` - PDF processing library
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model` - Configuration models
-- Standard library: `encoding/json`, `os`, `path/filepath` - For configuration management
+- `github.com/pdfcpu/pdfcpu/pkg/pdfcpu/color` - Color handling for watermarks
+- `github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types` - PDF types and anchors
+- Standard library: `encoding/json`, `os`, `path/filepath`, `strings`, `fmt` - For configuration management, file operations, and string manipulation
 
 **Frontend:**
 
@@ -240,9 +309,13 @@ For detailed application-level design, see [`DESIGN.md`](DESIGN.md).
 
 ### Error Handling
 
-- Validate PDF files before processing
-- Handle file access errors gracefully
-- Provide user-friendly error messages
+- Validate PDF files before processing (file existence, PDF format, readability)
+- Handle file access errors gracefully with descriptive messages
+- **Font encoding validation**: Merge operation validates each PDF can be read before merging, with specific error messages for font encoding issues (e.g., NULL encoding)
+- **Page range validation**: All operations validate page ranges against PDF page count
+- **Output file handling**: Existing output files are removed before creating new ones to avoid pdfcpu overwrite issues
+- **Temporary file management**: Rotate and watermark operations use temporary files to avoid in-place modification issues, with automatic cleanup
+- Provide user-friendly error messages that identify problematic files
 - Log errors for debugging
 
 ### Performance Considerations
@@ -448,9 +521,16 @@ func (s *PDFService) ApplyWatermark(
 
 - Uses pdfcpu library's `TextWatermark` API for watermark creation
 - Parses page range string to determine which pages to watermark (supports "all" or specific ranges like "1,3,5-10")
-- Renders text with specified font, size, color, opacity (simulated via color blending), rotation, and position
+- Renders text with specified font, size, color, opacity (simulated via color blending with white), rotation, and position
+- **Temporary file handling**: Creates a temporary copy of the input file, applies watermark, then moves to final output location (prevents in-place modification issues)
+- **Helper functions**:
+  - `parsePageRange()` - Parses page range strings (e.g., "1,3,5-10,15") into pdfcpu format
+  - `convertPositionToAnchor()` - Converts position strings to pdfcpu anchor format
+  - `parseColor()` - Parses hex color codes to pdfcpu color format
+  - `adjustColorOpacity()` - Simulates opacity by blending color with white
 - Handles errors gracefully with user-friendly error messages
 - Validates page numbers against PDF page count
+- Validates watermark configuration (non-empty text, valid font size, opacity range)
 - Includes comprehensive integration tests covering all scenarios
 
 #### App Binding (app.go)
@@ -561,8 +641,9 @@ For detailed design information, refer to the following documents:
 
 ## Notes
 
-- Uses Wails runtime package (`pkg/runtime`) for native file dialogs
-- Leverages Wails `OnFileDrop` API for drag-and-drop (handled at App level)
+- Uses Wails runtime package (`pkg/runtime`) for native file dialogs and event emission
+- Leverages Wails `OnFileDrop` API for drag-and-drop (handled at App level with `useDropTarget=false` for window-wide support)
+- Cross-platform drag-and-drop: `DisableWebViewDrop: true` prevents WebView interference on Windows and macOS
 - Material-UI components for consistent UI
 - TypeScript for type safety
 - Go structs with JSON tags for data exchange
