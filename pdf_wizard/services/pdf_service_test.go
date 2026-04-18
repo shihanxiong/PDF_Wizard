@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -64,6 +65,32 @@ func TestPDFService_MergePDFs(t *testing.T) {
 
 	if len(content) < 4 || string(content[0:4]) != "%PDF" {
 		t.Error("Output file does not appear to be a valid PDF")
+	}
+}
+
+func TestPDFService_MergePDFs_InvalidInputDiagnosed(t *testing.T) {
+	fileService := NewFileService(context.Background())
+	service := NewPDFService(fileService)
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	good := filepath.Join(testDir, "good.pdf")
+	bad := filepath.Join(testDir, "bad.pdf")
+	if err := createTestPDF(good); err != nil {
+		t.Fatalf("Failed to create good PDF: %v", err)
+	}
+	if err := os.WriteFile(bad, []byte("not a valid pdf"), 0644); err != nil {
+		t.Fatalf("Failed to write bad PDF: %v", err)
+	}
+
+	err := service.MergePDFs([]string{good, bad}, testDir, "merged-invalid")
+	if err == nil {
+		t.Fatal("expected merge to fail for invalid PDF input")
+	}
+	// Diagnosis path should mention the bad file index/name
+	if !strings.Contains(err.Error(), "bad.pdf") {
+		t.Errorf("expected error to reference bad.pdf, got: %v", err)
 	}
 }
 
