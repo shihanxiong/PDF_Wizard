@@ -1,0 +1,29 @@
+---
+description: Require tests when adding or changing production code
+alwaysApply: true
+---
+
+# Test coverage for new and changed code
+
+Whenever you **add or modify** production logic (not comments-only or pure formatting), include **test coverage** in the same change set unless the user explicitly opts out.
+
+## Go (`pdf_wizard/`)
+
+- Add or extend tests in `*_test.go` next to the code under `pdf_wizard/` (e.g. `services/pdf_service_test.go`, `app_test.go`).
+- Cover new branches, error paths, and behavior changes; adjust existing tests when behavior changes.
+- Run `go test ./...` from `pdf_wizard/` (or repo root as appropriate) and fix failures before finishing.
+
+## Frontend (`pdf_wizard/frontend/`)
+
+- Prefer **Playwright e2e** under `pdf_wizard/frontend/e2e/` for user-visible flows; extend an existing spec or add one when behavior or UI contracts change.
+- If you introduce **unit-level** helpers or hooks, add colocated or `*.test.ts` / `*.spec.ts` coverage if the project already uses that pattern for that area.
+
+## What counts as “covered”
+
+- New public API (Wails bindings, exported funcs, hooks): at least one test that exercises success and, when relevant, a representative failure case.
+- Bug fixes: a test that would have failed before the fix (regression guard).
+
+## Exceptions
+
+- Generated files, lockfiles, asset-only changes: tests not required unless they affect runtime behavior.
+- If tests are impractical in one pass, say why briefly and add a follow-up task—but default is **tests with the code**.

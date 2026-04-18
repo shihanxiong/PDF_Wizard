@@ -1,0 +1,88 @@
+---
+description: PR naming, build-dist.sh distributables, PR body updates
+alwaysApply: true
+---
+
+# Pull request and branch naming
+
+When opening a pull request or suggesting branch names for this repo, follow GitHub issue **#N** as the source of truth.
+
+## Branch name
+
+Use kebab-case after the prefix:
+
+`pdf-<issue#>-<short-description>`
+
+Examples:
+
+- Issue **53** about merge reads → `pdf-53-avoid-duplicate-merge-reads`
+- Issue **60** about file drop routing → `pdf-60-tab-drop-handler-map`
+
+Rules:
+
+- Prefix is always `pdf-` (lowercase).
+- `<issue#>` is the GitHub issue number with no padding (e.g. `53`, not `0053`).
+- `<short-description>` is lowercase words separated by `-`, no spaces.
+
+## PR title
+
+The title **must start with** the issue tag in this exact form:
+
+`[PDF-<issue#>]`
+
+Optionally add a concise summary after one space (recommended for reviewers and history).
+
+Examples:
+
+- `[PDF-53] Avoid duplicate full-PDF reads before merge`
+- `[PDF-62] Refresh OPTIMIZATION_REPORT.md`
+
+If only the tag is required for a trivial change, `[PDF-55]` alone is acceptable; prefer adding a short summary when it clarifies scope.
+
+## Keep the PR description current after new commits
+
+Whenever **additional commits are pushed** to an **open** pull request, **update the PR description** (and the title if the scope changed) so GitHub still tells an accurate story—do not leave an outdated body that only matches the first push.
+
+Refresh the body to reflect the **current** change set, for example:
+
+- **Summary** of what the PR does now (not only the initial intent).
+- **Notable commits or areas** if the branch grew (e.g. follow-up fixes, refactors, regenerated artifacts).
+- **Testing** you actually ran for the latest tip.
+- **Issue links** (`Closes #…`, `Refs #…`) still correct.
+
+Use the GitHub UI or CLI, e.g. `gh pr edit <number> --body-file <file>` or `--body "…"`, after pushing.
+
+If the PR title no longer matches the work, rename it while **keeping the `[PDF-<issue#>]` prefix**.
+
+## Distributables: `build-dist.sh` before every PR commit
+
+The GitHub repo keeps **up-to-date executables and packages** under `pdf_wizard/build/bin/` and `pdf_wizard/dist/`. Any pull request that changes product code (or anything that affects the built app) must refresh those artifacts **before** you commit.
+
+### Required command
+
+From the repo root:
+
+```bash
+bash pdf_wizard/build-dist.sh
+```
+
+(or `cd pdf_wizard && ./build-dist.sh` — same script at `pdf_wizard/build-dist.sh`).
+
+The script runs the full Wails pipeline for the current OS (e.g. macOS: universal binary, `PDF Wizard.app`, ZIP/DMG and related files under `pdf_wizard/dist/`). Run it on **macOS** when updating macOS bundles/archives; run on **Windows** when you need refreshed Windows executables/installers that the repo tracks.
+
+### Policy
+
+1. **Run `build-dist.sh` before committing** changes that go into an open PR (including follow-up commits on the same PR). Do not commit only source while leaving tracked binaries/archives stale.
+2. **Stage and commit** all resulting updates under tracked paths, at minimum:
+   - `pdf_wizard/build/bin/PDF Wizard.app/` (and peers under `build/bin/` if tracked)
+   - `pdf_wizard/dist/` (DMG, ZIP, READMEs, Windows `.exe` when applicable and tracked)
+3. Prefer **including distributable updates in the same commit** as the code they belong to when practical; otherwise include them in the **same PR** before merge.
+4. If a platform build cannot be run locally (e.g. no Windows box), say so in the PR and still run `build-dist.sh` on the platform you have—do not skip the step entirely when artifacts for that OS are expected to change.
+
+## Checklist before suggesting or creating a PR
+
+1. **`bash pdf_wizard/build-dist.sh` has been run** and tracked outputs under `pdf_wizard/build/bin/` and `pdf_wizard/dist/` are committed when they changed.
+2. Branch matches `pdf-<issue#>-<description>`.
+3. PR title starts with `[PDF-<issue#>]`.
+4. Same `<issue#>` appears in both branch prefix and title tag.
+5. After each meaningful push to an open PR: **PR description (and title if needed) updated** to match the latest commits.
