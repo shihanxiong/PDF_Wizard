@@ -1,0 +1,46 @@
+---
+description: Branch and PR naming for PDF Wizard (GitHub issues)
+alwaysApply: true
+---
+
+# Pull request and branch naming
+
+When opening a pull request or suggesting branch names for this repo, follow GitHub issue **#N** as the source of truth.
+
+## Branch name
+
+Use kebab-case after the prefix:
+
+`pdf-<issue#>-<short-description>`
+
+Examples:
+
+- Issue **53** about merge reads → `pdf-53-avoid-duplicate-merge-reads`
+- Issue **60** about file drop routing → `pdf-60-tab-drop-handler-map`
+
+Rules:
+
+- Prefix is always `pdf-` (lowercase).
+- `<issue#>` is the GitHub issue number with no padding (e.g. `53`, not `0053`).
+- `<short-description>` is lowercase words separated by `-`, no spaces.
+
+## PR title
+
+The title **must start with** the issue tag in this exact form:
+
+`[PDF-<issue#>]`
+
+Optionally add a concise summary after one space (recommended for reviewers and history).
+
+Examples:
+
+- `[PDF-53] Avoid duplicate full-PDF reads before merge`
+- `[PDF-62] Refresh OPTIMIZATION_REPORT.md`
+
+If only the tag is required for a trivial change, `[PDF-55]` alone is acceptable; prefer adding a short summary when it clarifies scope.
+
+## Checklist before suggesting or creating a PR
+
+1. Branch matches `pdf-<issue#>-<description>`.
+2. PR title starts with `[PDF-<issue#>]`.
+3. Same `<issue#>` appears in both branch prefix and title tag.
