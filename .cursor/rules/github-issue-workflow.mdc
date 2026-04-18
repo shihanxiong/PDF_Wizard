@@ -1,0 +1,28 @@
+---
+description: Move GitHub issue to project Todo before implementing
+alwaysApply: true
+---
+
+# Implementing a GitHub issue
+
+When asked to **implement**, **fix**, or **close** a GitHub issue by changing code, do this **before** editing the codebase or opening a PR:
+
+## 1. Move the issue to **Todo** on the project board
+
+Put the issue in the **Todo** column of the relevant **GitHub Project** (same org/user as the repo) so the board reflects that this issue is the active target.
+
+Use whichever applies:
+
+- **GitHub web UI:** Projects → open the board → drag the issue card into **Todo**, or set **Status** to **Todo** on the issue’s project fields.
+- **GitHub CLI:** If the issue is already linked to a project, update its **Status** field to **Todo** via `gh project item-edit` (you need the project item id, project id, Status field id, and Todo option id from `gh project view` / `gh project field-list` for that project). If the issue is not on the project yet, add it with `gh project item-add`, then set **Todo**.
+
+For this repository, issues are often tracked on the owner’s GitHub Project (e.g. **PDF_tools**); use the project that the user or repo actually uses.
+
+## 2. Then implement
+
+Continue with branch naming, tests, `build-dist.sh`, and PR rules from `.cursor/rules/pr-conventions.mdc` and related rules.
+
+## Exceptions
+
+- If the user explicitly says **not** to touch the project board, skip step 1.
+- If CLI access or project permissions are missing, say so and use the UI, or ask the user to move the card—do not skip the intent silently.
