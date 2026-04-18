@@ -55,24 +55,15 @@ func (s *PDFService) MergePDFs(inputPaths []string, outputDirectory string, outp
 		return err
 	}
 
-	// Validate each PDF can be read before attempting merge
-	// This helps identify which PDF has issues (e.g., invalid font encoding)
-	for i, path := range inputPaths {
-		_, err := api.ReadContextFile(path)
-		if err != nil {
-			// Extract filename for better error message
-			filename := filepath.Base(path)
-			return fmt.Errorf("PDF file %d (%s) has issues and cannot be processed: %w. This file may have invalid font encoding or be corrupted. Please try repairing the PDF or use a different file", i+1, filename, err)
-		}
-	}
-
-	// Use pdfcpu to merge PDFs
+	// Merge first: MergeCreateFile reads every input once. A separate ReadContextFile
+	// pass per input would double I/O and parse work on success paths (#53).
 	config := model.NewDefaultConfiguration()
-	// Merge the PDF files
-	// dividerPage: false means no divider pages between merged PDFs
 	err := api.MergeCreateFile(inputPaths, outputPath, false, config)
 	if err != nil {
-		// Provide more helpful error message for font encoding issues
+		// If merge failed, try per-input read to pinpoint a broken file (same UX as before).
+		if diagErr := mergeDiagnoseInputs(inputPaths); diagErr != nil {
+			return diagErr
+		}
 		if strings.Contains(err.Error(), "validateFontEncoding") || strings.Contains(err.Error(), "Encoding") {
 			return fmt.Errorf("failed to merge PDFs due to font encoding issues: %w. One or more PDFs may have invalid font encoding (e.g., NULL encoding). Please try repairing the problematic PDF(s) before merging", err)
 		}
@@ -514,6 +505,20 @@ func adjustColorOpacity(c color.SimpleColor, opacity float64) color.SimpleColor 
 	b := float32(float64(c.B)*opacity + 1.0*(1.0-opacity))
 
 	return color.SimpleColor{R: r, G: g, B: b}
+}
+
+// mergeDiagnoseInputs runs ReadContextFile on each merge input to find the first
+// file that fails to parse. Used only after MergeCreateFile fails so the common
+// success path does not pay for a second full read of every input.
+func mergeDiagnoseInputs(inputPaths []string) error {
+	for i, path := range inputPaths {
+		_, err := api.ReadContextFile(path)
+		if err != nil {
+			filename := filepath.Base(path)
+			return fmt.Errorf("PDF file %d (%s) has issues and cannot be processed: %w. This file may have invalid font encoding or be corrupted. Please try repairing the PDF or use a different file", i+1, filename, err)
+		}
+	}
+	return nil
 }
 
 // removeIfExists removes a file if it exists, returning an error only if removal fails
