@@ -1,205 +1,68 @@
-# Code Optimization Report
+# Code optimization report
 
-This document outlines optimization opportunities and improvements identified in the PDF Wizard codebase.
+Living document for performance and maintainability work in PDF Wizard. **Last updated:** 2026 (issue #62).
 
-## Summary
+---
 
-After reviewing the codebase, the following optimization opportunities have been identified:
+## Snapshot
 
-### High Priority
-1. **Extract PDF validation helper** - Reduce code duplication
-2. **Extract output directory validation** - Reduce code duplication
-3. **Improve TypeScript type safety** - Replace `any` types
-4. **Extract constants** - Centralize magic strings/numbers
+| Area | Status |
+|------|--------|
+| Go PDF / path validation (`isPDFFile`, `validatePDFFile`, `validateOutputDirectory`) | **Done** — `services/validation.go` |
+| Go shared constants (`PDFExtension`, file/dir permissions) | **Done** — `services/constants.go` |
+| Frontend limits / PDF extension constants | **Done** — `frontend/src/utils/constants.ts` |
+| Merge: avoid double-read on success path | **Done** — `MergePDFs` merges first, `mergeDiagnoseInputs` on failure (#53) |
+| TypeScript `any` in catch / strictness | **Partial** — e.g. `WatermarkTab` uses `unknown`; several tabs/hooks still use bare `catch (err)` |
+| Shared tab UI logic | **Partial** — `usePDFDrop`, `useOutputDirectory`, `useProcessingState`, `useErrorHandler` exist; Split/Rotate still overlap |
+| `GetPDFMetadata` / redundant `Stat` | **Open** — see backlog |
+| Split: multiple `TrimFile` passes | **Open** — see backlog |
 
-### Medium Priority
-5. **Create shared tab component logic** - Reduce duplication between SplitTab and RotateTab
-6. **Improve error handling consistency** - Standardize error patterns
-7. **Optimize file operations** - Reduce redundant file system calls
+---
 
-### Low Priority
-8. **Code organization improvements** - Better separation of concerns
-9. **Performance optimizations** - React memoization where beneficial
+## Completed work (reference)
 
-## Detailed Findings
+### Go services
 
-### 1. PDF Extension Validation Duplication (High Priority)
+- **`services/validation.go`** — Centralized `isPDFFile`, `validatePDFFile`, `validateOutputDirectory` (replaces duplicated extension and directory checks).
+- **`services/constants.go`** — `PDFExtension`, `DefaultFilePerm`, `DefaultDirPerm`.
+- **`services/pdf_service.go`** — `MergePDFs` calls `api.MergeCreateFile` first; per-input `ReadContextFile` only runs when merge fails, to pinpoint a bad file without doubling work on successful merges (#53).
 
-**Location**: `services/file_service.go`, `services/pdf_service.go`
+### Frontend
 
-**Issue**: PDF extension validation (`strings.ToLower(filepath.Ext(path)) != ".pdf"`) is repeated 4+ times.
+- **`frontend/src/utils/constants.ts`** — `MAX_SPLITS`, `MAX_ROTATIONS`, `PDF_EXTENSION`.
+- **`frontend/src/utils/formatters.ts`** — `convertToSelectedFile` uses generated `models.PDFMetadata` (not `any`).
+- **Hooks** — Shared behavior extracted into `usePDFDrop`, `useOutputDirectory`, `useProcessingState`, `useErrorHandler` (tabs compose these; further consolidation is optional).
 
-**Solution**: Create a helper function:
-```go
-func isPDFFile(path string) bool {
-    return strings.ToLower(filepath.Ext(path)) == ".pdf"
-}
-```
+---
 
-**Impact**: Reduces code duplication, improves maintainability.
+## Backlog (prioritized)
 
-### 2. Output Directory Validation Duplication (High Priority)
+### Medium
 
-**Location**: `services/pdf_service.go` (MergePDFs, SplitPDF, RotatePDF)
+1. **TypeScript error handling** — Prefer `catch (err: unknown)` and a small `getErrorMessage(err)` helper across `MergeTab`, `SplitTab`, `RotateTab`, `SettingsDialog`, and hooks; optionally enable `useUnknownInCatchVariables` in `tsconfig.json` (#61).
+2. **`GetPDFMetadata` / `GetPDFPageCount`** — `GetPDFMetadata` calls `os.Stat` then `GetPDFPageCount` → `validatePDFFile` stats again; reuse one stat or a single validated entry point (#54).
+3. **`parseInt` in page-range parsing** — Replace `fmt.Sscanf` in `parseInt` with `strconv.Atoi` in `pdf_service.go` (#55).
+4. **`removeIfExists`** — Prefer `os.Remove` + `errors.Is(…, fs.ErrNotExist)` over stat-then-remove (#56).
+5. **Split performance** — Investigate pdfcpu APIs to avoid N full `TrimFile` passes over the same source when many splits (#57).
+6. **Go error style** — Standardize `fmt.Errorf` wrapping and messages across services (no functional change required for consistency alone).
 
-**Issue**: Output directory validation logic is duplicated 3 times.
+### Low
 
-**Solution**: Extract to helper function:
-```go
-func validateOutputDirectory(path string) error {
-    info, err := os.Stat(path)
-    if os.IsNotExist(err) {
-        return fmt.Errorf("output directory does not exist: %s", path)
-    }
-    if err != nil {
-        return fmt.Errorf("error accessing output directory: %w", err)
-    }
-    if !info.IsDir() {
-        return fmt.Errorf("output path is not a directory: %s", path)
-    }
-    return nil
-}
-```
+7. **React** — `React.memo` / `useCallback` where profiling shows benefit; `React.lazy` for heavy tabs if bundle size matters.
+8. **Organization** — Group related helpers; optional small `validation` subpackage if the service layer grows.
 
-**Impact**: Reduces ~30 lines of duplicated code.
+---
 
-### 3. TypeScript Type Safety (High Priority)
+## Roadmap (suggested)
 
-**Location**: Multiple frontend files
+| Phase | Focus |
+|-------|--------|
+| **A** | TS `unknown` + error helper; `strconv.Atoi`; `removeIfExists` tidy |
+| **B** | `GetPDFMetadata` stat dedup; Split API research |
+| **C** | React perf and deeper tab abstraction as needed |
 
-**Issues**:
-- `err: any` in catch blocks (MergeTab, SplitTab, RotateTab, SettingsDialog)
-- `metadata: any` in `convertToSelectedFile`
-- `event: any` in SettingsDialog
+---
 
-**Solution**: Use proper types:
-```typescript
-// Error type
-type AppError = Error | { message: string };
+## Outdated claims (removed)
 
-// Metadata type
-import { PDFMetadata } from '../wailsjs/go/models';
-
-// Event type
-React.ChangeEvent<HTMLInputElement>
-```
-
-**Impact**: Better type safety, catch errors at compile time.
-
-### 4. Extract Constants (High Priority)
-
-**Location**: Multiple files
-
-**Issues**:
-- `".pdf"` string repeated throughout codebase
-- Magic numbers: `MAX_SPLITS = 10`, `MAX_ROTATIONS = 10`
-- File permissions: `0755`, `0644`
-
-**Solution**: Create constants file:
-```go
-// Go: services/constants.go
-const (
-    PDFExtension = ".pdf"
-    DefaultFilePerm = 0644
-    DefaultDirPerm = 0755
-)
-```
-
-```typescript
-// TypeScript: frontend/src/utils/constants.ts
-export const MAX_SPLITS = 10;
-export const MAX_ROTATIONS = 10;
-export const PDF_EXTENSION = '.pdf';
-```
-
-**Impact**: Easier to maintain, single source of truth.
-
-### 5. Shared Tab Component Logic (Medium Priority)
-
-**Location**: `SplitTab.tsx`, `RotateTab.tsx`
-
-**Issue**: Both components have very similar patterns:
-- PDF selection logic
-- File drop handling
-- Error/success state management
-- Output directory selection
-
-**Solution**: Create shared hooks or base component:
-```typescript
-// hooks/usePDFSelection.ts
-export function usePDFSelection() {
-  // Shared PDF selection logic
-}
-
-// hooks/useFileDrop.ts
-export function useFileDrop(onFileDrop: (handler: ...) => void) {
-  // Shared file drop logic
-}
-```
-
-**Impact**: Reduces ~200 lines of duplicated code.
-
-### 6. Error Handling Consistency (Medium Priority)
-
-**Location**: All service files
-
-**Issue**: Inconsistent error message formatting and error wrapping.
-
-**Solution**: Standardize error handling:
-```go
-// Use fmt.Errorf with %w for wrapping
-// Use consistent error message format
-// Create error types for common errors
-```
-
-**Impact**: Better error messages, easier debugging.
-
-### 7. File Operations Optimization (Medium Priority)
-
-**Location**: `services/pdf_service.go`
-
-**Issue**: 
-- `os.Stat()` called multiple times for same file
-- File existence checks before operations
-
-**Solution**: Cache file stats, optimize validation order.
-
-**Impact**: Slight performance improvement for large operations.
-
-### 8. Code Organization (Low Priority)
-
-**Suggestions**:
-- Group related functions
-- Add more inline documentation
-- Consider extracting validation to separate package
-
-### 9. React Performance (Low Priority)
-
-**Suggestions**:
-- Use `React.memo` for expensive components
-- Memoize callbacks with `useCallback`
-- Consider code splitting for large components
-
-## Implementation Plan
-
-### Phase 1: High Priority (Immediate)
-1. Extract PDF validation helper
-2. Extract output directory validation
-3. Extract constants
-4. Improve TypeScript types
-
-### Phase 2: Medium Priority (Next Sprint)
-5. Create shared tab component logic
-6. Standardize error handling
-
-### Phase 3: Low Priority (Future)
-7. Performance optimizations
-8. Code organization improvements
-
-## Estimated Impact
-
-- **Code Reduction**: ~300-400 lines of duplicated code
-- **Type Safety**: 100% elimination of `any` types in user code
-- **Maintainability**: Significant improvement through DRY principles
-- **Performance**: Minor improvements in file operations
-
+Earlier versions of this file listed “extract validation helpers” and “extract constants” as high-priority *future* work; those are **implemented** as above. Estimates such as “100% elimination of `any`” are not current and were dropped in favor of the snapshot table.
