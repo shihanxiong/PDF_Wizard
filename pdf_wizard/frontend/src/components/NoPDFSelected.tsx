@@ -1,10 +1,11 @@
 import { Box, Paper, Typography } from '@mui/material';
-import { t } from '../utils/i18n';
+import { useI18n } from '../utils/i18n';
 
 /**
  * Shared component for displaying "No PDF selected" empty state
  */
 export const NoPDFSelected = () => {
+  const { t } = useI18n();
   return (
     <Paper
       sx={{

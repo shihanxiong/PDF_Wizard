@@ -17,7 +17,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { SelectPDFFile, GetPDFMetadata, SplitPDF } from '../../wailsjs/go/main/App';
 import { SelectedPDF, SplitDefinition } from '../types';
 import { models } from '../../wailsjs/go/models';
-import { t } from '../utils/i18n';
+import { useI18n } from '../utils/i18n';
 import { MAX_SPLITS } from '../utils/constants';
 import { usePDFDrop } from '../hooks/usePDFDrop';
 import { useOutputDirectory } from '../hooks/useOutputDirectory';
@@ -31,6 +31,7 @@ interface SplitTabProps {
 }
 
 export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
+  const { t } = useI18n();
   const [selectedPDF, setSelectedPDF] = useState<SelectedPDF | null>(null);
   const [splits, setSplits] = useState<SplitDefinition[]>([]);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -56,8 +57,7 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
       });
     };
     onFileDrop(handleDroppedPDF);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [t, handlePDFDrop, onFileDrop, setError]);
 
   const handleSelectPDF = async () => {
     try {

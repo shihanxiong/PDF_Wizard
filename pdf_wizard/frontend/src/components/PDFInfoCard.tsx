@@ -1,7 +1,7 @@
 import { Card, CardContent, Typography } from '@mui/material';
 import { SelectedPDF } from '../types';
 import { formatFileSize, formatDate } from '../utils/formatters';
-import { t } from '../utils/i18n';
+import { useI18n } from '../utils/i18n';
 
 interface PDFInfoCardProps {
   pdf: SelectedPDF;
@@ -11,6 +11,7 @@ interface PDFInfoCardProps {
  * Shared component for displaying PDF file information
  */
 export const PDFInfoCard = ({ pdf }: PDFInfoCardProps) => {
+  const { t } = useI18n();
   return (
     <Card sx={{ mb: 3 }}>
       <CardContent>

@@ -8,8 +8,8 @@ import { WatermarkTab } from './components/WatermarkTab';
 import { SettingsDialog } from './components/SettingsDialog';
 import logo from './assets/img/app_logo.png';
 import { OnFileDrop, OnFileDropOff, EventsOn } from '../wailsjs/runtime/runtime';
-import { GetLanguage, SetLanguage } from '../wailsjs/go/main/App';
-import { t, setLanguage, type Language } from './utils/i18n';
+import { GetLanguage } from '../wailsjs/go/main/App';
+import { useI18n, type Language } from './utils/i18n';
 import { isValidLanguage } from './utils/i18n/constants';
 import { MAIN_TAB_IDS, type MainTabId } from './utils/constants';
 
@@ -44,9 +44,9 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export const App = () => {
+  const { t, setLanguage } = useI18n();
   const [tabId, setTabId] = useState<MainTabId>('merge');
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [, forceUpdate] = useState({});
   const activeTabIdRef = useRef<MainTabId>('merge');
   const dropHandlersRef = useRef<Partial<Record<MainTabId, (paths: string[]) => void>>>({});
 
@@ -58,7 +58,6 @@ export const App = () => {
         // Validate language code and default to 'en' if invalid
         const language = (isValidLanguage(lang) ? lang : 'en') as Language;
         setLanguage(language);
-        forceUpdate({}); // Force re-render to update UI
       } catch (err) {
         console.error('Failed to load language:', err);
       }
@@ -119,11 +118,6 @@ export const App = () => {
     setTabId(newValue as MainTabId);
   };
 
-  const handleLanguageChange = (language: Language) => {
-    setLanguage(language);
-    forceUpdate({}); // Force re-render to update all translated text
-  };
-
   return (
     <Box
       id="App"
@@ -174,11 +168,7 @@ export const App = () => {
           />
         </TabPanel>
       </Box>
-      <SettingsDialog
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        onLanguageChange={handleLanguageChange}
-      />
+      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </Box>
   );
 };

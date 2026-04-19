@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -26,13 +26,14 @@ import { SelectPDFFile, GetPDFMetadata, SelectOutputDirectory, ApplyWatermark } 
 import { SelectedPDF } from '../types';
 import { formatFileSize, formatDate } from '../utils/formatters';
 import { models } from '../../wailsjs/go/models';
-import { t } from '../utils/i18n';
+import { useI18n } from '../utils/i18n';
 
 interface WatermarkTabProps {
   onFileDrop: (handler: (paths: string[]) => void) => void;
 }
 
 export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
+  const { t } = useI18n();
   const [selectedPDF, setSelectedPDF] = useState<SelectedPDF | null>(null);
   const [watermarkText, setWatermarkText] = useState<string>('CONFIDENTIAL');
   const [fontSize, setFontSize] = useState<number>(24);
@@ -51,40 +52,42 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const handleDroppedPDF = useCallback(
+    async (paths: string[]) => {
+      const pdfPaths = paths.filter((path) => path.toLowerCase().endsWith('.pdf'));
+      if (pdfPaths.length === 0) {
+        setError(t('noPDFFilesFound'));
+        return;
+      }
+      if (pdfPaths.length > 1) {
+        setError(t('pleaseDropOnlyOnePDF'));
+        return;
+      }
+
+      try {
+        const path = pdfPaths[0];
+        const metadata = await GetPDFMetadata(path);
+        setSelectedPDF({
+          path: metadata.path,
+          name: metadata.name,
+          size: metadata.size,
+          lastModified: new Date(metadata.lastModified),
+          totalPages: metadata.totalPages,
+        });
+        setError(null);
+      } catch (err: unknown) {
+        const errorMessage =
+          err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error occurred';
+        setError(`${t('failedToLoadPDFWatermark')} ${errorMessage}`);
+      }
+    },
+    [t]
+  );
+
   // Register drag and drop handler with App component
   useEffect(() => {
     onFileDrop(handleDroppedPDF);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleDroppedPDF = async (paths: string[]) => {
-    const pdfPaths = paths.filter((path) => path.toLowerCase().endsWith('.pdf'));
-    if (pdfPaths.length === 0) {
-      setError(t('noPDFFilesFound'));
-      return;
-    }
-    if (pdfPaths.length > 1) {
-      setError(t('pleaseDropOnlyOnePDF'));
-      return;
-    }
-
-    try {
-      const path = pdfPaths[0];
-      const metadata = await GetPDFMetadata(path);
-      setSelectedPDF({
-        path: metadata.path,
-        name: metadata.name,
-        size: metadata.size,
-        lastModified: new Date(metadata.lastModified),
-        totalPages: metadata.totalPages,
-      });
-      setError(null);
-    } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error occurred';
-      setError(`${t('failedToLoadPDFWatermark')} ${errorMessage}`);
-    }
-  };
+  }, [onFileDrop, handleDroppedPDF]);
 
   const handleSelectPDF = async () => {
     try {

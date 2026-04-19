@@ -1,5 +1,5 @@
 import { Box, TextField, Typography } from '@mui/material';
-import { t } from '../utils/i18n';
+import { useI18n } from '../utils/i18n';
 
 interface FilenameInputProps {
   value: string;
@@ -12,6 +12,7 @@ interface FilenameInputProps {
  * Shared component for filename input with .pdf extension display
  */
 export const FilenameInput = ({ value, onChange, placeholder, disabled }: FilenameInputProps) => {
+  const { t } = useI18n();
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
       <Typography variant="body2">{t('outputFilename')}</Typography>

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { GetFileMetadata, GetPDFMetadata } from '../../wailsjs/go/main/App';
-import { t } from '../utils/i18n';
+import { useI18n } from '../utils/i18n';
 import { convertToSelectedFile } from '../utils/formatters';
 import { SelectedFile, SelectedPDF } from '../types';
 
@@ -8,6 +8,7 @@ import { SelectedFile, SelectedPDF } from '../types';
  * Hook for handling PDF file drops with consistent validation
  */
 export function usePDFDrop() {
+  const { t } = useI18n();
   const handlePDFDrop = useCallback(
     async (
       paths: string[],
@@ -62,7 +63,7 @@ export function usePDFDrop() {
         onError(errorMessage);
       }
     },
-    []
+    [t]
   );
 
   return { handlePDFDrop };
