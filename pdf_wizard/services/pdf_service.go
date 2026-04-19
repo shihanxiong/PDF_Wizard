@@ -6,9 +6,11 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/pdfcpu/pdfcpu/pkg/api"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/color"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
@@ -92,11 +94,22 @@ func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition,
 		return err
 	}
 
-	// Get PDF page count for validation
-	totalPages, err := s.fileService.GetPDFPageCount(inputPath)
+	// Single read+validate+optimize of the source (#57): reuse ctx for every segment
+	// instead of calling api.TrimFile per split (each TrimFile reopens and reparses).
+	config := model.NewDefaultConfiguration()
+	config.Cmd = model.TRIM
+
+	f, err := os.Open(inputPath)
 	if err != nil {
-		return fmt.Errorf("failed to get page count: %w", err)
+		return fmt.Errorf("failed to open input PDF: %w", err)
 	}
+	defer f.Close()
+
+	ctx, err := api.ReadValidateAndOptimize(f, config)
+	if err != nil {
+		return fmt.Errorf("failed to read PDF for split: %w", err)
+	}
+	totalPages := ctx.PageCount
 
 	// Validate all splits
 	for i, split := range splits {
@@ -121,34 +134,58 @@ func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition,
 		filenameMap[filename] = true
 	}
 
-	// Use pdfcpu to split the PDF
-	config := model.NewDefaultConfiguration()
-
-	// Process each split
+	// Process each split: extract from the shared in-memory context (same as api.Trim).
 	for i, split := range splits {
-		// Create output path
 		outputPath := filepath.Join(outputDirectory, strings.TrimSpace(split.Filename)+PDFExtension)
 
-		// Remove existing output file if it exists
 		if err := removeIfExists(outputPath); err != nil {
 			return err
 		}
 
-		// Use TrimFile to extract the page range
-		// pdfcpu uses 1-based page numbers and TrimFile keeps only the specified pages
 		pageRange := fmt.Sprintf("%d-%d", split.StartPage, split.EndPage)
-		err := api.TrimFile(inputPath, outputPath, []string{pageRange}, config)
+		pages, err := api.PagesForPageSelection(ctx.PageCount, []string{pageRange}, false, true)
 		if err != nil {
 			return fmt.Errorf("failed to trim pages for split %d (pages %d-%d): %w", i+1, split.StartPage, split.EndPage, err)
 		}
 
-		// Validate the split file was created
+		pageNrs := intSetToSortedPages(pages)
+		if len(pageNrs) == 0 {
+			return fmt.Errorf("split %d: no pages selected for range %s", i+1, pageRange)
+		}
+
+		ctxDest, err := pdfcpu.ExtractPages(ctx, pageNrs, false)
+		if err != nil {
+			return fmt.Errorf("failed to trim pages for split %d (pages %d-%d): %w", i+1, split.StartPage, split.EndPage, err)
+		}
+
+		if config.PostProcessValidate {
+			if err := api.ValidateContext(ctxDest); err != nil {
+				return fmt.Errorf("failed to trim pages for split %d (pages %d-%d): %w", i+1, split.StartPage, split.EndPage, err)
+			}
+		}
+
+		if err := api.WriteContextFile(ctxDest, outputPath); err != nil {
+			return fmt.Errorf("failed to write split %d (pages %d-%d): %w", i+1, split.StartPage, split.EndPage, err)
+		}
+
 		if _, err := os.Stat(outputPath); os.IsNotExist(err) {
 			return fmt.Errorf("split file was not created at: %s", outputPath)
 		}
 	}
 
 	return nil
+}
+
+// intSetToSortedPages converts pdfcpu's page selection set to sorted 1-based page numbers (same as api.Trim).
+func intSetToSortedPages(pages types.IntSet) []int {
+	var pageNrs []int
+	for k, v := range pages {
+		if v {
+			pageNrs = append(pageNrs, k)
+		}
+	}
+	sort.Ints(pageNrs)
+	return pageNrs
 }
 
 // RotatePDF rotates specified page ranges in a PDF file

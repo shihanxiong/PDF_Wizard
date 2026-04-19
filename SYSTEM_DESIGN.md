@@ -173,6 +173,10 @@ The backend uses a service-based architecture with clear separation of concerns:
 - **Output file handling**: Removes existing output file before creating new one to avoid pdfcpu overwrite issues
 - **Error messages**: Includes filename and file index in error messages for better debugging
 
+#### SplitPDF
+
+- **Single-pass source read**: Opens the input once with `api.ReadValidateAndOptimize` (trim command), then for each segment runs `pdfcpu.ExtractPages` and `api.WriteContextFile`, instead of calling `api.TrimFile` per segment (which would reopen and reparse the source each time; see issue #57)
+
 #### RotatePDF
 
 - **Temporary file strategy**: Creates a temporary copy of input file because pdfcpu's `RotateFile` modifies files in place
@@ -211,6 +215,7 @@ For detailed application-level design, see [pdf_wizard/DESIGN.md](pdf_wizard/DES
 - `github.com/wailsapp/wails/v2/pkg/runtime` - File dialogs and runtime operations
 - `github.com/wailsapp/wails/v2/pkg/menu` - Application menu
 - `github.com/pdfcpu/pdfcpu/pkg/api` - PDF processing library
+- `github.com/pdfcpu/pdfcpu/pkg/pdfcpu` - Low-level helpers (e.g. `ExtractPages` after a shared read context for split)
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model` - Configuration models
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu/color` - Color handling for watermarks
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types` - PDF types and anchors
