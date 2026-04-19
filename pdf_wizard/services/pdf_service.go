@@ -351,6 +351,13 @@ func (s *PDFService) ApplyWatermark(inputPath string, watermark models.Watermark
 	// Default TextWatermark config forces diagonal layout and overrides rotation; UI exposes explicit rotation.
 	wm.Diagonal = model.NoDiagonal
 
+	// Default relative Scale (0.5) makes model.scaleFontSize derive an effective size from
+	// page width × scale × FontSize / textWidth; text width scales with FontSize, so the
+	// ratio largely cancels and the stamp looks the same for different UI font sizes.
+	// Absolute scale 1 honors FontSize as points (see pdfcpu examples: "scale:1 abs").
+	wm.ScaleAbs = true
+	wm.Scale = 1.0
+
 	// Customize the watermark with user settings
 	wm.Pos = anchor
 	wm.FontName = watermark.TextConfig.FontFamily
