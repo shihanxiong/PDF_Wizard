@@ -108,11 +108,15 @@ export const ar: Translations = {
   imagesPhonePageChooseFiles: 'اختيار الصور',
   imagesPhonePageUpload: 'رفع',
   imagesPhonePageDoneTitle: 'اكتمل الرفع.',
-  imagesPhonePageDoneBody: 'يمكنك إغلاق هذه الصفحة.',
+  imagesPhonePageDoneBody:
+    'يمكنك إغلاق هذه الصفحة. لإرسال المزيد من الصور لاحقًا، ابدأ جلسة استقبال جديدة في PDF Wizard وامسح رمز QR الجديد.',
   imagesPhonePageNoFiles: 'لم يتم اختيار صور. ارجع واختر ملفًا واحدًا على الأقل.',
   imagesPhonePageRetry: 'حاول مرة أخرى',
   imagesPhonePageSelectedCount: '__COUNT__ صور محددة للرفع',
   imagesPhonePageTooManyFiles: 'يمكنك رفع ما لا يزيد عن __MAX__ صورة في كل جلسة.',
+  imagesPhonePageSessionClosedTitle: 'انتهت هذه الجلسة',
+  imagesPhonePageSessionClosedBody:
+    'لا يمكنك الرفع مرة أخرى من هذه الصفحة. لإرسال المزيد من الصور، ابدأ جلسة استقبال جديدة في PDF Wizard على الكمبيوتر وامسح رمز QR الجديد.',
   modified: 'تم التعديل:',
   selectFiles: 'اختر الملفات',
   selectFile: 'اختر الملف',

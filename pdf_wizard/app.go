@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"pdf_wizard/models"
 	"pdf_wizard/services"
@@ -214,9 +215,11 @@ func (a *App) StartImagesPhoneUpload(pageCopy models.PhoneUploadPageCopy) (strin
 			return
 		}
 		runtime.EventsEmit(a.ctx, "images-phone-upload", string(data))
-		// End the receive session after a successful upload so the phone must scan a new QR for more images.
+		// Stop the LAN server after a successful upload so the next batch needs a new QR. Delay so the phone
+		// can load the /ok success page and logo without the connection dropping first.
 		if len(paths) > 0 {
 			go func() {
+				time.Sleep(4 * time.Second)
 				_ = a.StopImagesPhoneUpload()
 			}()
 		}

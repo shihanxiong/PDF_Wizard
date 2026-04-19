@@ -108,11 +108,15 @@ export const ko: Translations = {
   imagesPhonePageChooseFiles: '이미지 선택',
   imagesPhonePageUpload: '업로드',
   imagesPhonePageDoneTitle: '업로드가 완료되었습니다.',
-  imagesPhonePageDoneBody: '이 페이지를 닫아도 됩니다.',
+  imagesPhonePageDoneBody:
+    '이 페이지를 닫아도 됩니다. 나중에 더 보내려면 PDF Wizard에서 새로 받기를 시작하고 새 QR 코드를 스캔하세요.',
   imagesPhonePageNoFiles: '선택된 이미지가 없습니다. 돌아가서 파일을 하나 이상 선택하세요.',
   imagesPhonePageRetry: '다시 시도',
   imagesPhonePageSelectedCount: '업로드할 이미지 __COUNT__개 선택됨',
   imagesPhonePageTooManyFiles: '세션당 최대 __MAX__개의 이미지를 업로드할 수 있습니다.',
+  imagesPhonePageSessionClosedTitle: '이 세션이 종료되었습니다',
+  imagesPhonePageSessionClosedBody:
+    '이 페이지에서 다시 업로드할 수 없습니다. 더 보내려면 컴퓨터의 PDF Wizard에서 새로 받기를 시작하고 새 QR 코드를 스캔하세요.',
   modified: '수정됨:',
   selectFiles: '파일 선택',
   selectFile: '파일 선택',

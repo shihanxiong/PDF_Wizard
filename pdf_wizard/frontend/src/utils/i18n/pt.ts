@@ -108,11 +108,15 @@ export const pt: Translations = {
   imagesPhonePageChooseFiles: 'Selecionar imagens',
   imagesPhonePageUpload: 'Enviar',
   imagesPhonePageDoneTitle: 'Envio concluído.',
-  imagesPhonePageDoneBody: 'Pode fechar esta página.',
+  imagesPhonePageDoneBody:
+    'Pode fechar esta página. Para enviar mais imagens mais tarde, inicie uma nova receção no PDF Wizard e leia o novo código QR.',
   imagesPhonePageNoFiles: 'Nenhuma imagem selecionada. Volte e escolha pelo menos um arquivo.',
   imagesPhonePageRetry: 'Tentar novamente',
   imagesPhonePageSelectedCount: '__COUNT__ imagens selecionadas para envio',
   imagesPhonePageTooManyFiles: 'Pode enviar no máximo __MAX__ imagens por sessão.',
+  imagesPhonePageSessionClosedTitle: 'Esta sessão terminou',
+  imagesPhonePageSessionClosedBody:
+    'Não pode voltar a enviar a partir desta página. Para enviar mais imagens, inicie uma nova receção no PDF Wizard no computador e leia o novo código QR.',
   modified: 'Modificado:',
   selectFiles: 'Selecionar arquivos',
   selectFile: 'Selecionar arquivo',

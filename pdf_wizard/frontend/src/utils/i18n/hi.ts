@@ -108,11 +108,15 @@ export const hi: Translations = {
   imagesPhonePageChooseFiles: 'छवियाँ चुनें',
   imagesPhonePageUpload: 'अपलोड करें',
   imagesPhonePageDoneTitle: 'अपलोड पूर्ण।',
-  imagesPhonePageDoneBody: 'आप इस पृष्ठ को बंद कर सकते हैं।',
+  imagesPhonePageDoneBody:
+    'आप इस पृष्ठ को बंद कर सकते हैं। बाद में और छवियाँ भेजने के लिए PDF Wizard में नया प्राप्ति सत्र शुरू करें और नया QR कोड स्कैन करें।',
   imagesPhonePageNoFiles: 'कोई छवि चयनित नहीं। वापस जाएँ और कम से कम एक फ़ाइल चुनें।',
   imagesPhonePageRetry: 'पुनः प्रयास करें',
   imagesPhonePageSelectedCount: 'अपलोड के लिए __COUNT__ छवियाँ चुनी गईं',
   imagesPhonePageTooManyFiles: 'प्रति सत्र अधिकतम __MAX__ छवियाँ अपलोड की जा सकती हैं।',
+  imagesPhonePageSessionClosedTitle: 'यह सत्र समाप्त हो गया',
+  imagesPhonePageSessionClosedBody:
+    'इस पृष्ठ से फिर अपलोड नहीं किया जा सकता। और छवियाँ भेजने के लिए अपने कंप्यूटर पर PDF Wizard में नया प्राप्ति सत्र शुरू करें और नया QR कोड स्कैन करें।',
   modified: 'संशोधित:',
   selectFiles: 'फ़ाइलें चुनें',
   selectFile: 'फ़ाइल चुनें',

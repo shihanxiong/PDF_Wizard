@@ -108,11 +108,15 @@ export const ru: Translations = {
   imagesPhonePageChooseFiles: 'Выбрать изображения',
   imagesPhonePageUpload: 'Загрузить',
   imagesPhonePageDoneTitle: 'Загрузка завершена.',
-  imagesPhonePageDoneBody: 'Можно закрыть эту страницу.',
+  imagesPhonePageDoneBody:
+    'Можно закрыть эту страницу. Чтобы отправить ещё изображения позже, начните новый приём в PDF Wizard и отсканируйте новый QR-код.',
   imagesPhonePageNoFiles: 'Изображения не выбраны. Вернитесь и выберите хотя бы один файл.',
   imagesPhonePageRetry: 'Повторить',
   imagesPhonePageSelectedCount: 'Выбрано изображений для загрузки: __COUNT__',
   imagesPhonePageTooManyFiles: 'За сеанс можно загрузить не более __MAX__ изображений.',
+  imagesPhonePageSessionClosedTitle: 'Сеанс завершён',
+  imagesPhonePageSessionClosedBody:
+    'Повторная загрузка с этой страницы недоступна. Чтобы отправить ещё изображения, начните новый приём в PDF Wizard на компьютере и отсканируйте новый QR-код.',
   modified: 'Изменено:',
   selectFiles: 'Выбрать файлы',
   selectFile: 'Выбрать файл',

@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -115,6 +116,29 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:1r
 </body>
 </html>`))
 
+	tmplPhoneSessionClosed = template.Must(template.New("phoneSessionClosed").Parse(`<!DOCTYPE html>
+<html lang="{{.Lang}}" dir="{{.Dir}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.SessionClosedTitle}}</title>
+<style>
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:1rem;max-width:28rem;margin:0 auto;background:#fafafa;color:rgba(0,0,0,.87)}
+.page-header{display:flex;align-items:center;justify-content:center;gap:12px;margin:0 0 1rem;flex-wrap:wrap}
+.page-logo{width:40px;height:40px;object-fit:contain;display:block}
+.closed-title{font-size:1.25rem;font-weight:600;margin:0}
+.closed-body{margin:.75rem 0 0;line-height:1.5;color:rgba(0,0,0,.6)}
+</style>
+</head>
+<body>
+<header class="page-header">
+<img class="page-logo" src="logo.png" alt="" width="40" height="40" decoding="async">
+<p class="closed-title">{{.SessionClosedTitle}}</p>
+</header>
+<p class="closed-body">{{.SessionClosedBody}}</p>
+</body>
+</html>`))
+
 	tmplPhoneErrNoFiles = template.Must(template.New("phoneErr").Parse(`<!DOCTYPE html>
 <html lang="{{.Lang}}" dir="{{.Dir}}">
 <head>
@@ -181,11 +205,13 @@ func normalizePhoneCopy(c models.PhoneUploadPageCopy) models.PhoneUploadPageCopy
 		ChooseFiles: "Select images",
 		Upload:      "Upload",
 		DoneTitle:   "Upload complete.",
-		DoneBody:    "You can close this page.",
+		DoneBody:    "You can close this page. To send more images later, start a new receive session in PDF Wizard and scan a new QR code.",
 		NoFiles:     "No images were selected. Go back and choose at least one file.",
 		Retry:       "Try again",
 		SelectedCountLine: "__COUNT__ images selected for upload",
-		TooManyFiles:      fmt.Sprintf("You can upload at most %d images per session.", PhoneUploadMaxFilesPerSession),
+		TooManyFiles:       fmt.Sprintf("You can upload at most %d images per session.", PhoneUploadMaxFilesPerSession),
+		SessionClosedTitle: "This session has ended",
+		SessionClosedBody:  "You cannot upload again from this page. To send more images, start a new receive session in PDF Wizard on your computer and scan the new QR code.",
 	}
 	merge := func(a, b string) string {
 		if strings.TrimSpace(a) != "" {
@@ -206,7 +232,9 @@ func normalizePhoneCopy(c models.PhoneUploadPageCopy) models.PhoneUploadPageCopy
 		NoFiles:     merge(c.NoFiles, def.NoFiles),
 		Retry:       merge(c.Retry, def.Retry),
 		SelectedCountLine: merge(c.SelectedCountLine, def.SelectedCountLine),
-		TooManyFiles:      merge(c.TooManyFiles, def.TooManyFiles),
+		TooManyFiles:       merge(c.TooManyFiles, def.TooManyFiles),
+		SessionClosedTitle: merge(c.SessionClosedTitle, def.SessionClosedTitle),
+		SessionClosedBody:  merge(c.SessionClosedBody, def.SessionClosedBody),
 	}
 	switch {
 	case c.Dir == "rtl" || c.Dir == "ltr":
@@ -324,6 +352,8 @@ func StartLANImageUploadServer(onUploaded func(paths []string), pageCopy models.
 
 	page := normalizePhoneCopy(pageCopy)
 
+	sessionDone := &atomic.Bool{}
+
 	tokenBytes := make([]byte, 16)
 	if _, err := rand.Read(tokenBytes); err != nil {
 		return "", nil, err
@@ -353,7 +383,7 @@ func StartLANImageUploadServer(onUploaded func(paths []string), pageCopy models.
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       5 * time.Minute,
 		WriteTimeout:      2 * time.Minute,
-		Handler:           newPhoneUploadHandler(token, dir, onUploaded, &page),
+		Handler:           newPhoneUploadHandler(token, dir, onUploaded, &page, sessionDone),
 	}
 
 	var wg sync.WaitGroup
@@ -445,7 +475,7 @@ func phoneUploadSuccessRedirect(w http.ResponseWriter, r *http.Request, token st
 	http.Redirect(w, r, u.String(), http.StatusSeeOther)
 }
 
-func newPhoneUploadHandler(token, dir string, onUploaded func(paths []string), page *models.PhoneUploadPageCopy) http.Handler {
+func newPhoneUploadHandler(token, dir string, onUploaded func(paths []string), page *models.PhoneUploadPageCopy, sessionDone *atomic.Bool) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := strings.Trim(r.URL.Path, "/")
 		parts := strings.Split(path, "/")
@@ -498,6 +528,15 @@ func newPhoneUploadHandler(token, dir string, onUploaded func(paths []string), p
 		case http.MethodGet:
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Header().Set("Content-Language", page.Lang)
+			if sessionDone.Load() {
+				b, err := writePhoneHTML(tmplPhoneSessionClosed, page)
+				if err != nil {
+					http.Error(w, "Server error", http.StatusInternalServerError)
+					return
+				}
+				_, _ = w.Write(b)
+				return
+			}
 			b, err := writePhoneFormHTML(page)
 			if err != nil {
 				http.Error(w, "Server error", http.StatusInternalServerError)
@@ -505,6 +544,18 @@ func newPhoneUploadHandler(token, dir string, onUploaded func(paths []string), p
 			}
 			_, _ = w.Write(b)
 		case http.MethodPost:
+			if sessionDone.Load() {
+				w.Header().Set("Content-Type", "text/html; charset=utf-8")
+				w.Header().Set("Content-Language", page.Lang)
+				w.WriteHeader(http.StatusGone)
+				b, err := writePhoneHTML(tmplPhoneSessionClosed, page)
+				if err != nil {
+					http.Error(w, "Server error", http.StatusInternalServerError)
+					return
+				}
+				_, _ = w.Write(b)
+				return
+			}
 			r.Body = http.MaxBytesReader(w, r.Body, phoneUploadMaxBody)
 			if err := r.ParseMultipartForm(phoneUploadPartMemory); err != nil {
 				http.Error(w, "Bad request", http.StatusBadRequest)
@@ -583,6 +634,9 @@ func newPhoneUploadHandler(token, dir string, onUploaded func(paths []string), p
 			if err != nil {
 				http.Error(w, "Server error", http.StatusInternalServerError)
 				return
+			}
+			if len(durable) > 0 {
+				sessionDone.Store(true)
 			}
 			onUploaded(durable)
 

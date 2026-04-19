@@ -108,11 +108,15 @@ export const ja: Translations = {
   imagesPhonePageChooseFiles: '画像を選択',
   imagesPhonePageUpload: 'アップロード',
   imagesPhonePageDoneTitle: 'アップロードが完了しました。',
-  imagesPhonePageDoneBody: 'このページを閉じても構いません。',
+  imagesPhonePageDoneBody:
+    'このページを閉じても構いません。あとでさらに送信する場合は、PDF Wizard で受信をやり直し、新しい QR コードを読み取ってください。',
   imagesPhonePageNoFiles: '画像が選択されていません。戻ってファイルを 1 つ以上選んでください。',
   imagesPhonePageRetry: '再試行',
   imagesPhonePageSelectedCount: 'アップロード用に __COUNT__ 枚の画像を選択済み',
   imagesPhonePageTooManyFiles: '1 セッションあたり最大 __MAX__ 枚までアップロードできます。',
+  imagesPhonePageSessionClosedTitle: 'このセッションは終了しました',
+  imagesPhonePageSessionClosedBody:
+    'このページから再度アップロードすることはできません。さらに送信するには、コンピューター上の PDF Wizard で受信をやり直し、新しい QR コードを読み取ってください。',
   modified: '変更日時：',
   selectFiles: 'ファイルを選択',
   selectFile: 'ファイルを選択',

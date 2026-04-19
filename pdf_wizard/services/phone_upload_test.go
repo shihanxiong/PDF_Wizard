@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 
 	"pdf_wizard/models"
@@ -28,7 +29,8 @@ func TestPhoneUploadHandler_POST(t *testing.T) {
 	var got []string
 	var token = "deadbeefdeadbeefdeadbeefdeadbeef"
 	page := normalizePhoneCopy(models.PhoneUploadPageCopy{})
-	h := newPhoneUploadHandler(token, dir, func(paths []string) { got = paths }, &page)
+	var sessionDone atomic.Bool
+	h := newPhoneUploadHandler(token, dir, func(paths []string) { got = paths }, &page, &sessionDone)
 
 	var body bytes.Buffer
 	w := multipart.NewWriter(&body)
@@ -74,9 +76,59 @@ func TestPhoneUploadHandler_POST(t *testing.T) {
 	}
 }
 
+func TestPhoneUploadHandler_GET_form_after_upload_shows_session_closed(t *testing.T) {
+	dir := t.TempDir()
+	token := "deadbeefdeadbeefdeadbeefdeadbeef"
+	page := normalizePhoneCopy(models.PhoneUploadPageCopy{})
+	var sessionDone atomic.Bool
+	h := newPhoneUploadHandler(token, dir, func([]string) {}, &page, &sessionDone)
+
+	var body bytes.Buffer
+	w := multipart.NewWriter(&body)
+	part, err := w.CreateFormFile("files", "a.png")
+	if err != nil {
+		t.Fatal(err)
+	}
+	png1x1 := []byte{
+		0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+		0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+		0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+		0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4,
+		0x89, 0x00, 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41,
+		0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
+		0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00,
+		0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae,
+		0x42, 0x60, 0x82,
+	}
+	if _, err := part.Write(png1x1); err != nil {
+		t.Fatal(err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+	postReq := httptest.NewRequest(http.MethodPost, "/u/"+token+"/", &body)
+	postReq.Header.Set("Content-Type", w.FormDataContentType())
+	postRR := httptest.NewRecorder()
+	h.ServeHTTP(postRR, postReq)
+	if postRR.Code != http.StatusSeeOther {
+		t.Fatalf("POST status %d", postRR.Code)
+	}
+
+	getReq := httptest.NewRequest(http.MethodGet, "/u/"+token+"/", nil)
+	getRR := httptest.NewRecorder()
+	h.ServeHTTP(getRR, getReq)
+	if getRR.Code != http.StatusOK {
+		t.Fatalf("GET status %d", getRR.Code)
+	}
+	if !bytes.Contains(getRR.Body.Bytes(), []byte("This session has ended")) {
+		t.Fatalf("expected session closed page")
+	}
+}
+
 func TestPhoneUploadHandler_wrongToken(t *testing.T) {
 	page := normalizePhoneCopy(models.PhoneUploadPageCopy{})
-	h := newPhoneUploadHandler("aaa", t.TempDir(), func([]string) {}, &page)
+	var sessionDone atomic.Bool
+	h := newPhoneUploadHandler("aaa", t.TempDir(), func([]string) {}, &page, &sessionDone)
 	req := httptest.NewRequest(http.MethodGet, "/u/bbb/", nil)
 	rr := httptest.NewRecorder()
 	h.ServeHTTP(rr, req)
@@ -88,7 +140,8 @@ func TestPhoneUploadHandler_wrongToken(t *testing.T) {
 func TestPhoneUploadHandler_GET_logoPNG(t *testing.T) {
 	token := "deadbeefdeadbeefdeadbeefdeadbeef"
 	page := normalizePhoneCopy(models.PhoneUploadPageCopy{})
-	h := newPhoneUploadHandler(token, t.TempDir(), func([]string) {}, &page)
+	var sessionDone atomic.Bool
+	h := newPhoneUploadHandler(token, t.TempDir(), func([]string) {}, &page, &sessionDone)
 	req := httptest.NewRequest(http.MethodGet, "/u/"+token+"/logo.png", nil)
 	rr := httptest.NewRecorder()
 	h.ServeHTTP(rr, req)
@@ -107,7 +160,8 @@ func TestPhoneUploadHandler_GET_logoPNG(t *testing.T) {
 func TestPhoneUploadHandler_GET_ok(t *testing.T) {
 	token := "deadbeefdeadbeefdeadbeefdeadbeef"
 	page := normalizePhoneCopy(models.PhoneUploadPageCopy{})
-	h := newPhoneUploadHandler(token, t.TempDir(), func([]string) {}, &page)
+	var sessionDone atomic.Bool
+	h := newPhoneUploadHandler(token, t.TempDir(), func([]string) {}, &page, &sessionDone)
 	req := httptest.NewRequest(http.MethodGet, "/u/"+token+"/ok", nil)
 	rr := httptest.NewRecorder()
 	h.ServeHTTP(rr, req)

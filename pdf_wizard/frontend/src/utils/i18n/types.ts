@@ -130,6 +130,8 @@ export interface Translations {
   imagesPhonePageSelectedCount: string;
   /** Use __MAX__ placeholder; replaced with the per-session image limit (25). */
   imagesPhonePageTooManyFiles: string;
+  imagesPhonePageSessionClosedTitle: string;
+  imagesPhonePageSessionClosedBody: string;
 
   // Common
   modified: string;

@@ -108,11 +108,15 @@ export const en: Translations = {
   imagesPhonePageChooseFiles: 'Select images',
   imagesPhonePageUpload: 'Upload',
   imagesPhonePageDoneTitle: 'Upload complete.',
-  imagesPhonePageDoneBody: 'You can close this page.',
+  imagesPhonePageDoneBody:
+    'You can close this page. To send more images later, start a new receive session in PDF Wizard and scan a new QR code.',
   imagesPhonePageNoFiles: 'No images were selected. Go back and choose at least one file.',
   imagesPhonePageRetry: 'Try again',
   imagesPhonePageSelectedCount: '__COUNT__ images selected for upload',
   imagesPhonePageTooManyFiles: 'You can upload at most __MAX__ images per session.',
+  imagesPhonePageSessionClosedTitle: 'This session has ended',
+  imagesPhonePageSessionClosedBody:
+    'You cannot upload again from this page. To send more images, start a new receive session in PDF Wizard on your computer and scan the new QR code.',
   modified: 'Modified:',
   selectFiles: 'Select Files',
   selectFile: 'Select File',

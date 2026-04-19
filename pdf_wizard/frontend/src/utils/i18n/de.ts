@@ -108,11 +108,15 @@ export const de: Translations = {
   imagesPhonePageChooseFiles: 'Bilder auswählen',
   imagesPhonePageUpload: 'Hochladen',
   imagesPhonePageDoneTitle: 'Upload abgeschlossen.',
-  imagesPhonePageDoneBody: 'Sie können diese Seite schließen.',
+  imagesPhonePageDoneBody:
+    'Sie können diese Seite schließen. Um später weitere Bilder zu senden, starten Sie in PDF Wizard eine neue Empfangssitzung und scannen Sie den neuen QR-Code.',
   imagesPhonePageNoFiles: 'Keine Bilder ausgewählt. Bitte zurückgehen und mindestens eine Datei wählen.',
   imagesPhonePageRetry: 'Erneut versuchen',
   imagesPhonePageSelectedCount: '__COUNT__ Bilder zum Hochladen ausgewählt',
   imagesPhonePageTooManyFiles: 'Pro Sitzung können höchstens __MAX__ Bilder hochgeladen werden.',
+  imagesPhonePageSessionClosedTitle: 'Diese Sitzung ist beendet',
+  imagesPhonePageSessionClosedBody:
+    'Sie können von dieser Seite nicht erneut hochladen. Um weitere Bilder zu senden, starten Sie in PDF Wizard auf dem Computer eine neue Empfangssitzung und scannen Sie den neuen QR-Code.',
   modified: 'Geändert:',
   selectFiles: 'Dateien auswählen',
   selectFile: 'Datei auswählen',

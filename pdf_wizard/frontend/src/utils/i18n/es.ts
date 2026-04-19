@@ -108,11 +108,15 @@ export const es: Translations = {
   imagesPhonePageChooseFiles: 'Seleccionar imágenes',
   imagesPhonePageUpload: 'Subir',
   imagesPhonePageDoneTitle: 'Subida completada.',
-  imagesPhonePageDoneBody: 'Puede cerrar esta página.',
+  imagesPhonePageDoneBody:
+    'Puede cerrar esta página. Para enviar más imágenes más tarde, inicie una nueva recepción en PDF Wizard y escanee el nuevo código QR.',
   imagesPhonePageNoFiles: 'No hay imágenes seleccionadas. Vuelva atrás y elija al menos un archivo.',
   imagesPhonePageRetry: 'Reintentar',
   imagesPhonePageSelectedCount: '__COUNT__ imágenes seleccionadas para subir',
   imagesPhonePageTooManyFiles: 'Puede subir como máximo __MAX__ imágenes por sesión.',
+  imagesPhonePageSessionClosedTitle: 'Esta sesión ha terminado',
+  imagesPhonePageSessionClosedBody:
+    'No puede volver a subir desde esta página. Para enviar más imágenes, inicie una nueva recepción en PDF Wizard en el ordenador y escanee el nuevo código QR.',
   modified: 'Modificado:',
   selectFiles: 'Seleccionar archivos',
   selectFile: 'Seleccionar archivo',

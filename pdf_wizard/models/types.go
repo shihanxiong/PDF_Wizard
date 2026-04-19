@@ -60,4 +60,7 @@ type PhoneUploadPageCopy struct {
 	SelectedCountLine string `json:"selectedCountLine"`
 	// TooManyFiles is the full message (frontend replaces "__MAX__" with the session limit, e.g. 25).
 	TooManyFiles string `json:"tooManyFiles"`
+	// SessionClosedTitle/Body are shown if the user opens the upload URL again after a successful upload (e.g. back button).
+	SessionClosedTitle string `json:"sessionClosedTitle"`
+	SessionClosedBody  string `json:"sessionClosedBody"`
 }

@@ -218,6 +218,8 @@ export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
         retry: t('imagesPhonePageRetry'),
         selectedCountLine: t('imagesPhonePageSelectedCount'),
         tooManyFiles: t('imagesPhonePageTooManyFiles').replace(/__MAX__/g, String(PHONE_UPLOAD_MAX_FILES)),
+        sessionClosedTitle: t('imagesPhonePageSessionClosedTitle'),
+        sessionClosedBody: t('imagesPhonePageSessionClosedBody'),
       });
       const url = await StartImagesPhoneUpload(page);
       setPhoneUploadURL(url);

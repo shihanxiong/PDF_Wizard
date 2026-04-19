@@ -37,6 +37,8 @@ export namespace models {
 	    retry: string;
 	    selectedCountLine: string;
 	    tooManyFiles: string;
+	    sessionClosedTitle: string;
+	    sessionClosedBody: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new PhoneUploadPageCopy(source);
@@ -58,6 +60,8 @@ export namespace models {
 	        this.retry = source["retry"];
 	        this.selectedCountLine = source["selectedCountLine"];
 	        this.tooManyFiles = source["tooManyFiles"];
+	        this.sessionClosedTitle = source["sessionClosedTitle"];
+	        this.sessionClosedBody = source["sessionClosedBody"];
 	    }
 	}
 	export class RotateDefinition {
