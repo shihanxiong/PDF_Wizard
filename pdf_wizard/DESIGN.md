@@ -177,6 +177,10 @@ func (a *App) SelectPDFFile() (string, error) {
     return a.fileService.SelectPDFFile()
 }
 
+func (a *App) SelectImageFiles() ([]string, error) {
+    return a.fileService.SelectImageFiles()
+}
+
 func (a *App) SelectOutputDirectory() (string, error) {
     return a.fileService.SelectOutputDirectory()
 }
@@ -198,12 +202,20 @@ func (a *App) MergePDFs(inputPaths []string, outputDirectory string, outputFilen
     return a.pdfService.MergePDFs(inputPaths, outputDirectory, outputFilename)
 }
 
+func (a *App) ImagesToPDF(imagePaths []string, outputDirectory string, outputFilename string) error {
+    return a.pdfService.ImagesToPDF(imagePaths, outputDirectory, outputFilename)
+}
+
 func (a *App) SplitPDF(inputPath string, splits []models.SplitDefinition, outputDirectory string) error {
     return a.pdfService.SplitPDF(inputPath, splits, outputDirectory)
 }
 
 func (a *App) RotatePDF(inputPath string, rotations []models.RotateDefinition, outputDirectory string, outputFilename string) error {
     return a.pdfService.RotatePDF(inputPath, rotations, outputDirectory, outputFilename)
+}
+
+func (a *App) ApplyWatermark(inputPath string, watermark models.WatermarkDefinition, outputDirectory string, outputFilename string) error {
+    return a.pdfService.ApplyWatermark(inputPath, watermark, outputDirectory, outputFilename)
 }
 ```
 

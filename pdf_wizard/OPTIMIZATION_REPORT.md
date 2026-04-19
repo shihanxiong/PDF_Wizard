@@ -13,7 +13,7 @@ Living document for performance and maintainability work in PDF Wizard. **Last u
 | Frontend limits / PDF extension constants | **Done** — `frontend/src/utils/constants.ts` |
 | Merge: avoid double-read on success path | **Done** — `MergePDFs` merges first, `mergeDiagnoseInputs` on failure (#53) |
 | TypeScript `any` in catch / strictness | **Partial** — e.g. `WatermarkTab` uses `unknown`; several tabs/hooks still use bare `catch (err)` |
-| Shared tab UI logic | **Partial** — `usePDFDrop`, `useOutputDirectory`, `useProcessingState`, `useErrorHandler` exist; Split/Rotate still overlap |
+| Shared tab UI logic | **Partial** — `usePDFDrop`, `useImageDrop`, `useOutputDirectory`, `useProcessingState`, `useErrorHandler` exist; Split/Rotate still overlap |
 | `GetPDFMetadata` / redundant `Stat` | **Open** — see backlog |
 | Split: single read + per-segment extract | **Done** — `SplitPDF` (#57) |
 

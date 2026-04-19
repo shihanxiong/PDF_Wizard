@@ -2,7 +2,7 @@
 
 ## Overview
 
-PDF Wizard is a cross-platform desktop application built with Wails v2 that provides PDF manipulation capabilities, including merging, splitting, rotating, and watermarking PDF files. The application uses a Go backend for file operations and a React/TypeScript frontend with Material-UI for the user interface.
+PDF Wizard is a cross-platform desktop application built with Wails v2 that provides PDF manipulation capabilities, including merging, splitting, rotating, and watermarking PDF files, and building a multi-page PDF from ordered images. The application uses a Go backend for file operations and a React/TypeScript frontend with Material-UI for the user interface.
 
 ## Documentation map
 
@@ -17,7 +17,7 @@ Avoid duplicating long procedures across files. Use this table to find the **sin
 | Tab components and Settings dialog UI | [pdf_wizard/frontend/src/components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md) |
 | File/PDF services (`FileService`, `PDFService`) | [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md) |
 | i18n layout, `useI18n`, adding a language | [pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md) |
-| **This file** | End-to-end architecture, UI patterns, watermark spec, cross-cutting technical notes |
+| **This file** | End-to-end architecture, UI patterns, watermark and images-to-PDF specs, cross-cutting technical notes |
 
 **Supported Platforms:**
 
@@ -28,7 +28,7 @@ Avoid duplicating long procedures across files. Use this table to find the **sin
 
 ### Technology Stack
 
-- **Backend**: Go 1.24.0 with Wails v2.12.0
+- **Backend**: Go 1.25 with Wails v2.12.0
 - **Frontend**: React 18+ with TypeScript, Material-UI (MUI) v7
 - **PDF Processing**: `github.com/pdfcpu/pdfcpu v0.11.1` - Native Go PDF library
 - **Build Tool**: Wails CLI v2.12.0 (align with `github.com/wailsapp/wails/v2 v2.12.0` in `go.mod`)
@@ -46,7 +46,8 @@ pdf_wizard/
 ├── DESIGN.md               # Application-level design (menu, config, models)
 ├── services/              # Service layer for business logic
 │   ├── file_service.go    # File selection and metadata operations
-│   ├── pdf_service.go     # PDF processing operations (merge, split, rotate, watermark)
+│   ├── pdf_service.go     # PDF processing operations (merge, split, rotate, watermark, images→PDF)
+│   ├── heic_jpeg.go       # HEIC/HEIF → temporary JPEG for pdfcpu import
 │   ├── validation.go      # File and directory validation utilities
 │   ├── constants.go       # Service constants (file extensions, permissions)
 │   └── DESIGN.md          # Backend services design
@@ -56,12 +57,13 @@ pdf_wizard/
 │   ├── src/
 │   │   ├── main.tsx       # React entry; wraps App in I18nProvider
 │   │   ├── App.tsx        # Main application component with tab navigation
-│   │   ├── hooks/         # Shared hooks (PDF drop, errors, processing state, output directory)
+│   │   ├── hooks/         # Shared hooks (PDF/image drop, errors, processing state, output directory)
 │   │   ├── components/    # React components
 │   │   │   ├── MergeTab.tsx
 │   │   │   ├── SplitTab.tsx
 │   │   │   ├── RotateTab.tsx
 │   │   │   ├── WatermarkTab.tsx
+│   │   │   ├── ImagesToPdfTab.tsx
 │   │   │   ├── SettingsDialog.tsx
 │   │   │   └── DESIGN.md  # Components design
 │   │   ├── types/         # TypeScript type definitions
@@ -95,23 +97,24 @@ pdf_wizard/
 
 ### Tab-Based Layout
 
-The application features a tabbed interface with four main tabs:
+The application features a tabbed interface with five main tabs:
 
 1. **Merge PDF Tab** - For combining multiple PDF files
 2. **Split PDF Tab** - For dividing a PDF into multiple files
 3. **Rotate PDF Tab** - For rotating specific page ranges in a PDF
 4. **Watermark PDF Tab** - For adding text or image watermarks to PDF files
+5. **Images to PDF Tab** - For building one PDF from multiple ordered images (including HEIC/HEIF)
 
 ### Tab Component Structure
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  [Merge PDF] [Split PDF] [Rotate PDF] [Watermark PDF] │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  Tab Content Area                                       │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  [Merge PDF] [Split PDF] [Rotate PDF] [Watermark PDF] [Images to PDF]     │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  Tab Content Area                                                            │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Drag and Drop Architecture
@@ -119,7 +122,7 @@ The application features a tabbed interface with four main tabs:
 Drag and drop file handling is implemented at the App level to work anywhere on the window:
 
 - A single `OnFileDrop` handler is registered at the App component level with `useDropTarget=false` to work anywhere on the window
-- The handler routes dropped files using **stable tab ids** (`merge`, `split`, `rotate`, `watermark`) defined by `MAIN_TAB_IDS` in `utils/constants.ts`. `activeTabIdRef` holds the current tab id; each tab registers a handler in `dropHandlersRef`, a `Partial<Record<MainTabId, ...>>` keyed by that id (not by numeric tab index)
+- The handler routes dropped files using **stable tab ids** (`merge`, `split`, `rotate`, `watermark`, `imagesToPdf`) defined by `MAIN_TAB_IDS` in `utils/constants.ts`. `activeTabIdRef` holds the current tab id; each tab registers a handler in `dropHandlersRef`, a `Partial<Record<MainTabId, ...>>` keyed by that id (not by numeric tab index)
 - Each tab component registers its own drop handler via a callback prop
 - Cross-platform compatibility:
   - **Windows**: `DisableWebViewDrop: true` in Wails config prevents WebView2 from intercepting drag-and-drop events
@@ -137,12 +140,13 @@ Menu construction, Wails `options.App`, the JSON config path, and `GetLanguage` 
 
 ## Component Design
 
-The application consists of four main tab components:
+The application consists of five main tab components:
 
 1. **MergeTab** - Combines multiple PDF files into one
 2. **SplitTab** - Divides a PDF into multiple files
 3. **RotateTab** - Rotates specific page ranges in a PDF
 4. **WatermarkTab** - Adds text or image watermarks to PDF files
+5. **ImagesToPdfTab** - Builds one PDF from ordered images; composes `useImageDrop` for window-level drops (see [components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md))
 
 Each component handles its own state, file selection, validation, and processing.
 
@@ -152,8 +156,8 @@ For detailed component design and implementation, see [pdf_wizard/frontend/src/c
 
 The backend uses a service-based architecture with clear separation of concerns:
 
-- **FileService** - Handles file selection, directory selection, and file metadata operations
-- **PDFService** - Handles all PDF processing operations (merge, split, rotate, watermark)
+- **FileService** - Handles file selection, directory selection, and file metadata operations (including `SelectImageFiles` for the images tab)
+- **PDFService** - Handles all PDF processing operations (merge, split, rotate, watermark, images→PDF via `ImagesToPDF`)
 - **Validation utilities** (`validation.go`) - File and directory validation functions
   - `validatePDFFile()` - Validates file exists, is readable, and has PDF extension
   - `validateOutputDirectory()` - Validates directory exists and is accessible
@@ -191,6 +195,13 @@ The backend uses a service-based architecture with clear separation of concerns:
 - **Stamp vs underlay**: Uses pdfcpu text config with **on top** of page content (`TextWatermark` with `onTop=true`) so text stays visible on opaque PDFs; clears default diagonal mode so UI rotation/position apply; opacity uses pdfcpu `ExtGState` (`wm.Opacity`)
 - **Helper functions**: Page range parsing, position-to-anchor conversion, hex color parsing
 
+#### ImagesToPDF
+
+- **Input validation**: Non-empty path list; each path validated with `validateImageFile()` (supported extensions include `.heic` / `.heif`)
+- **HEIC/HEIF**: `resolveImagePathsForPDF()` in `heic_jpeg.go` decodes HEIC/HEIF once to temporary JPEG files so `api.ImportImagesFile` uses pdfcpu’s JPEG import path; temps removed in a `defer` cleanup
+- **Import**: `api.ImportImagesFile(paths, outputPath, pdfcpu.DefaultImportConfig(), model.NewDefaultConfiguration())` — one PDF page per image, order preserved
+- **Output**: Same overwrite pattern as merge (remove existing output, verify file exists after write)
+
 For detailed service implementation, see [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md).
 
 ## Application-Level Design
@@ -219,7 +230,8 @@ For detailed application-level design, see [pdf_wizard/DESIGN.md](pdf_wizard/DES
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model` - Configuration models
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu/color` - Color handling for watermarks
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types` - PDF types and anchors
-- Standard library: `encoding/json`, `os`, `path/filepath`, `strings`, `fmt` - For configuration management, file operations, and string manipulation
+- `github.com/gen2brain/heic` - HEIC/HEIF decode for the images→PDF pipeline (temporary JPEG before import)
+- Standard library: `encoding/json`, `image/jpeg`, `os`, `path/filepath`, `strings`, `fmt` - For configuration management, file operations, HEIC→JPEG encoding, and string manipulation
 
 **Frontend:**
 
@@ -237,7 +249,7 @@ For detailed application-level design, see [pdf_wizard/DESIGN.md](pdf_wizard/DES
 - **Font encoding / read errors on merge**: After a failed merge, per-input `ReadContextFile` diagnosis yields specific messages (e.g., NULL encoding) tied to filename and index
 - **Page range validation**: All operations validate page ranges against PDF page count
 - **Output file handling**: Existing output files are removed before creating new ones to avoid pdfcpu overwrite issues
-- **Temporary file management**: Rotate and watermark operations use temporary files to avoid in-place modification issues, with automatic cleanup
+- **Temporary file management**: Rotate and watermark operations use temporary files to avoid in-place modification issues, with automatic cleanup; HEIC/HEIF→JPEG conversion for images→PDF uses temp files under `heic_jpeg.go` with deferred removal
 - Provide user-friendly error messages that identify problematic files
 - Log errors for debugging
 
@@ -250,10 +262,8 @@ For detailed application-level design, see [pdf_wizard/DESIGN.md](pdf_wizard/DES
 
 ### File Validation
 
-- Check file extension (.pdf)
-- Verify file is readable
-- Optionally validate PDF structure
-- Check file permissions
+- **PDF paths**: Check file extension (`.pdf`), verify readable, optionally validate structure, check permissions
+- **Image paths** (images→PDF): Supported extensions include JPEG, PNG, WebP, TIFF, GIF, BMP, HEIC, HEIF; same existence/read checks as other inputs where applicable
 
 ## Future Enhancements
 
@@ -267,6 +277,21 @@ For detailed application-level design, see [pdf_wizard/DESIGN.md](pdf_wizard/DES
 8. **Undo/Redo**: Support for undoing file removals or reorders
 9. **File Validation**: Pre-check PDF files for corruption before processing
 10. **Progress Tracking**: Real-time progress updates for long-running operations
+
+## Images to PDF Tab
+
+### Overview
+
+The **Images to PDF** tab produces a single PDF with **one page per image**, in the order shown in the list. Supported raster types include JPEG, PNG, WebP, TIFF, GIF, BMP, and HEIC/HEIF. HEIC/HEIF files are converted once to temporary JPEGs on the backend so pdfcpu can import them efficiently (`services/heic_jpeg.go`).
+
+### Functional requirements (summary)
+
+1. **Image selection** — Native multi-select (`SelectImageFiles`) and window-level drag-and-drop when the images tab is active; invalid paths are filtered with user-visible feedback.
+2. **Ordering** — Same `@dnd-kit` sortable list pattern as merge; order maps directly to page order in the output PDF.
+3. **Output** — Output directory and base filename (`.pdf` appended); calls Wails-bound `ImagesToPDF`.
+4. **i18n** — Tab label, buttons, and errors use `useI18n()` like other tabs.
+
+For component-level UI and state shape, see [pdf_wizard/frontend/src/components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md).
 
 ## Watermark PDF Tab
 

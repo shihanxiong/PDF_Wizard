@@ -7,7 +7,8 @@ This document describes the backend service layer architecture and implementatio
 The backend uses a service-based architecture with clear separation of concerns:
 
 - **FileService** (`file_service.go`): Handles file selection, directory selection, and file metadata operations
-- **PDFService** (`pdf_service.go`): Handles all PDF processing operations (merge, split, rotate)
+- **PDFService** (`pdf_service.go`): Handles all PDF processing operations (merge, split, rotate, watermark, images→PDF)
+- **HEIC helpers** (`heic_jpeg.go`): Decode HEIC/HEIF to temporary JPEG for `api.ImportImagesFile`
 
 The App struct in `app.go` acts as a thin wrapper that delegates to these services and provides Wails bindings for the frontend.
 
@@ -51,6 +52,14 @@ Opens a native file dialog to select a single PDF file.
 - Uses `runtime.OpenFileDialog()` with PDF filter
 - Returns selected file path
 - Returns error if no file selected or dialog fails
+
+#### `SelectImageFiles() ([]string, error)`
+
+Opens a native file dialog to select multiple image files.
+
+- Uses `runtime.OpenMultipleFilesDialog()` with an image filter (JPEG, PNG, WebP, TIFF, GIF, BMP, HEIC, HEIF)
+- Returns array of selected paths
+- Returns error if dialog is cancelled or fails
 
 #### `SelectOutputDirectory() (string, error)`
 
@@ -96,6 +105,8 @@ PDFService handles all PDF processing operations:
 - Merging multiple PDFs into one
 - Splitting a PDF into multiple files
 - Rotating specific page ranges in a PDF
+- Applying text watermarks (`ApplyWatermark`)
+- Building one PDF from ordered images (`ImagesToPDF`)
 
 ### Structure
 
@@ -204,6 +215,36 @@ Rotates specified page ranges in a PDF file.
 
 - `copyFile(src, dst string) error`: Copies a file from source to destination using `os.Open()` and `ReadFrom()`
 
+#### `ApplyWatermark(inputPath string, watermark models.WatermarkDefinition, outputDirectory string, outputFilename string) error`
+
+Adds a text watermark to the selected pages of a PDF (see [SYSTEM_DESIGN.md § Watermark PDF Tab](../../SYSTEM_DESIGN.md#watermark-pdf-tab) for product behavior).
+
+- Validates input PDF and output directory; uses a temporary working copy where pdfcpu would otherwise modify in place
+- Delegates to pdfcpu watermark APIs with configuration derived from `WatermarkDefinition`
+
+#### `ImagesToPDF(imagePaths []string, outputDirectory string, outputFilename string) error`
+
+Creates one PDF with one page per image, preserving order.
+
+**Validation:**
+
+- Non-empty `imagePaths`; each path validated with `validateImageFile()` (supported extensions include HEIC/HEIF)
+- Output directory writable; non-empty trimmed `outputFilename`
+
+**Implementation:**
+
+- `resolveImagePathsForPDF()` replaces HEIC/HEIF paths with temporary JPEGs (`heic_jpeg.go`); `defer` cleanup removes temps
+- `api.ImportImagesFile` with `pdfcpu.DefaultImportConfig()` and `model.NewDefaultConfiguration()`
+- Removes existing output file before write; verifies output exists after import
+
+## Validation (`validation.go`)
+
+Shared helpers used by services:
+
+- **`validatePDFFile` / `isPDFFile`** — PDF inputs
+- **`validateImageFile` / `isImageFile`** — Raster inputs for `ImagesToPDF` (including `.heic` / `.heif`)
+- **`validateOutputDirectory`** — Output directory exists and is writable
+
 ## Data Models
 
 ### PDFMetadata
@@ -269,8 +310,11 @@ App-wide Go and npm dependencies are summarized in [SYSTEM_DESIGN.md § Technica
   - `ReadContextFile()` - Read PDF and get context
   - `MergeCreateFile()` - Merge multiple PDFs
   - `ReadValidateAndOptimize()`, `PagesForPageSelection()`, `WriteContextFile()`, `ValidateContext()` — split uses one optimized read then per-output writes (#57)
+  - `ImportImagesFile()` — images→PDF (one page per image)
 
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu` - Page extraction (`ExtractPages` for split segments)
+
+- `github.com/gen2brain/heic` — decode HEIC/HEIF for `heic_jpeg.go` (combined with standard library `image/jpeg` encode)
 
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model` - Configuration models
 
