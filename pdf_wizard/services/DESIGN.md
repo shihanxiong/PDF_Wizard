@@ -9,8 +9,26 @@ The backend uses a service-based architecture with clear separation of concerns:
 - **FileService** (`file_service.go`): Handles file selection, directory selection, and file metadata operations
 - **PDFService** (`pdf_service.go`): Handles all PDF processing operations (merge, split, rotate, watermark, images→PDF)
 - **HEIC helpers** (`heic_jpeg.go`): Decode HEIC/HEIF to temporary JPEG for `api.ImportImagesFile`
+- **LAN phone upload** (`phone_upload.go`, `phone_upload_logo.go`): Optional HTTP server for sending images from a phone on the same LAN (see [§ LAN phone image upload](#lan-phone-image-upload))
 
-The App struct in `app.go` acts as a thin wrapper that delegates to these services and provides Wails bindings for the frontend.
+The App struct in `app.go` acts as a thin wrapper that delegates to these services and provides Wails bindings for the frontend (including starting/stopping the phone upload server).
+
+## LAN phone image upload
+
+**Files:** `phone_upload.go`, `phone_upload_logo.go`, embedded `app_logo.png` (keep in sync with `frontend/src/assets/img/app_logo.png`).
+
+**Entry:** `StartLANImageUploadServer(onUploaded func([]string), pageCopy models.PhoneUploadPageCopy) (pageURL string, stop func() error, err error)` — listens on `0.0.0.0:random port`, serves token-scoped routes under `/u/{token}/`.
+
+**Behavior:**
+
+- **GET** `/u/{token}/` — Upload form (or **session closed** HTML after a successful upload); **`writePhoneFormHTML`** injects `MaxFiles`, JS for selected-count (`__COUNT__`), and bfcache **`pageshow`** reload.
+- **GET** `/u/{token}/ok` — Success page after **POST** + redirect (PRG).
+- **GET** `/u/{token}/logo.png` — PNG bytes (`go:embed`), used as `src="logo.png"` in templates (avoids large `data:` URIs in HTML).
+- **POST** — Multipart field `files`; saves valid images to a session temp dir; **`cloneUploadedImagesForApp`** copies into `os.TempDir` paths for the app; **`onUploaded`** receives durable paths; **`PhoneUploadMaxFilesPerSession`** (25) enforced.
+- **HTML** — `html/template`, **`setPhonePageNoStore`** on responses; localized copy from **`normalizePhoneCopy`** defaults merged with **`PhoneUploadPageCopy`** from the frontend.
+- **`IsImageFile`** / **`validateImageFile`** from `validation.go` for accepted types.
+
+**App wiring:** `StartImagesPhoneUpload` / `StopImagesPhoneUpload` in `app.go`; **`runtime.EventsEmit(ctx, "images-phone-upload", json)`**; tests in `phone_upload_test.go`.
 
 ## FileService
 
@@ -246,6 +264,10 @@ Shared helpers used by services:
 - **`validateOutputDirectory`** — Output directory exists and is writable
 
 ## Data Models
+
+### PhoneUploadPageCopy
+
+Defined in **`models/types.go`**. Passed from React when starting the LAN server so phone HTML matches UI language. Fields include `lang`, `dir`, form/success/error/session-closed strings, `selectedCountLine` (`__COUNT__`), `tooManyFiles` (with `__MAX__` substituted on the frontend). See **`frontend/src/utils/i18n/types.ts`** (`imagesPhonePage*` keys).
 
 ### PDFMetadata
 

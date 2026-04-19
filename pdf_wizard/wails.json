@@ -12,7 +12,7 @@
   },
   "info": {
     "productName": "PDF Wizard",
-    "productVersion": "1.0.0",
+    "productVersion": "1.0.1",
     "copyright": "Copyright © 2026",
     "comments": "A modern PDF toolkit built with Wails v2"
   },

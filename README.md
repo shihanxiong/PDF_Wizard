@@ -10,7 +10,7 @@ A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backe
 - **Split PDFs**: Divide a PDF into multiple files based on page ranges
 - **Rotate PDFs**: Rotate specific page ranges in a PDF (90°, -90°, or 180°)
 - **Watermark PDFs**: Add text watermarks to PDFs with customizable font, size, color, opacity, rotation, and position. Features **language-specific fonts** that automatically adapt based on your selected language (Chinese, Japanese, Korean, Hindi, and standard fonts for other languages)
-- **Images to PDF**: Build one PDF from multiple images (JPEG, PNG, WebP, TIFF, GIF, BMP, HEIC/HEIF) with drag-and-drop reorder; HEIC/HEIF are converted to temporary JPEGs before import for reliable, faster processing
+- **Images to PDF**: Build one PDF from multiple images (JPEG, PNG, WebP, TIFF, GIF, BMP, HEIC/HEIF) with drag-and-drop reorder; **receive from phone** on the same Wi‑Fi via a LAN upload page and QR code (localized HTML, session limits, automatic stop after upload). HEIC/HEIF are converted to temporary JPEGs before import for reliable, faster processing
 
 **Features:**
 
@@ -137,7 +137,7 @@ Long-form material lives in dedicated files so it is not copied in multiple plac
 | Release packaging (DMG, ZIP, `build-dist.sh`, NSIS) | [pdf_wizard/DISTRIBUTION.md](pdf_wizard/DISTRIBUTION.md)                                     |
 | `main.go`, `app.go`, menu, config file, models      | [pdf_wizard/DESIGN.md](pdf_wizard/DESIGN.md)                                                 |
 | Tab components and Settings UI                      | [pdf_wizard/frontend/src/components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md) |
-| Go services (merge, split, rotate, watermark, images→PDF) | [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md)                         |
+| Go services (merge, split, rotate, watermark, images→PDF, **LAN phone upload**) | [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md)                         |
 | i18n files, `useI18n`, adding a language            | [pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md) |
 | Daily commands from `pdf_wizard/`                   | [pdf_wizard/README.md](pdf_wizard/README.md)                                                 |
 
@@ -199,6 +199,7 @@ Coverage reports, filtering tests by name, and Playwright/CI details: **[pdf_wiz
 ## Features
 
 - **Watermark PDFs** (language-aware fonts, positions, opacity): [SYSTEM_DESIGN.md — Watermark PDF Tab](SYSTEM_DESIGN.md#watermark-pdf-tab).
+- **Images to PDF — phone upload** (QR, LAN server, session rules): [SYSTEM_DESIGN.md — Images to PDF Tab](SYSTEM_DESIGN.md#images-to-pdf-tab) and [pdf_wizard/services/DESIGN.md — LAN phone image upload](pdf_wizard/services/DESIGN.md#lan-phone-image-upload).
 - **Internationalization** (12 languages, `useI18n`, adding a locale): [pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md).
 
 ## Technology stack
@@ -263,6 +264,10 @@ Navigate to the frontend directory and install manually:
 cd pdf_wizard/frontend
 npm install
 ```
+
+### macOS: app blocked or “unidentified developer” after sharing the DMG
+
+How you copy the app (AirDrop, WeChat, USB, etc.) does **not** change Gatekeeper rules. Unsigned or unnotarized builds still need **Right-click → Open** (or **Privacy & Security**) the first time. For fewer prompts for end users, use **signed and notarized** builds; see [pdf_wizard/DISTRIBUTION.md](pdf_wizard/DISTRIBUTION.md).
 
 ### Language not changing
 

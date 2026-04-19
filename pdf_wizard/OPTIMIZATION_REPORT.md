@@ -1,6 +1,6 @@
 # Code optimization report
 
-Living document for performance and maintainability work in PDF Wizard. **Last updated:** 2026 (issues #57, #62).
+Living document for performance and maintainability work in PDF Wizard. **Last updated:** 2026 (issues #57, #62; LAN phone upload documented in SYSTEM_DESIGN / services DESIGN).
 
 ---
 
@@ -16,6 +16,7 @@ Living document for performance and maintainability work in PDF Wizard. **Last u
 | Shared tab UI logic | **Partial** — `usePDFDrop`, `useImageDrop`, `useOutputDirectory`, `useProcessingState`, `useErrorHandler` exist; Split/Rotate still overlap |
 | `GetPDFMetadata` / redundant `Stat` | **Open** — see backlog |
 | Split: single read + per-segment extract | **Done** — `SplitPDF` (#57) |
+| LAN phone image upload (HTTP server, QR flow) | **Shipped** — `services/phone_upload.go`; product doc: [SYSTEM_DESIGN.md](../SYSTEM_DESIGN.md#images-to-pdf-tab) |
 
 ---
 

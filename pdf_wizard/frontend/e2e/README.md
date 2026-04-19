@@ -6,6 +6,8 @@ This directory contains end-to-end (E2E) tests for the PDF Wizard application us
 
 These tests run against the Vite development server and test the full UI flow of the application.
 
+**Scope:** Flows that need a second device or a real LAN HTTP server (e.g. **Receive from phone** on the Images to PDF tab) are not covered here; see **[SYSTEM_DESIGN.md](../../../../SYSTEM_DESIGN.md#images-to-pdf-tab)** for that feature.
+
 ## Running Tests
 
 ### Basic Test Run

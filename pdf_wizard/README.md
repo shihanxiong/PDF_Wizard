@@ -17,8 +17,10 @@ Vite hot reload; optional browser devtools UI at `http://localhost:34115`.
 
 ## Build and distribution
 
-- **Binary**: `wails build` → `build/bin/`
+- **Binary**: `wails build` → `build/bin/` (gitignored; not committed)
 - **DMG / ZIP / renamed Windows artifacts**: `./build-dist.sh` or `.\build-dist.ps1` after a successful build — full procedure in **[DISTRIBUTION.md](DISTRIBUTION.md)** only.
+
+**LAN phone upload** (Images to PDF): architecture and behavior are documented in **[SYSTEM_DESIGN.md](../SYSTEM_DESIGN.md#images-to-pdf-tab)** and **[services/DESIGN.md](services/DESIGN.md#lan-phone-image-upload)**.
 
 ## Tests
 

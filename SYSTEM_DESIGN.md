@@ -15,7 +15,7 @@ Avoid duplicating long procedures across files. Use this table to find the **sin
 | Commands from `pdf_wizard/` (`wails dev`, quick test entry points) | [pdf_wizard/README.md](pdf_wizard/README.md) |
 | Native menu, `app.go`, config file, models, Wails `options.App` | [pdf_wizard/DESIGN.md](pdf_wizard/DESIGN.md) |
 | Tab components and Settings dialog UI | [pdf_wizard/frontend/src/components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md) |
-| File/PDF services (`FileService`, `PDFService`) | [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md) |
+| File/PDF services (`FileService`, `PDFService`) and **LAN phone upload** (`phone_upload.go`) | [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md) |
 | i18n layout, `useI18n`, adding a language | [pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md) |
 | **This file** | End-to-end architecture, UI patterns, watermark and images-to-PDF specs, cross-cutting technical notes |
 
@@ -48,11 +48,14 @@ pdf_wizard/
 │   ├── file_service.go    # File selection and metadata operations
 │   ├── pdf_service.go     # PDF processing operations (merge, split, rotate, watermark, images→PDF)
 │   ├── heic_jpeg.go       # HEIC/HEIF → temporary JPEG for pdfcpu import
+│   ├── phone_upload.go    # LAN HTTP server for phone → images upload; HTML templates
+│   ├── phone_upload_logo.go # go:embed app logo for phone pages (mirrors frontend asset)
+│   ├── app_logo.png       # Embedded copy of frontend logo (keep in sync when changing branding)
 │   ├── validation.go      # File and directory validation utilities
 │   ├── constants.go       # Service constants (file extensions, permissions)
 │   └── DESIGN.md          # Backend services design
 ├── models/                 # Data models
-│   └── types.go           # PDFMetadata, SplitDefinition, RotateDefinition, WatermarkDefinition
+│   └── types.go           # PDFMetadata, SplitDefinition, RotateDefinition, WatermarkDefinition, PhoneUploadPageCopy
 ├── frontend/
 │   ├── src/
 │   │   ├── main.tsx       # React entry; wraps App in I18nProvider
@@ -158,6 +161,7 @@ The backend uses a service-based architecture with clear separation of concerns:
 
 - **FileService** - Handles file selection, directory selection, and file metadata operations (including `SelectImageFiles` for the images tab)
 - **PDFService** - Handles all PDF processing operations (merge, split, rotate, watermark, images→PDF via `ImagesToPDF`)
+- **LAN phone upload** (`services/phone_upload.go`) - Optional HTTP server on the LAN for the Images to PDF tab: token-scoped URL `/u/{token}/`, multipart uploads, `PrimaryLANIPv4` for the QR base URL; not a separate service struct, but documented in [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md)
 - **Validation utilities** (`validation.go`) - File and directory validation functions
   - `validatePDFFile()` - Validates file exists, is readable, and has PDF extension
   - `validateOutputDirectory()` - Validates directory exists and is accessible
@@ -231,7 +235,7 @@ For detailed application-level design, see [pdf_wizard/DESIGN.md](pdf_wizard/DES
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu/color` - Color handling for watermarks
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types` - PDF types and anchors
 - `github.com/gen2brain/heic` - HEIC/HEIF decode for the images→PDF pipeline (temporary JPEG before import)
-- Standard library: `encoding/json`, `image/jpeg`, `os`, `path/filepath`, `strings`, `fmt` - For configuration management, file operations, HEIC→JPEG encoding, and string manipulation
+- Standard library: `net`, `net/http`, `html/template`, `encoding/json`, `image/jpeg`, `os`, `path/filepath`, `strings`, `fmt`, `sync/atomic` — LAN phone upload server (`phone_upload.go`), configuration, HEIC→JPEG encoding, and string handling
 
 **Frontend:**
 
@@ -240,6 +244,7 @@ For detailed application-level design, see [pdf_wizard/DESIGN.md](pdf_wizard/DES
 - TypeScript
 - Wails runtime bindings
 - `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities` - For drag-and-drop file reordering (replaced deprecated react-beautiful-dnd)
+- `qrcode` - QR code generation for the LAN phone upload URL (Images to PDF tab)
 - Custom i18n system (`utils/i18n/`) - For internationalization (per-language modules, `catalog.ts` merge, React `I18nProvider` / `useI18n` for 12 languages)
 
 ### Error Handling
@@ -284,12 +289,26 @@ For detailed application-level design, see [pdf_wizard/DESIGN.md](pdf_wizard/DES
 
 The **Images to PDF** tab produces a single PDF with **one page per image**, in the order shown in the list. Supported raster types include JPEG, PNG, WebP, TIFF, GIF, BMP, and HEIC/HEIF. HEIC/HEIF files are converted once to temporary JPEGs on the backend so pdfcpu can import them efficiently (`services/heic_jpeg.go`).
 
+### Receive from phone (same Wi‑Fi)
+
+Users can **start receiving** on the desktop to run a small **HTTP server** on the LAN (random port, `0.0.0.0`). The app shows a **QR code** and URL that open a **phone-friendly upload page** in the device browser. The page is **localized** using `models.PhoneUploadPageCopy` strings passed from the React (`useI18n`) when the session starts.
+
+**Behavior (summary):**
+
+- **Token URL** — `http://<LAN-IPv4>:<port>/u/<token>/` (see `PrimaryLANIPv4()` + `StartLANImageUploadServer` in `services/phone_upload.go`).
+- **Logo** — `GET /u/{token}/logo.png` serves an embedded PNG (`services/app_logo.png`, same as `frontend/src/assets/img/app_logo.png`).
+- **Limit** — Up to **25** images per upload request (`PhoneUploadMaxFilesPerSession`); server and client enforce this.
+- **After a successful upload** — The app emits `images-phone-upload` with JSON path array, then **stops the LAN server** after a short delay so the phone can load the **success** (`/ok`) page first; the desktop clears the QR receive state. Further batches require **Receive from phone** again (new QR).
+- **Session closed** — After upload, revisiting the upload URL shows a **session ended** page; repeat **POST** returns **410** with the same copy. HTML responses use **`Cache-Control: no-store`**; the upload form uses **`pageshow` + bfcache reload** so Back does not show a stale form from cache.
+- **Wails bindings** — `StartImagesPhoneUpload(pageCopy)`, `StopImagesPhoneUpload()`; implementation details: [pdf_wizard/services/DESIGN.md — LAN phone image upload](pdf_wizard/services/DESIGN.md#lan-phone-image-upload), [pdf_wizard/DESIGN.md](pdf_wizard/DESIGN.md) (`App`).
+
 ### Functional requirements (summary)
 
 1. **Image selection** — Native multi-select (`SelectImageFiles`) and window-level drag-and-drop when the images tab is active; invalid paths are filtered with user-visible feedback.
-2. **Ordering** — Same `@dnd-kit` sortable list pattern as merge; order maps directly to page order in the output PDF.
-3. **Output** — Output directory and base filename (`.pdf` appended); calls Wails-bound `ImagesToPDF`.
-4. **i18n** — Tab label, buttons, and errors use `useI18n()` like other tabs.
+2. **Phone upload** (optional) — Receive from phone + QR + `EventsOn('images-phone-upload')` to append files to the same list as local picks.
+3. **Ordering** — Same `@dnd-kit` sortable list pattern as merge; order maps directly to page order in the output PDF.
+4. **Output** — Output directory and base filename (`.pdf` appended); calls Wails-bound `ImagesToPDF`.
+5. **i18n** — Tab label, buttons, phone page copy, and errors use `useI18n()` like other tabs; phone-specific keys live in `Translations` and `PhoneUploadPageCopy`.
 
 For component-level UI and state shape, see [pdf_wizard/frontend/src/components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md).
 

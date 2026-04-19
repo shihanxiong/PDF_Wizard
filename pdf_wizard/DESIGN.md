@@ -48,12 +48,10 @@ func main() {
 The application menu is configured as follows:
 
 1. **AppMenu**: Uses `menu.AppMenu()` which automatically includes:
-
    - "About PDF Wizard" (handled by `mac.About` option)
    - Standard macOS app menu items (Services, Hide, Quit, etc.)
 
 2. **Settings Menu**: Added as a separate menu item
-
    - Contains "Settings" menu item
    - Triggers `EmitSettingsEvent()` which emits "show-settings" event
    - Frontend listens for this event and opens Settings dialog
@@ -68,7 +66,7 @@ The application menu is configured as follows:
 Mac: &mac.Options{
     About: &mac.AboutInfo{
         Title:   "PDF Wizard",
-        Message: "A modern PDF toolkit built with Wails v2\n\nAuthor: Hanxiong Shi\nVersion 1.0.0\nCopyright © 2026",
+        Message: "A modern PDF toolkit built with Wails v2\n\nAuthor: Hanxiong Shi\nVersion 1.0.1\nCopyright © 2026",
     },
 }
 ```
@@ -93,6 +91,9 @@ type App struct {
     ctx         context.Context
     fileService *services.FileService
     pdfService  *services.PDFService
+
+    phoneMu   sync.Mutex
+    phoneStop func() error // stops LAN image upload server; nil when not running
 }
 
 const (
@@ -120,6 +121,15 @@ func (a *App) startup(ctx context.Context) {
     a.pdfService = pdfService
 }
 ```
+
+The Wails **`shutdown`** lifecycle hook calls **`StopImagesPhoneUpload`** so the LAN server stops when the app quits.
+
+### LAN phone image upload (`StartImagesPhoneUpload` / `StopImagesPhoneUpload`)
+
+- **`StartImagesPhoneUpload(pageCopy models.PhoneUploadPageCopy) (string, error)`** — Starts `services.StartLANImageUploadServer` with translated copy for the phone HTML. Returns the page URL for QR display. If a server is already running, it is stopped first. On successful upload, emits **`images-phone-upload`** (JSON array of paths) and schedules **`StopImagesPhoneUpload`** after a delay so the phone can load the success page.
+- **`StopImagesPhoneUpload() error`** — Invokes the stored stop function (shutdown HTTP server, remove temp dir), clears `phoneStop`, no-ops if idle.
+
+See [services/DESIGN.md](services/DESIGN.md#lan-phone-image-upload) and [SYSTEM_DESIGN.md — Images to PDF Tab](../SYSTEM_DESIGN.md#images-to-pdf-tab).
 
 ### Language Management
 
@@ -220,6 +230,10 @@ func (a *App) ApplyWatermark(inputPath string, watermark models.WatermarkDefinit
 ```
 
 ## Data Models (models/types.go)
+
+### PhoneUploadPageCopy
+
+Structured strings for the **phone browser** upload HTML (same language as the desktop UI). Filled in **`ImagesToPdfTab`** from `useI18n()` and passed to **`StartImagesPhoneUpload`**. Includes labels for the form, success and error pages, session-ended page, selected-count line (`__COUNT__`), and max-files message (`__MAX__` replaced on the frontend). See **`types.ts`** / locale files for keys (`imagesPhonePage*`).
 
 ### PDFMetadata
 
