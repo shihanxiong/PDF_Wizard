@@ -21,13 +21,14 @@ When the UI language is English, **`App.tsx`** applies a slightly smaller `Tabs`
 ### Functional requirements
 
 1. **Image selection** — `SelectImageFiles` from the backend plus drag-and-drop when the images tab is active; only supported image extensions are kept (same mental model as merge: multi-file + optional reorder).
-2. **File list** — Sortable list via `@dnd-kit` (reuse merge-style UX: path, size, last modified, remove, drag handle).
-3. **Output** — Shared output directory + filename patterns (`OutputDirectorySelector`, `FilenameInput`); default basename `from_images` → `from_images.pdf`.
-4. **Processing** — `ImagesToPDF` Wails binding; success/error surfaced like other tabs.
+2. **Receive from phone** — `StartImagesPhoneUpload` with `models.PhoneUploadPageCopy` built from `useI18n()` (language, `dir`, and all `imagesPhonePage*` strings). Shows URL + **QR code** (`qrcode` npm). Subscribes to **`EventsOn('images-phone-upload')`**, loads metadata via `GetFileMetadata`, appends to the list, clears receive URL on success. **`StopImagesPhoneUpload`** when the user stops receiving; the backend also stops automatically after a successful phone upload (new session = new QR).
+3. **File list** — Sortable list via `@dnd-kit` (reuse merge-style UX: path, size, last modified, remove, drag handle).
+4. **Output** — Shared output directory + filename patterns (`OutputDirectorySelector`, `FilenameInput`); default basename `from_images` → `from_images.pdf`.
+5. **Processing** — `ImagesToPDF` Wails binding; success/error surfaced like other tabs.
 
 ### Implementation notes
 
-- **`ImagesToPdfTab.tsx`** — Local list state, registers a drop handler with `App` keyed by `imagesToPdf` (`MAIN_TAB_IDS`).
+- **`ImagesToPdfTab.tsx`** — Local list state, registers a drop handler with `App` keyed by `imagesToPdf` (`MAIN_TAB_IDS`); phone receive state, QR data URL, `PHONE_UPLOAD_MAX_FILES` constant must match Go **`PhoneUploadMaxFilesPerSession`**.
 - **`useImageDrop.ts`** — Filters dropped paths to image extensions and maps them into `SelectedFile`-like rows for the list.
 
 ## Merge PDFs Tab

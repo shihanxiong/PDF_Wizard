@@ -1,5 +1,7 @@
 # PDF Wizard - Installation Instructions
 
+Product overview, development setup, and the full documentation index: **[README.md](../../README.md)** (repository root). LAN phone upload behavior: **[SYSTEM_DESIGN.md](../../SYSTEM_DESIGN.md#images-to-pdf-tab)**.
+
 ## macOS Installation
 
 ### Quick Start (DMG):

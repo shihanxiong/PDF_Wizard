@@ -51,6 +51,10 @@ On startup, `App.tsx` calls `GetLanguage()` from the Go binding, validates with 
 
 The Settings dialog reads `SUPPORTED_LANGUAGES`; no separate hardcoded list is required there.
 
+## Phone upload page copy (`imagesPhonePage*`)
+
+The **LAN phone upload** HTML is not React-rendered; the Go server serves static templates with strings from **`models.PhoneUploadPageCopy`**. The **Images to PDF** tab fills that struct via `new models.PhoneUploadPageCopy({ ... })` using keys such as **`imagesPhonePageTitle`**, **`imagesPhonePageSessionClosedTitle`**, **`imagesPhonePageSelectedCount`** (contains `__COUNT__`), **`imagesPhonePageTooManyFiles`** (contains `__MAX__`; replace with the numeric limit in TS), etc. When adding or renaming keys, update **`types.ts`**, every locale file, **`normalizePhoneCopy`** defaults in `services/phone_upload.go`, and run **`wails generate module`**.
+
 ## Best practices
 
 - Use `t('key')` for all user-visible strings; add the key to **`types.ts`** and every locale file.

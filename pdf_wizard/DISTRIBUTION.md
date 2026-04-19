@@ -34,6 +34,10 @@ xattr -cr "/path/to/PDF Wizard.app"
 
 Then open it normally.
 
+#### Transfer method and Gatekeeper
+
+Copying the app or DMG via **AirDrop, WeChat, USB, etc.** does **not** bypass macOS **Gatekeeper** or **notarization** requirements. Recipients still see the same “unidentified developer” / quarantine behavior as with a download from the web until the app is **signed and notarized** (or they use **Right-click → Open**). See the root **[README.md](../README.md)** troubleshooting section.
+
 #### Option B: Code Signing (Recommended for Public Distribution)
 
 For distribution to other users, you should code sign the app:
