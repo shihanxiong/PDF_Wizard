@@ -1,0 +1,121 @@
+# Production-style Wails builds on macOS and Windows for every PR (and main/master pushes).
+# Artifacts are attached to the workflow run (not committed to the repo).
+
+name: PDF Wizard Wails build
+
+on:
+  pull_request:
+    branches: [master, main]
+    paths:
+      - 'pdf_wizard/**'
+      - '.github/workflows/pdf_wizard_wails_build.yml'
+  push:
+    branches: [master, main]
+    paths:
+      - 'pdf_wizard/**'
+      - '.github/workflows/pdf_wizard_wails_build.yml'
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: '1.25.x'
+  NODE_VERSION: '22.21.1'
+  NODE_OPTIONS: --max-old-space-size=6144
+
+jobs:
+  wails-build:
+    name: Wails (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: darwin/universal
+            artifact: PDF-Wizard-macos-universal.zip
+          - os: windows-latest
+            platform: windows/amd64
+            artifact: PDF-Wizard-windows-amd64.exe
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up MinGW (Windows / CGO)
+        if: runner.os == 'Windows'
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: pdf_wizard/go.sum
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: pdf_wizard/frontend/package-lock.json
+
+      - name: Install Wails CLI
+        run: |
+          go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+          wails version
+
+      - name: Install frontend dependencies
+        working-directory: pdf_wizard/frontend
+        run: npm ci
+
+      - name: Go tests (services + app)
+        working-directory: pdf_wizard
+        run: go test ./...
+
+      - name: Wails build
+        working-directory: pdf_wizard
+        run: wails build -platform ${{ matrix.platform }}
+
+      - name: List build output
+        working-directory: pdf_wizard/build/bin
+        run: ls -la
+
+      - name: Package macOS (.app → zip)
+        if: runner.os == 'macOS'
+        working-directory: pdf_wizard/build/bin
+        run: |
+          if [ -d pdf_wizard.app ] && [ ! -d 'PDF Wizard.app' ]; then
+            mv pdf_wizard.app 'PDF Wizard.app'
+          fi
+          if [ ! -d 'PDF Wizard.app' ]; then
+            echo 'Expected PDF Wizard.app (or pdf_wizard.app) under build/bin'
+            exit 1
+          fi
+          zip -r "$RUNNER_TEMP/${{ matrix.artifact }}" 'PDF Wizard.app'
+
+      - name: Package Windows (exe)
+        if: runner.os == 'Windows'
+        working-directory: pdf_wizard/build/bin
+        run: |
+          if [ -f 'PDF Wizard.exe' ]; then
+            cp 'PDF Wizard.exe' "$RUNNER_TEMP/${{ matrix.artifact }}"
+          elif [ -f pdf_wizard.exe ]; then
+            cp pdf_wizard.exe "$RUNNER_TEMP/${{ matrix.artifact }}"
+          else
+            echo 'Expected PDF Wizard.exe or pdf_wizard.exe under build/bin'
+            exit 1
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ runner.temp }}/${{ matrix.artifact }}
+          if-no-files-found: error
