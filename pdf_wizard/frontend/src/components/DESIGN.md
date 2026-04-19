@@ -1,16 +1,17 @@
 # PDF Wizard Components Design
 
-This document describes the design and implementation of the React components in the PDF Wizard application.
+This document describes the design and implementation of the React components in the PDF Wizard application. Documentation map: [SYSTEM_DESIGN.md](../../../../SYSTEM_DESIGN.md#documentation-map).
 
 ## Overview
 
-The application features three main tab components for PDF manipulation:
+The application features four main tab components for PDF manipulation:
 
-- **MergeTab** - Combines multiple PDF files into one
-- **SplitTab** - Divides a PDF into multiple files
-- **RotateTab** - Rotates specific page ranges in a PDF
+- **MergeTab** — combines multiple PDFs
+- **SplitTab** — divides a PDF by page ranges
+- **RotateTab** — rotates page ranges
+- **WatermarkTab** — text watermarks (see [SYSTEM_DESIGN.md — Watermark PDF Tab](../../../../SYSTEM_DESIGN.md#watermark-pdf-tab) for product-level requirements)
 
-All components use Material-UI for consistent styling and support internationalization through the `utils/i18n` system.
+Components use Material-UI. Strings use **`useI18n()`** from `utils/i18n` (see [utils/i18n/DESIGN.md](../utils/i18n/DESIGN.md)).
 
 ## Merge PDFs Tab
 
