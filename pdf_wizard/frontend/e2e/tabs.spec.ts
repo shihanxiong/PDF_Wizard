@@ -15,12 +15,12 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     await setupTestPage(page);
   });
 
-  test('should display all four tabs (Merge, Split, Rotate, and Watermark)', async ({ page }) => {
-    // Verify all four tabs are present
+  test('should display all five tabs (Merge, Split, Rotate, Watermark, Images to PDF)', async ({ page }) => {
     await expect(page.getByRole('tab', { name: 'Merge PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Split PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Watermark PDF' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Images to PDF' })).toBeVisible();
 
     // Verify Merge tab is selected by default (active)
     const mergeTab = page.getByRole('tab', { name: 'Merge PDF' });
@@ -163,6 +163,7 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     await expect(page.getByRole('tab', { name: 'Merge PDF' })).toHaveAttribute('aria-selected', 'false');
     await expect(page.getByRole('tab', { name: 'Split PDF' })).toHaveAttribute('aria-selected', 'false');
     await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toHaveAttribute('aria-selected', 'false');
+    await expect(page.getByRole('tab', { name: 'Images to PDF' })).toHaveAttribute('aria-selected', 'false');
 
     // Get the active tab panel and wait for it to be visible
     const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-watermark');
@@ -190,6 +191,17 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     const applyWatermarkButton = watermarkTabPanel.locator('button').filter({ hasText: 'Apply Watermark' });
     await expect(applyWatermarkButton).toBeVisible();
     await expect(applyWatermarkButton).toBeDisabled();
+  });
+
+  test('should switch to Images to PDF tab when clicked', async ({ page }) => {
+    await page.getByRole('tab', { name: 'Images to PDF' }).click();
+    await expect(page.getByRole('tab', { name: 'Images to PDF' })).toHaveAttribute('aria-selected', 'true');
+    const imagesTabPanel = page.locator('#pdf-wizard-tabpanel-imagesToPdf');
+    await expect(imagesTabPanel).toBeVisible();
+    await expect(imagesTabPanel.getByRole('button', { name: 'Select Image Files' })).toBeVisible();
+    const createPdfButton = imagesTabPanel.locator('button').filter({ hasText: 'Create PDF' });
+    await expect(createPdfButton).toBeVisible();
+    await expect(createPdfButton).toBeDisabled();
   });
 
   test('should display watermark configuration options', async ({ page }) => {

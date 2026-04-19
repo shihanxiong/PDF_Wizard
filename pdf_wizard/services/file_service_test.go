@@ -2,6 +2,9 @@ package services
 
 import (
 	"context"
+	"image"
+	"image/color"
+	"image/png"
 	"os"
 	"path/filepath"
 	"testing"
@@ -75,6 +78,25 @@ startxref
 %%EOF`
 
 	return os.WriteFile(path, []byte(pdfContent), 0644)
+}
+
+// writeTestPNG writes a tiny PNG for image-import tests.
+func writeTestPNG(t *testing.T, path string) {
+	t.Helper()
+	img := image.NewRGBA(image.Rect(0, 0, 4, 4))
+	for y := 0; y < 4; y++ {
+		for x := 0; x < 4; x++ {
+			img.Set(x, y, color.RGBA{R: byte(x * 50), G: byte(y * 50), B: 200, A: 255})
+		}
+	}
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	if err := png.Encode(f, img); err != nil {
+		t.Fatal(err)
+	}
 }
 
 // setupTestDir creates a temporary directory for tests

@@ -50,6 +50,12 @@ test.describe('PDF Wizard - UI Components', () => {
     // Verify Rotate tab has output filename input
     await expect(rotateTabPanel.getByText('Output Filename:')).toBeVisible();
     await expect(rotateTabPanel.locator('input[placeholder="rotated"]')).toBeVisible();
+
+    await page.getByRole('tab', { name: 'Images to PDF' }).click();
+    const imagesTabPanel = page.locator('#pdf-wizard-tabpanel-imagesToPdf');
+    await expect(imagesTabPanel).toBeVisible();
+    await expect(imagesTabPanel.getByText('Output Filename:')).toBeVisible();
+    await expect(imagesTabPanel.locator('input[placeholder="from_images"]')).toBeVisible();
   });
 
   test('should disable action buttons when required fields are missing', async ({ page }) => {

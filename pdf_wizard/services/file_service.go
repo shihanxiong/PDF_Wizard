@@ -40,6 +40,23 @@ func (s *FileService) SelectPDFFiles() ([]string, error) {
 	return selection, nil
 }
 
+// SelectImageFiles opens a file dialog to select multiple image files.
+func (s *FileService) SelectImageFiles() ([]string, error) {
+	selection, err := runtime.OpenMultipleFilesDialog(s.ctx, runtime.OpenDialogOptions{
+		Title: "Select Image Files",
+		Filters: []runtime.FileFilter{
+			{
+				DisplayName: "Images",
+				Pattern:     "*.jpg;*.jpeg;*.png;*.gif;*.webp;*.tif;*.tiff;*.bmp;*.heic;*.heif;*.HEIC;*.HEIF",
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return selection, nil
+}
+
 // SelectPDFFile opens a file dialog to select a single PDF file
 func (s *FileService) SelectPDFFile() (string, error) {
 	selection, err := runtime.OpenFileDialog(s.ctx, runtime.OpenDialogOptions{

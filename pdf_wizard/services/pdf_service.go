@@ -83,6 +83,50 @@ func (s *PDFService) MergePDFs(inputPaths []string, outputDirectory string, outp
 	return nil
 }
 
+// ImagesToPDF creates one PDF with one page per image, in the given order.
+func (s *PDFService) ImagesToPDF(imagePaths []string, outputDirectory string, outputFilename string) error {
+	if len(imagePaths) == 0 {
+		return fmt.Errorf("no input images provided")
+	}
+	for i, path := range imagePaths {
+		if path == "" {
+			return fmt.Errorf("empty file path at index %d", i)
+		}
+		if err := validateImageFile(path); err != nil {
+			return fmt.Errorf("input image %d: %w", i+1, err)
+		}
+	}
+	if err := validateOutputDirectory(outputDirectory); err != nil {
+		return err
+	}
+	if strings.TrimSpace(outputFilename) == "" {
+		return fmt.Errorf("output filename cannot be empty")
+	}
+
+	outputPath := filepath.Join(outputDirectory, strings.TrimSpace(outputFilename)+PDFExtension)
+	if err := removeIfExists(outputPath); err != nil {
+		return err
+	}
+
+	// HEIC/HEIF: decode once to temp JPEG so pdfcpu uses its fast JPEG import path
+	// instead of repeated HEIC decode via image.Decode in the PDF pipeline.
+	pathsForImport, cleanup, err := resolveImagePathsForPDF(imagePaths)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
+	config := model.NewDefaultConfiguration()
+	imp := pdfcpu.DefaultImportConfig()
+	if err := api.ImportImagesFile(pathsForImport, outputPath, imp, config); err != nil {
+		return fmt.Errorf("failed to create PDF from images: %w", err)
+	}
+	if _, err := os.Stat(outputPath); os.IsNotExist(err) {
+		return fmt.Errorf("output file was not created at: %s", outputPath)
+	}
+	return nil
+}
+
 // SplitPDF splits the given PDF according to split definitions
 func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition, outputDirectory string) error {
 	// Validate input file exists and is a PDF

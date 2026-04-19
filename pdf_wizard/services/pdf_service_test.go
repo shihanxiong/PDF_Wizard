@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"embed"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,6 +15,9 @@ import (
 
 	"pdf_wizard/models"
 )
+
+//go:embed testdata/sample.heic
+var heicTestFS embed.FS
 
 func TestPDFService_MergePDFs(t *testing.T) {
 	fileService := NewFileService(context.Background())
@@ -406,5 +410,80 @@ func TestPDFService_ApplyWatermark_Validation(t *testing.T) {
 	err = service.ApplyWatermark(inputPDF, watermark, outputDir, outputFilename)
 	if err == nil {
 		t.Error("Expected error for invalid opacity, got nil")
+	}
+}
+
+func TestPDFService_ImagesToPDF(t *testing.T) {
+	fileService := NewFileService(context.Background())
+	service := NewPDFService(fileService)
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	img1 := filepath.Join(testDir, "first.png")
+	img2 := filepath.Join(testDir, "second.png")
+	writeTestPNG(t, img1)
+	writeTestPNG(t, img2)
+
+	err := service.ImagesToPDF([]string{img1, img2}, testDir, "from_images")
+	if err != nil {
+		t.Fatalf("ImagesToPDF: %v", err)
+	}
+
+	out := filepath.Join(testDir, "from_images.pdf")
+	content, err := os.ReadFile(out)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+	if len(content) < 4 || string(content[0:4]) != "%PDF" {
+		t.Fatal("output is not a valid PDF")
+	}
+
+	n, err := fileService.GetPDFPageCount(out)
+	if err != nil {
+		t.Fatalf("GetPDFPageCount: %v", err)
+	}
+	if n != 2 {
+		t.Fatalf("expected 2 pages, got %d", n)
+	}
+}
+
+func TestPDFService_ImagesToPDF_HEIC(t *testing.T) {
+	fileService := NewFileService(context.Background())
+	service := NewPDFService(fileService)
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	heicBytes, err := heicTestFS.ReadFile("testdata/sample.heic")
+	if err != nil {
+		t.Fatalf("read embedded HEIC: %v", err)
+	}
+
+	heicPath := filepath.Join(testDir, "sample.heic")
+	if err := os.WriteFile(heicPath, heicBytes, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	err = service.ImagesToPDF([]string{heicPath}, testDir, "from_heic")
+	if err != nil {
+		t.Fatalf("ImagesToPDF HEIC: %v", err)
+	}
+
+	out := filepath.Join(testDir, "from_heic.pdf")
+	var content []byte
+	content, err = os.ReadFile(out)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+	if len(content) < 4 || string(content[0:4]) != "%PDF" {
+		t.Fatal("output is not a valid PDF")
+	}
+	var n int
+	n, err = fileService.GetPDFPageCount(out)
+	if err != nil {
+		t.Fatalf("GetPDFPageCount: %v", err)
+	}
+	if n != 1 {
+		t.Fatalf("expected 1 page, got %d", n)
 	}
 }

@@ -26,12 +26,20 @@ export function GetPDFPageCount(arg1) {
   return window['go']['main']['App']['GetPDFPageCount'](arg1);
 }
 
+export function ImagesToPDF(arg1, arg2, arg3) {
+  return window['go']['main']['App']['ImagesToPDF'](arg1, arg2, arg3);
+}
+
 export function MergePDFs(arg1, arg2, arg3) {
   return window['go']['main']['App']['MergePDFs'](arg1, arg2, arg3);
 }
 
 export function RotatePDF(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['RotatePDF'](arg1, arg2, arg3, arg4);
+}
+
+export function SelectImageFiles() {
+  return window['go']['main']['App']['SelectImageFiles']();
 }
 
 export function SelectOutputDirectory() {
