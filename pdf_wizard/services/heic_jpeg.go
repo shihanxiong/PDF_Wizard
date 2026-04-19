@@ -53,6 +53,8 @@ func heicToJPEGTempFile(srcPath string) (string, error) {
 
 // resolveImagePathsForPDF returns paths suitable for pdfcpu ImportImagesFile.
 // HEIC/HEIF inputs are converted to temporary JPEGs (faster pdfcpu path); temps must be removed via cleanup.
+// JPEG/PNG/GIF/TIFF/BMP are passed through imaging with EXIF orientation applied so phone photos match
+// on-screen orientation when imported into the PDF (pdfcpu does not apply EXIF alone).
 func resolveImagePathsForPDF(imagePaths []string) (resolved []string, cleanup func(), err error) {
 	var temps []string
 	cleanup = func() {
@@ -63,17 +65,25 @@ func resolveImagePathsForPDF(imagePaths []string) (resolved []string, cleanup fu
 
 	resolved = make([]string, 0, len(imagePaths))
 	for _, p := range imagePaths {
-		if !isHEICOrHEIF(p) {
-			resolved = append(resolved, p)
-			continue
+		path := p
+		if isHEICOrHEIF(path) {
+			jpg, convErr := heicToJPEGTempFile(path)
+			if convErr != nil {
+				cleanup()
+				return nil, nil, fmt.Errorf("%s: %w", filepath.Base(path), convErr)
+			}
+			temps = append(temps, jpg)
+			path = jpg
 		}
-		jpg, convErr := heicToJPEGTempFile(p)
-		if convErr != nil {
+		out, created, normErr := normalizeRasterOrientation(path)
+		if normErr != nil {
 			cleanup()
-			return nil, nil, fmt.Errorf("%s: %w", filepath.Base(p), convErr)
+			return nil, nil, normErr
 		}
-		temps = append(temps, jpg)
-		resolved = append(resolved, jpg)
+		if created {
+			temps = append(temps, out)
+		}
+		resolved = append(resolved, out)
 	}
 	return resolved, cleanup, nil
 }
