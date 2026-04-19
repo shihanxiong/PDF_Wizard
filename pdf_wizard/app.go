@@ -176,6 +176,16 @@ func (a *App) MergePDFs(inputPaths []string, outputDirectory string, outputFilen
 	return a.pdfService.MergePDFs(inputPaths, outputDirectory, outputFilename)
 }
 
+// SelectImageFiles opens a dialog to select multiple image files.
+func (a *App) SelectImageFiles() ([]string, error) {
+	return a.fileService.SelectImageFiles()
+}
+
+// ImagesToPDF writes a PDF with one page per image in the given order.
+func (a *App) ImagesToPDF(imagePaths []string, outputDirectory string, outputFilename string) error {
+	return a.pdfService.ImagesToPDF(imagePaths, outputDirectory, outputFilename)
+}
+
 // SplitPDF splits the given PDF according to split definitions
 func (a *App) SplitPDF(inputPath string, splits []models.SplitDefinition, outputDirectory string) error {
 	return a.pdfService.SplitPDF(inputPath, splits, outputDirectory)

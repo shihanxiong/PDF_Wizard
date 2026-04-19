@@ -12,6 +12,16 @@ func isPDFFile(path string) bool {
 	return strings.ToLower(filepath.Ext(path)) == PDFExtension
 }
 
+// isImageFile checks if a file path has a supported raster image extension.
+func isImageFile(path string) bool {
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".jpg", ".jpeg", ".png", ".gif", ".webp", ".tif", ".tiff", ".bmp", ".heic", ".heif":
+		return true
+	default:
+		return false
+	}
+}
+
 // statPDFFile performs the same Stat and error mapping as the first step of
 // validatePDFFile, so callers can reuse os.FileInfo without a second Stat (#54).
 func statPDFFile(path string) (os.FileInfo, error) {
@@ -47,6 +57,21 @@ func validatePDFFile(path string) error {
 		return err
 	}
 	return validatePDFFileInfo(path, info)
+}
+
+// validateImageFile validates that a file exists and is a supported image type.
+func validateImageFile(path string) error {
+	info, err := statPDFFile(path)
+	if err != nil {
+		return err
+	}
+	if info.IsDir() {
+		return fmt.Errorf("path is a directory, not a file: %s", path)
+	}
+	if !isImageFile(path) {
+		return fmt.Errorf("file is not a supported image (jpg, png, gif, webp, tif, bmp, heic, heif): %s", path)
+	}
+	return nil
 }
 
 // validateOutputDirectory validates that an output directory exists and is writable

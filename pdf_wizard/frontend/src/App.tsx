@@ -5,6 +5,7 @@ import { MergeTab } from './components/MergeTab';
 import { SplitTab } from './components/SplitTab';
 import { RotateTab } from './components/RotateTab';
 import { WatermarkTab } from './components/WatermarkTab';
+import { ImagesToPdfTab } from './components/ImagesToPdfTab';
 import { SettingsDialog } from './components/SettingsDialog';
 import logo from './assets/img/app_logo.png';
 import { OnFileDrop, OnFileDropOff, EventsOn } from '../wailsjs/runtime/runtime';
@@ -13,11 +14,15 @@ import { useI18n, type Language } from './utils/i18n';
 import { isValidLanguage } from './utils/i18n/constants';
 import { MAIN_TAB_IDS, type MainTabId } from './utils/constants';
 
-const TAB_LABEL_KEY: Record<MainTabId, 'mergeTab' | 'splitTab' | 'rotateTab' | 'watermarkTab'> = {
+const TAB_LABEL_KEY: Record<
+  MainTabId,
+  'mergeTab' | 'splitTab' | 'rotateTab' | 'watermarkTab' | 'imagesToPdfTab'
+> = {
   merge: 'mergeTab',
   split: 'splitTab',
   rotate: 'rotateTab',
   watermark: 'watermarkTab',
+  imagesToPdf: 'imagesToPdfTab',
 };
 
 interface TabPanelProps {
@@ -44,7 +49,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export const App = () => {
-  const { t, setLanguage } = useI18n();
+  const { t, setLanguage, language } = useI18n();
   const [tabId, setTabId] = useState<MainTabId>('merge');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const activeTabIdRef = useRef<MainTabId>('merge');
@@ -138,7 +143,21 @@ export const App = () => {
             </Typography>
           </Box>
           <Box sx={{ flexGrow: 1 }}>
-            <Tabs value={tabId} onChange={handleTabChange} aria-label="PDF Wizard tabs" sx={{ minHeight: 'auto' }}>
+            <Tabs
+              value={tabId}
+              onChange={handleTabChange}
+              aria-label="PDF Wizard tabs"
+              sx={{
+                minHeight: 'auto',
+                ...(language === 'en' && {
+                  '& .MuiTab-root': {
+                    fontSize: '0.8125rem',
+                    minHeight: 40,
+                    py: 0.75,
+                  },
+                }),
+              }}
+            >
               {MAIN_TAB_IDS.map((tab) => (
                 <Tab
                   key={tab}
@@ -165,6 +184,11 @@ export const App = () => {
         <TabPanel activeTabId={tabId} panelId="watermark">
           <WatermarkTab
             onFileDrop={(handler: (paths: string[]) => void) => (dropHandlersRef.current.watermark = handler)}
+          />
+        </TabPanel>
+        <TabPanel activeTabId={tabId} panelId="imagesToPdf">
+          <ImagesToPdfTab
+            onFileDrop={(handler: (paths: string[]) => void) => (dropHandlersRef.current.imagesToPdf = handler)}
           />
         </TabPanel>
       </Box>

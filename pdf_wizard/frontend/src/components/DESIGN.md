@@ -4,14 +4,31 @@ This document describes the design and implementation of the React components in
 
 ## Overview
 
-The application features four main tab components for PDF manipulation:
+The application features five main tab components for PDF manipulation:
 
 - **MergeTab** — combines multiple PDFs
 - **SplitTab** — divides a PDF by page ranges
 - **RotateTab** — rotates page ranges
 - **WatermarkTab** — text watermarks (see [SYSTEM_DESIGN.md — Watermark PDF Tab](../../../../SYSTEM_DESIGN.md#watermark-pdf-tab) for product-level requirements)
+- **ImagesToPdfTab** — ordered images to one PDF (see [SYSTEM_DESIGN.md — Images to PDF Tab](../../../../SYSTEM_DESIGN.md#images-to-pdf-tab)); uses **`useImageDrop`** in `hooks/useImageDrop.ts` for the same window-level drop pattern as PDF tabs
 
 Components use Material-UI. Strings use **`useI18n()`** from `utils/i18n` (see [utils/i18n/DESIGN.md](../utils/i18n/DESIGN.md)).
+
+When the UI language is English, **`App.tsx`** applies a slightly smaller `Tabs` label font so five tabs fit comfortably without crowding.
+
+## Images to PDF Tab
+
+### Functional requirements
+
+1. **Image selection** — `SelectImageFiles` from the backend plus drag-and-drop when the images tab is active; only supported image extensions are kept (same mental model as merge: multi-file + optional reorder).
+2. **File list** — Sortable list via `@dnd-kit` (reuse merge-style UX: path, size, last modified, remove, drag handle).
+3. **Output** — Shared output directory + filename patterns (`OutputDirectorySelector`, `FilenameInput`); default basename `from_images` → `from_images.pdf`.
+4. **Processing** — `ImagesToPDF` Wails binding; success/error surfaced like other tabs.
+
+### Implementation notes
+
+- **`ImagesToPdfTab.tsx`** — Local list state, registers a drop handler with `App` keyed by `imagesToPdf` (`MAIN_TAB_IDS`).
+- **`useImageDrop.ts`** — Filters dropped paths to image extensions and maps them into `SelectedFile`-like rows for the list.
 
 ## Merge PDFs Tab
 

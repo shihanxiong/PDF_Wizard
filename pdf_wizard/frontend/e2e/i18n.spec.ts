@@ -22,6 +22,8 @@ test.describe('PDF Wizard - Internationalization', () => {
     await expect(page.getByRole('tab', { name: 'Merge PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Split PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Watermark PDF' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Images to PDF' })).toBeVisible();
 
     // Verify Merge tab content is in English
     const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-merge');
@@ -45,6 +47,8 @@ test.describe('PDF Wizard - Internationalization', () => {
     await expect(page.getByRole('tab', { name: '合并 PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: '拆分 PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: '旋转 PDF' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'PDF 水印' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: '图片转 PDF' })).toBeVisible();
 
     // Verify Merge tab content is in Chinese
     const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-merge');
@@ -174,5 +178,9 @@ test.describe('PDF Wizard - Internationalization', () => {
     await page.getByRole('tab', { name: '旋转 PDF' }).click();
     const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-rotate');
     await expect(rotateTabPanel.getByRole('button', { name: '选择 PDF 文件' })).toBeVisible();
+
+    await page.getByRole('tab', { name: '图片转 PDF' }).click();
+    const imagesTabPanel = page.locator('#pdf-wizard-tabpanel-imagesToPdf');
+    await expect(imagesTabPanel.getByRole('button', { name: '选择图片文件' })).toBeVisible();
   });
 });

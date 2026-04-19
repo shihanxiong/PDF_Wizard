@@ -5,12 +5,12 @@ on:
     branches: ['master', 'main']
     paths:
       - 'pdf_wizard/**'
-      - '.github/workflows/pdf_wizard.yml'
+      - '.github/workflows/pdf_wizard_integration_tests.yml'
   pull_request:
     branches: ['master', 'main']
     paths:
       - 'pdf_wizard/**'
-      - '.github/workflows/pdf_wizard.yml'
+      - '.github/workflows/pdf_wizard_integration_tests.yml'
 
 permissions:
   contents: read
@@ -27,13 +27,13 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.25.x'
           cache-dependency-path: pdf_wizard/go.sum
 
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22.21.1'
           cache: 'npm'
           cache-dependency-path: pdf_wizard/frontend/package-lock.json
 

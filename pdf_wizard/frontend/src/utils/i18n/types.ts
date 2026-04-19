@@ -10,6 +10,7 @@ export interface Translations {
   splitTab: string;
   rotateTab: string;
   watermarkTab: string;
+  imagesToPdfTab: string;
 
   // Settings
   settings: string;
@@ -103,6 +104,16 @@ export interface Translations {
   positionBottomLeft: string;
   positionBottomCenter: string;
   positionBottomRight: string;
+
+  // Images to PDF Tab
+  selectImageFiles: string;
+  dragDropImagesHint: string;
+  noImageFilesFound: string;
+  failedToSelectImageFiles: string;
+  imagesToPdf: string;
+  convertingImagesToPdf: string;
+  imagesToPdfSuccessfully: string;
+  imagesToPdfFailed: string;
 
   // Common
   modified: string;

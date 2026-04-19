@@ -4,12 +4,13 @@
   <img src="./assets/img/app_logo_raw.png" width="350" height="350" />
 </p>
 
-A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backend performance with a React/TypeScript frontend. PDF Wizard provides four main features:
+A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backend performance with a React/TypeScript frontend. PDF Wizard provides five main features:
 
 - **Merge PDFs**: Combine multiple PDF files into a single document
 - **Split PDFs**: Divide a PDF into multiple files based on page ranges
 - **Rotate PDFs**: Rotate specific page ranges in a PDF (90°, -90°, or 180°)
 - **Watermark PDFs**: Add text watermarks to PDFs with customizable font, size, color, opacity, rotation, and position. Features **language-specific fonts** that automatically adapt based on your selected language (Chinese, Japanese, Korean, Hindi, and standard fonts for other languages)
+- **Images to PDF**: Build one PDF from multiple images (JPEG, PNG, WebP, TIFF, GIF, BMP, HEIC/HEIF) with drag-and-drop reorder; HEIC/HEIF are converted to temporary JPEGs before import for reliable, faster processing
 
 **Features:**
 
@@ -42,6 +43,12 @@ A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backe
 
 <p align="center">
   <img src="./assets/img/app_view_4.png" alt="Watermark PDF Tab" width="800" />
+</p>
+
+### Images to PDF Tab
+
+<p align="center">
+  <img src="./assets/img/app_view_5.png" alt="Images to PDF Tab" width="800" />
 </p>
 
 ## Downloads
@@ -116,7 +123,7 @@ Pre-built installers are available in the [`pdf_wizard/dist/`](https://github.co
 
 ## Prerequisites
 
-- **Go 1.24.0** (specified in `go.mod`)
+- **Go 1.25** (specified in `pdf_wizard/go.mod`)
 - **Node.js 22.21.1** (required by the project)
 - **Wails CLI v2.12.0** (matches `github.com/wailsapp/wails/v2 v2.12.0` in `pdf_wizard/go.mod`)
 
@@ -124,15 +131,15 @@ Pre-built installers are available in the [`pdf_wizard/dist/`](https://github.co
 
 Long-form material lives in dedicated files so it is not copied in multiple places:
 
-| Topic | Document |
-| --- | --- |
-| Architecture, UI patterns, watermark spec | [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) (includes a **documentation map**) |
-| Release packaging (DMG, ZIP, `build-dist.sh`, NSIS) | [pdf_wizard/DISTRIBUTION.md](pdf_wizard/DISTRIBUTION.md) |
-| `main.go`, `app.go`, menu, config file, models | [pdf_wizard/DESIGN.md](pdf_wizard/DESIGN.md) |
-| Tab components and Settings UI | [pdf_wizard/frontend/src/components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md) |
-| Go services (merge, split, rotate, watermark) | [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md) |
-| i18n files, `useI18n`, adding a language | [pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md) |
-| Daily commands from `pdf_wizard/` | [pdf_wizard/README.md](pdf_wizard/README.md) |
+| Topic                                               | Document                                                                                     |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Architecture, UI patterns, watermark & images-to-PDF | [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) (includes a **documentation map**)                      |
+| Release packaging (DMG, ZIP, `build-dist.sh`, NSIS) | [pdf_wizard/DISTRIBUTION.md](pdf_wizard/DISTRIBUTION.md)                                     |
+| `main.go`, `app.go`, menu, config file, models      | [pdf_wizard/DESIGN.md](pdf_wizard/DESIGN.md)                                                 |
+| Tab components and Settings UI                      | [pdf_wizard/frontend/src/components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md) |
+| Go services (merge, split, rotate, watermark, images→PDF) | [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md)                         |
+| i18n files, `useI18n`, adding a language            | [pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md) |
+| Daily commands from `pdf_wizard/`                   | [pdf_wizard/README.md](pdf_wizard/README.md)                                                 |
 
 ## Quick Start
 
