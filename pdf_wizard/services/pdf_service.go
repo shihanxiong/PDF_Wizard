@@ -1,7 +1,9 @@
 package services
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -522,11 +524,10 @@ func mergeDiagnoseInputs(inputPaths []string) error {
 }
 
 // removeIfExists removes a file if it exists, returning an error only if removal fails
+// (#56) Use Remove directly; skip the extra Stat syscall when the file is absent.
 func removeIfExists(path string) error {
-	if _, err := os.Stat(path); err == nil {
-		if err := os.Remove(path); err != nil {
-			return fmt.Errorf("failed to remove existing file: %w", err)
-		}
+	if err := os.Remove(path); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return fmt.Errorf("failed to remove existing file: %w", err)
 	}
 	return nil
 }
