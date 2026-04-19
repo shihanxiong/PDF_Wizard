@@ -118,7 +118,21 @@ Pre-built installers are available in the [`pdf_wizard/dist/`](https://github.co
 
 - **Go 1.24.0** (specified in `go.mod`)
 - **Node.js 22.21.1** (required by the project)
-- **Wails CLI v2.11.0** (matches `github.com/wailsapp/wails/v2 v2.11.0` in `go.mod`)
+- **Wails CLI v2.12.0** (matches `github.com/wailsapp/wails/v2 v2.12.0` in `pdf_wizard/go.mod`)
+
+## Documentation
+
+Long-form material lives in dedicated files so it is not copied in multiple places:
+
+| Topic | Document |
+| --- | --- |
+| Architecture, UI patterns, watermark spec | [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) (includes a **documentation map**) |
+| Release packaging (DMG, ZIP, `build-dist.sh`, NSIS) | [pdf_wizard/DISTRIBUTION.md](pdf_wizard/DISTRIBUTION.md) |
+| `main.go`, `app.go`, menu, config file, models | [pdf_wizard/DESIGN.md](pdf_wizard/DESIGN.md) |
+| Tab components and Settings UI | [pdf_wizard/frontend/src/components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md) |
+| Go services (merge, split, rotate, watermark) | [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md) |
+| i18n files, `useI18n`, adding a language | [pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md) |
+| Daily commands from `pdf_wizard/` | [pdf_wizard/README.md](pdf_wizard/README.md) |
 
 ## Quick Start
 
@@ -161,286 +175,32 @@ For development instructions, see [pdf_wizard/README.md](pdf_wizard/README.md).
 
 ## Building
 
-### Build Executables
-
-Build platform-specific executables:
-
-```bash
-cd pdf_wizard
-wails build
-```
-
-The output will be generated in the `pdf_wizard/build/bin` directory.
-
-**Build for macOS Distribution:**
-
-To create a universal binary that works on both Intel and Apple Silicon Macs:
-
-```bash
-cd pdf_wizard
-wails build -platform darwin/universal
-```
-
-For distribution to other Mac machines, see [Distribution Guide](pdf_wizard/DISTRIBUTION.md).
-
-**Build for Windows Distribution:**
-
-To create a Windows executable:
-
-```bash
-cd pdf_wizard
-wails build
-```
-
-This will create in `build/bin`:
-
-- `PDF Wizard.exe` - Standalone executable
-- `PDF Wizard Installer.exe` - NSIS installer (if NSIS is installed)
-
-For distribution packages in the `dist` directory, use the build script:
-
-```bash
-cd pdf_wizard
-./build-dist.sh
-```
-
-This will create in `dist`:
-
-- `pdf_wizard-windows.exe` - Standalone executable (matches macOS naming convention)
-- `pdf_wizard-windows-installer.exe` - NSIS installer (only if NSIS is installed on the build machine)
-- `pdf_wizard-windows-portable.zip` - ZIP archive containing the executable
-
-> **Note**: To create the NSIS installer, you need to install NSIS first:
->
-> - Download from: https://nsis.sourceforge.io/Download
-> - Or install via Chocolatey (as Administrator): `choco install nsis`
-> - After installing NSIS, rebuild the project to generate the installer
-
-**Quick Distribution Build:**
-
-Use the automated build script (cross-platform):
-
-**On macOS/Linux:**
-
-```bash
-cd pdf_wizard
-./build-dist.sh
-```
-
-**On Windows (PowerShell):**
-
-```powershell
-cd pdf_wizard
-.\build-dist.ps1
-```
-
-**On Windows (Git Bash/WSL):**
-
-```bash
-cd pdf_wizard
-./build-dist.sh
-```
-
-The script automatically detects your operating system and creates:
-
-- **macOS**: DMG installer and ZIP archive
-- **Windows**: NSIS installer (if NSIS is installed) and portable ZIP archive
-
-All distribution files are created in the `pdf_wizard/dist` directory.
+From `pdf_wizard/`, run `wails build` (output under `pdf_wizard/build/bin/`). Universal macOS builds, `build-dist.sh` / `build-dist.ps1`, DMG/ZIP/Windows artifacts, and NSIS notes are documented only in **[pdf_wizard/DISTRIBUTION.md](pdf_wizard/DISTRIBUTION.md)**.
 
 ## Testing
 
-PDF Wizard includes both backend integration tests and frontend E2E tests.
-
-### Backend Integration Tests
-
-Run the Go integration tests locally:
-
 ```bash
-cd pdf_wizard
-go test -v ./...
+cd pdf_wizard && go test -v ./...
 ```
 
-This will run all tests with verbose output.
-
-**Test Coverage:**
-
-To see test coverage:
-
 ```bash
-cd pdf_wizard
-go test -v -coverprofile=coverage.out ./...
-go tool cover -func=coverage.out
+cd pdf_wizard/frontend && npm run test:e2e
 ```
 
-To view an HTML coverage report:
-
-```bash
-go tool cover -html=coverage.out
-```
-
-**Run Specific Tests:**
-
-Run a specific test function:
-
-```bash
-cd pdf_wizard
-go test -v -run TestGetFileMetadata
-```
-
-Run language management tests:
-
-```bash
-cd pdf_wizard
-go test -v -run "TestGetLanguage|TestSetLanguage"
-```
-
-Run tests with race detection:
-
-```bash
-cd pdf_wizard
-go test -v -race ./...
-```
-
-**Backend Test Coverage:**
-
-The backend test suite includes:
-
-- PDF file operations (merge, split, rotate)
-- File metadata retrieval
-- Page count operations
-- Error handling and validation
-- **Language management**:
-  - Language preference storage and retrieval
-  - Config file handling
-  - Default language fallback
-  - Invalid config handling
-
-### Frontend E2E Tests
-
-The frontend uses Playwright for end-to-end UI testing. These tests verify the application UI, user interactions, and component behavior.
-
-**Running Tests Locally:**
-
-```bash
-cd pdf_wizard/frontend
-npm run test:e2e
-```
-
-For detailed E2E testing instructions, test structure, configuration, and CI/CD setup, see the [E2E Testing README](pdf_wizard/frontend/e2e/README.md).
+Coverage reports, filtering tests by name, and Playwright/CI details: **[pdf_wizard/frontend/e2e/README.md](pdf_wizard/frontend/e2e/README.md)** and **[SYSTEM_DESIGN.md § Testing](SYSTEM_DESIGN.md#testing)**.
 
 ## Features
 
-### Watermark PDFs
+- **Watermark PDFs** (language-aware fonts, positions, opacity): [SYSTEM_DESIGN.md — Watermark PDF Tab](SYSTEM_DESIGN.md#watermark-pdf-tab).
+- **Internationalization** (12 languages, `useI18n`, adding a locale): [pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md).
 
-The watermark feature includes intelligent font selection based on your application language. Font options automatically filter to show only fonts appropriate for your selected language (Chinese, Japanese, Korean, Hindi, and standard fonts for other languages), with automatic default selection and localized font names.
+## Technology stack
 
-For detailed information about language-specific fonts and watermark customization options, see [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md#watermark-pdf-tab).
+Stack versions and dependencies (Go modules, React, MUI, pdfcpu, Playwright, etc.) are listed in **[SYSTEM_DESIGN.md § Technology stack](SYSTEM_DESIGN.md#technology-stack)** and **[§ Technical considerations](SYSTEM_DESIGN.md#technical-considerations)**.
 
-### Internationalization (i18n)
+## Repository layout
 
-PDF Wizard supports multiple languages with an easy-to-use translation system:
-
-- **Supported Languages**:
-  - English (en)
-  - Chinese Simplified (zh)
-  - Chinese Traditional (zh-TW)
-  - Arabic (ar)
-  - French (fr)
-  - Japanese (ja)
-  - Hindi (hi)
-  - Spanish (es)
-  - Portuguese (pt)
-  - Russian (ru)
-  - Korean (ko)
-  - German (de)
-- **Language Selection**: Accessible via the Settings menu in the application menu bar
-- **Language Persistence**: Your language preference is saved and persists across application restarts
-- **Modular Structure**: Translations are organized in separate language files for easy maintenance and extension
-- **Native Language Names**: Language options are displayed in their native script for better user experience
-
-**Adding New Languages:**
-
-To add a new language:
-
-1. Create a new file in `pdf_wizard/frontend/src/utils/i18n/` (e.g., `de.ts` for German)
-2. Export a `Translations` object with all required translation keys (see `types.ts` for the interface)
-3. Import the new language file in `i18n/index.ts`
-4. Add the language to the `translations` record in `i18n/index.ts`
-5. Update the `Language` type in `i18n/types.ts` to include the new language code
-6. Add the language to the `getNativeLanguageName` function in `i18n/index.ts`
-7. Add the language option to the Settings dialog component (`SettingsDialog.tsx`)
-8. Update the validation arrays in `App.tsx` and `SettingsDialog.tsx` to include the new language code
-9. Update the backend validation in `app.go` (`GetLanguage()` and `SetLanguage()` functions) to include the new language code
-
-## Technology Stack
-
-### Backend
-
-- **Go 1.24.0**: High-performance backend services
-- **Wails v2.11.0**: Desktop application framework
-- **pdfcpu**: PDF manipulation library for merging, splitting, and rotating
-- **JSON Config**: Language preference stored in user config directory
-
-### Frontend
-
-- **React 18**: Modern UI library with hooks
-- **TypeScript**: Type-safe development
-- **Material-UI (MUI) v7**: Component library for modern UI
-- **@dnd-kit**: Modern drag-and-drop library (replaced deprecated react-beautiful-dnd)
-- **Vite**: Fast build tool and dev server
-- **Custom i18n System**: Internationalization support with modular language files
-  - Language files: `i18n/en.ts`, `i18n/zh.ts`, `i18n/zh-TW.ts`, `i18n/ar.ts`, `i18n/fr.ts`, `i18n/ja.ts`, `i18n/hi.ts`, `i18n/es.ts`, `i18n/pt.ts`, `i18n/ru.ts`, `i18n/ko.ts`, `i18n/de.ts`
-  - Type definitions: `i18n/types.ts`
-  - Main logic: `i18n/index.ts` (includes `getNativeLanguageName` helper)
-
-### Testing
-
-- **Playwright**: End-to-end testing framework
-- **Go Testing**: Unit and integration tests
-
-## Project Structure
-
-```
-PDF_Wizard/
-├── pdf_wizard/          # Main Wails application
-│   ├── frontend/        # React/TypeScript frontend
-│   │   ├── e2e/         # Playwright E2E tests
-│   │   ├── src/         # React source code
-│   │   │   ├── components/    # React components
-│   │   │   │   ├── MergeTab.tsx
-│   │   │   │   ├── SplitTab.tsx
-│   │   │   │   ├── RotateTab.tsx
-│   │   │   │   └── SettingsDialog.tsx
-│   │   │   ├── utils/         # Utility functions
-│   │   │   │   ├── i18n/      # Internationalization
-│   │   │   │   │   ├── index.ts    # Main i18n logic
-│   │   │   │   │   ├── types.ts    # TypeScript types
-│   │   │   │   │   ├── en.ts       # English translations
-│   │   │   │   │   ├── zh.ts       # Chinese Simplified translations
-│   │   │   │   │   ├── zh-TW.ts    # Chinese Traditional translations
-│   │   │   │   │   ├── ar.ts       # Arabic translations
-│   │   │   │   │   ├── fr.ts       # French translations
-│   │   │   │   │   ├── ja.ts       # Japanese translations
-│   │   │   │   │   ├── hi.ts       # Hindi translations
-│   │   │   │   │   ├── es.ts       # Spanish translations
-│   │   │   │   │   ├── pt.ts       # Portuguese translations
-│   │   │   │   │   ├── ru.ts       # Russian translations
-│   │   │   │   │   ├── ko.ts       # Korean translations
-│   │   │   │   │   └── de.ts       # German translations
-│   │   │   │   └── formatters.ts
-│   │   │   └── App.tsx        # Main application component
-│   │   └── dist/        # Built frontend assets
-│   ├── services/        # Go service layer
-│   ├── models/          # Data models
-│   ├── app.go           # Go application entry (includes language management)
-│   └── main.go          # Wails main file
-├── assets/              # Application assets
-│   └── img/             # Application images and logos
-│       ├── app_logo_raw.png  # Source logo (high resolution)
-│       └── app_logo.png      # Application logo (128x128)
-└── .github/workflows/   # GitHub Actions CI/CD workflows
-```
+High-level tree and the role of each major folder: **[SYSTEM_DESIGN.md § Project Structure](SYSTEM_DESIGN.md#project-structure)**.
 
 ## Configuration
 
@@ -460,20 +220,7 @@ The config file is automatically created when you change the language. You can a
 }
 ```
 
-Valid values are:
-
-- `"en"` - English
-- `"zh"` - Chinese Simplified
-- `"zh-TW"` - Chinese Traditional
-- `"ar"` - Arabic
-- `"fr"` - French
-- `"ja"` - Japanese
-- `"hi"` - Hindi
-- `"es"` - Spanish
-- `"pt"` - Portuguese
-- `"ru"` - Russian
-- `"ko"` - Korean
-- `"de"` - German
+Valid `"language"` values are exactly the codes in **`pdf_wizard/frontend/src/utils/i18n/constants.ts`** (`SUPPORTED_LANGUAGES`), which must match **`validLanguages`** in **`pdf_wizard/app.go`**. See [pdf_wizard/DESIGN.md](pdf_wizard/DESIGN.md) for path resolution and error handling.
 
 ## Troubleshooting
 

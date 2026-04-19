@@ -1,0 +1,33 @@
+---
+description: Update documentation whenever production code or dependencies change
+alwaysApply: true
+---
+
+# Keep documentation in sync with code
+
+When you change **implementation** (not typo-only or purely mechanical refactors with no behavior change), update the **authoritative** docs in the same effort so they stay accurate. Do not leave design docs, READMEs, or rules describing behavior that no longer exists.
+
+## Where to edit (use the doc map)
+
+Use **[SYSTEM_DESIGN.md](SYSTEM_DESIGN.md#documentation-map)** and the root **[README.md](README.md#documentation)** “Documentation” table. Typical mapping:
+
+| Code / topic | Update these docs (as applicable) |
+| --- | --- |
+| `pdf_wizard/main.go`, `app.go`, menu, config path, models | [pdf_wizard/DESIGN.md](pdf_wizard/DESIGN.md) |
+| `pdf_wizard/services/*`, merge/split/rotate/watermark behavior | [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md) and [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) (architecture, PDF sections, error handling) |
+| `frontend/src/components/*`, Settings UX | [pdf_wizard/frontend/src/components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md) |
+| `frontend/src/utils/i18n/*`, locales, `useI18n` | [pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md) |
+| Drag/drop, tab routing, cross-cutting UI architecture | [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) |
+| `wails build`, `build-dist.sh`, DMG/ZIP/installers | [pdf_wizard/DISTRIBUTION.md](pdf_wizard/DISTRIBUTION.md) |
+| User-facing install, prerequisites, quick start | [README.md](README.md) |
+| `go.mod` / `package.json` versions, major stack choices | [README.md](README.md) prerequisites or features, and [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) technology stack |
+
+If a change spans layers, touch every doc that currently states the old behavior—**one source of truth per topic**; do not copy long paragraphs into multiple files. Prefer a short update plus a link to the canonical section.
+
+## Checklist before finishing a code change
+
+1. Did any public API, CLI, config shape, or user-visible behavior change? If yes, docs must reflect it.
+2. Did dependencies or minimum tool versions change? Update README / SYSTEM_DESIGN version lines.
+3. Did tests or build steps change? Update [SYSTEM_DESIGN.md § Testing](SYSTEM_DESIGN.md#testing), [pdf_wizard/README.md](pdf_wizard/README.md), or [pdf_wizard/frontend/e2e/README.md](pdf_wizard/frontend/e2e/README.md) as appropriate.
+
+When unsure which file is canonical, start from the **Documentation map** in SYSTEM_DESIGN.md.

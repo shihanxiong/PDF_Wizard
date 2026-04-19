@@ -2,6 +2,8 @@
 
 This document describes the application-level design including the main entry point, app wrapper, menu configuration, and data models.
 
+For a map of all documentation (so topics are not repeated in multiple places), see [SYSTEM_DESIGN.md § Documentation map](../SYSTEM_DESIGN.md#documentation-map) in the repository root.
+
 ## Overview
 
 The application is structured with:
@@ -126,9 +128,9 @@ func (a *App) startup(ctx context.Context) {
 Returns the current language preference from the configuration file.
 
 - Reads from `<UserConfigDir>/PDF Wizard/pdf_wizard_config.json`
-- Returns "en" or "zh"
-- Defaults to "en" if file doesn't exist or is invalid
-- Creates config directory if it doesn't exist
+- Returns the stored code when it matches `validLanguages` in `app.go` (same set as frontend `SUPPORTED_LANGUAGES` in `frontend/src/utils/i18n/constants.ts`)
+- Defaults to `"en"` if the file is missing, invalid, or the code is not supported
+- Creates the config directory if needed
 
 **Config File Structure:**
 
@@ -148,7 +150,7 @@ Returns the current language preference from the configuration file.
 
 Saves the language preference to the configuration file.
 
-- Validates language is "en" or "zh"
+- Validates the code against `validLanguages` in `app.go`
 - Creates config directory if it doesn't exist
 - Writes JSON configuration file
 - Returns error if file operations fail
@@ -319,20 +321,7 @@ This pattern allows the native menu to trigger frontend UI updates.
 
 ## Dependencies
 
-### Go Libraries
-
-- `github.com/wailsapp/wails/v2` - Wails framework
-- `github.com/wailsapp/wails/v2/pkg/menu` - Application menu
-- `github.com/wailsapp/wails/v2/pkg/options` - Application options
-- `github.com/wailsapp/wails/v2/pkg/options/mac` - macOS-specific options
-- `github.com/wailsapp/wails/v2/pkg/runtime` - Runtime operations (events, dialogs)
-
-### Standard Library
-
-- `context` - Context for runtime operations
-- `encoding/json` - JSON encoding/decoding for config
-- `os` - File operations
-- `path/filepath` - Path manipulation
+The `App` layer uses Wails (`menu`, `options`, `runtime`, `mac`). PDF and file I/O live in `services/` and depend on **pdfcpu**; see [services/DESIGN.md](services/DESIGN.md). The full stack (Go modules, React, MUI, Playwright, etc.) is listed once in [SYSTEM_DESIGN.md § Technical Considerations](../SYSTEM_DESIGN.md#technical-considerations).
 
 ## Application Options
 
@@ -350,7 +339,8 @@ The application is configured with the following options:
     },
     BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
     DragAndDrop: &options.DragAndDrop{
-        EnableFileDrop: true,
+        EnableFileDrop:     true,
+        DisableWebViewDrop: true, // Windows WebView2 / macOS WebKit
     },
     Menu: appMenu,
     Mac: &mac.Options{
@@ -368,7 +358,7 @@ The application is configured with the following options:
 - **Title**: "PDF Wizard"
 - **Window Size**: 1024x900 (minimum 800x600)
 - **Background Color**: Dark theme (RGB: 27, 38, 54)
-- **Drag and Drop**: Enabled for file dropping anywhere on window
+- **Drag and Drop**: `EnableFileDrop` with `DisableWebViewDrop: true` so the host handles file drops (see [SYSTEM_DESIGN.md](../SYSTEM_DESIGN.md) for frontend routing)
 - **Assets**: Frontend build embedded via `//go:embed`
 - **Menu**: Custom menu with AppMenu, Settings, Edit, Window
 - **macOS About**: Custom About dialog information

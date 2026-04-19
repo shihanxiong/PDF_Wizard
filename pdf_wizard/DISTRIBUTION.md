@@ -1,6 +1,6 @@
 # PDF Wizard Distribution Guide
 
-This guide explains how to build and distribute PDF Wizard for macOS and Windows platforms.
+Step-by-step packaging for maintainers (DMG, ZIP, Windows binaries, NSIS). Prerequisites and the global documentation index are in the repository **[README.md](../README.md)**; architecture notes live in **[SYSTEM_DESIGN.md](../SYSTEM_DESIGN.md)**. This file intentionally holds the **release build** detail so it is not duplicated in the root README.
 
 ## Building for Distribution
 

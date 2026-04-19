@@ -4,6 +4,9 @@
 # Logs
 *.log
 
+# Wails / Go build output
+pdf_wizard/build/
+
 # Node.js / Frontend
 pdf_wizard/frontend/node_modules
 pdf_wizard/frontend/dist

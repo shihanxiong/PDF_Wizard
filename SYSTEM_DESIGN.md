@@ -4,6 +4,21 @@
 
 PDF Wizard is a cross-platform desktop application built with Wails v2 that provides PDF manipulation capabilities, including merging, splitting, rotating, and watermarking PDF files. The application uses a Go backend for file operations and a React/TypeScript frontend with Material-UI for the user interface.
 
+## Documentation map
+
+Avoid duplicating long procedures across files. Use this table to find the **single** place each topic is maintained:
+
+| Topic | Canonical document |
+| --- | --- |
+| Product overview, downloads, install, troubleshooting | [README.md](README.md) |
+| Release builds (DMG, ZIP, `build-dist.sh`) | [pdf_wizard/DISTRIBUTION.md](pdf_wizard/DISTRIBUTION.md) |
+| Commands from `pdf_wizard/` (`wails dev`, quick test entry points) | [pdf_wizard/README.md](pdf_wizard/README.md) |
+| Native menu, `app.go`, config file, models, Wails `options.App` | [pdf_wizard/DESIGN.md](pdf_wizard/DESIGN.md) |
+| Tab components and Settings dialog UI | [pdf_wizard/frontend/src/components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md) |
+| File/PDF services (`FileService`, `PDFService`) | [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md) |
+| i18n layout, `useI18n`, adding a language | [pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md) |
+| **This file** | End-to-end architecture, UI patterns, watermark spec, cross-cutting technical notes |
+
 **Supported Platforms:**
 
 - macOS (Intel and Apple Silicon - universal binary)
@@ -13,10 +28,10 @@ PDF Wizard is a cross-platform desktop application built with Wails v2 that prov
 
 ### Technology Stack
 
-- **Backend**: Go 1.24.0 with Wails v2.11.0
+- **Backend**: Go 1.24.0 with Wails v2.12.0
 - **Frontend**: React 18+ with TypeScript, Material-UI (MUI) v7
 - **PDF Processing**: `github.com/pdfcpu/pdfcpu v0.11.1` - Native Go PDF library
-- **Build Tool**: Wails CLI v2.11.0
+- **Build Tool**: Wails CLI v2.12.0 (align with `github.com/wailsapp/wails/v2 v2.12.0` in `go.mod`)
 - **UI Framework**: Material-UI
 - **Drag and Drop**: `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities` for file reordering (replaced deprecated react-beautiful-dnd)
 - **Internationalization**: Custom i18n system supporting 12 languages (English, Chinese Simplified, Chinese Traditional, Arabic, French, Japanese, Hindi, Spanish, Portuguese, Russian, Korean, German)
@@ -39,7 +54,9 @@ pdf_wizard/
 │   └── types.go           # PDFMetadata, SplitDefinition, RotateDefinition, WatermarkDefinition
 ├── frontend/
 │   ├── src/
+│   │   ├── main.tsx       # React entry; wraps App in I18nProvider
 │   │   ├── App.tsx        # Main application component with tab navigation
+│   │   ├── hooks/         # Shared hooks (PDF drop, errors, processing state, output directory)
 │   │   ├── components/    # React components
 │   │   │   ├── MergeTab.tsx
 │   │   │   ├── SplitTab.tsx
@@ -49,9 +66,13 @@ pdf_wizard/
 │   │   │   └── DESIGN.md  # Components design
 │   │   ├── types/         # TypeScript type definitions
 │   │   └── utils/         # Utility functions
+│   │       ├── constants.ts # MAIN_TAB_IDS / MainTabId; shared UI constants
 │   │       ├── formatters.ts
 │   │       └── i18n/       # Internationalization utilities
-│   │           ├── index.ts
+│   │           ├── index.ts           # Barrel exports (useI18n, types, getNativeLanguageName)
+│   │           ├── I18nProvider.tsx   # React context; current language and t()
+│   │           ├── catalog.ts        # Merged translation map and lookup helpers
+│   │           ├── constants.ts      # SUPPORTED_LANGUAGES, isValidLanguage
 │   │           ├── types.ts
 │   │           ├── en.ts       # English translations
 │   │           ├── zh.ts       # Chinese Simplified translations
@@ -98,7 +119,7 @@ The application features a tabbed interface with four main tabs:
 Drag and drop file handling is implemented at the App level to work anywhere on the window:
 
 - A single `OnFileDrop` handler is registered at the App component level with `useDropTarget=false` to work anywhere on the window
-- The handler routes dropped files to the appropriate tab based on the currently active tab (using refs to track current tab)
+- The handler routes dropped files using **stable tab ids** (`merge`, `split`, `rotate`, `watermark`) defined by `MAIN_TAB_IDS` in `utils/constants.ts`. `activeTabIdRef` holds the current tab id; each tab registers a handler in `dropHandlersRef`, a `Partial<Record<MainTabId, ...>>` keyed by that id (not by numeric tab index)
 - Each tab component registers its own drop handler via a callback prop
 - Cross-platform compatibility:
   - **Windows**: `DisableWebViewDrop: true` in Wails config prevents WebView2 from intercepting drag-and-drop events
@@ -108,114 +129,11 @@ Drag and drop file handling is implemented at the App level to work anywhere on 
 
 ### Internationalization (i18n)
 
-The application supports multiple languages through a custom internationalization system:
+The application supports **12 languages** through a custom i18n stack: per-language modules merged in `catalog.ts`, wrapped by `I18nProvider` in `main.tsx`, and consumed via `useI18n()` (`t`, `setLanguage`). Locale codes, `SUPPORTED_LANGUAGES`, and how to add a language are maintained in **[pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md)**.
 
-- **Supported Languages**: 12 languages total
-  - English (en)
-  - Chinese Simplified (zh)
-  - Chinese Traditional (zh-TW)
-  - Arabic (ar)
-  - French (fr)
-  - Japanese (ja)
-  - Hindi (hi)
-  - Spanish (es)
-  - Portuguese (pt)
-  - Russian (ru)
-  - Korean (ko)
-  - German (de)
-- **Language Selection**: Available through the Settings dialog (accessible via menu bar)
-- **Language Persistence**: User's language preference is saved to a configuration file in the user's config directory
-- **Translation System**: All UI text uses translation keys accessed via the `t()` function from `utils/i18n`
-- **Dynamic Updates**: UI updates immediately when language is changed
-- **Default Language**: English (en) is the default if no preference is set
-- **Native Language Names**: Language options are displayed in their native script for better user experience
+### Native menu, window options, config file, and Settings
 
-For detailed i18n implementation, see [`frontend/src/utils/i18n/DESIGN.md`](frontend/src/utils/i18n/DESIGN.md).
-
-#### Settings Dialog
-
-- Accessible via the "Settings" menu item in the application menu bar
-- Allows users to select from 12 supported languages
-- Language options are displayed in their native script (e.g., "简体中文", "繁體中文", "한국어", "Deutsch")
-- Changes are saved immediately and persist across application restarts
-- Uses Material-UI Dialog component for consistent UI
-- Language preference is loaded on application startup
-- Frontend listens for "show-settings" event from backend to open dialog
-
-#### Menu Configuration
-
-The application menu is configured in `main.go`:
-
-```go
-// Create menu with AppMenu (includes "About PDF Wizard" automatically)
-appMenu := menu.NewMenu()
-appMenu.Append(menu.AppMenu())
-
-// Add Settings menu item
-settingsSubMenu := menu.NewMenu()
-settingsSubMenu.Append(menu.Text("Settings", nil, func(_ *menu.CallbackData) {
-    app.EmitSettingsEvent()
-}))
-appMenu.Append(menu.SubMenu("Settings", settingsSubMenu))
-
-appMenu.Append(menu.EditMenu())
-appMenu.Append(menu.WindowMenu())
-```
-
-- The `menu.AppMenu()` function automatically includes "About PDF Wizard" and other standard macOS app menu items
-- Settings is added as a separate menu item (not inside AppMenu)
-- Settings menu item triggers `EmitSettingsEvent()` which emits a "show-settings" event
-- Frontend listens for this event using `EventsOn('show-settings', ...)` and opens the Settings dialog
-- Menu is native on macOS (appears in the menu bar at the top of the screen)
-
-#### Application Configuration
-
-The application is configured with the following options in `main.go`:
-
-```go
-&options.App{
-    Title:     "PDF Wizard",
-    Width:     1024,
-    Height:    900,
-    MinWidth:  800,
-    MinHeight: 600,
-    BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
-    DragAndDrop: &options.DragAndDrop{
-        EnableFileDrop:     true,
-        DisableWebViewDrop: true, // Prevents WebView interference on Windows and macOS
-    },
-    Mac: &mac.Options{
-        About: &mac.AboutInfo{
-            Title:   "PDF Wizard",
-            Message: "A modern PDF toolkit built with Wails v2\n\nAuthor: Hanxiong Shi\nVersion 1.0.0\nCopyright © 2026",
-        },
-    },
-}
-```
-
-- **Window Size**: 1024x900 pixels (minimum 800x600)
-- **Background Color**: Dark theme (RGB: 27, 38, 54)
-- **Drag and Drop**: Enabled with `DisableWebViewDrop: true` for cross-platform compatibility
-- **macOS About Dialog**: Custom About information with author, version, and copyright
-
-For detailed menu and application configuration, see [`DESIGN.md`](DESIGN.md).
-
-#### Configuration File
-
-Language preference is stored in a JSON configuration file:
-
-- **Location**: `<UserConfigDir>/PDF Wizard/pdf_wizard_config.json`
-  - On macOS: `~/Library/Application Support/PDF Wizard/pdf_wizard_config.json`
-  - On Windows: `%AppData%\PDF Wizard\pdf_wizard_config.json`
-  - On Linux: `~/.config/PDF Wizard/pdf_wizard_config.json`
-- **Structure**:
-  ```json
-  {
-    "language": "en"
-  }
-  ```
-- **Default**: If the file doesn't exist or is invalid, the default language is "en" (English)
-- **Persistence**: The config directory is created automatically if it doesn't exist
+Menu construction, Wails `options.App`, the JSON config path, and `GetLanguage` / `SetLanguage` / `EmitSettingsEvent` are documented in **[pdf_wizard/DESIGN.md](pdf_wizard/DESIGN.md)**. Settings dialog layout is in **[pdf_wizard/frontend/src/components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md)**.
 
 ## Component Design
 
@@ -228,7 +146,7 @@ The application consists of four main tab components:
 
 Each component handles its own state, file selection, validation, and processing.
 
-For detailed component design and implementation, see [`frontend/src/components/DESIGN.md`](frontend/src/components/DESIGN.md).
+For detailed component design and implementation, see [pdf_wizard/frontend/src/components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md).
 
 ## Backend Services
 
@@ -250,8 +168,8 @@ The backend uses a service-based architecture with clear separation of concerns:
 
 #### MergePDFs
 
-- **Pre-validation**: Validates each PDF can be read using `api.ReadContextFile()` before merging to identify problematic files
-- **Font encoding handling**: Provides specific error messages for font encoding issues (e.g., NULL encoding), suggesting PDF repair
+- **Merge-first, then diagnose**: Attempts `api.MergeCreateFile()` first (pdfcpu reads inputs as part of the merge). If merge fails, `mergeDiagnoseInputs()` runs `api.ReadContextFile()` on each input in order to report which file fails and why (e.g., font encoding / NULL encoding), suggesting PDF repair where applicable
+- **Font encoding handling**: Diagnosis path surfaces encoding-related read errors with filename and index
 - **Output file handling**: Removes existing output file before creating new one to avoid pdfcpu overwrite issues
 - **Error messages**: Includes filename and file index in error messages for better debugging
 
@@ -269,7 +187,7 @@ The backend uses a service-based architecture with clear separation of concerns:
 - **Opacity simulation**: Since pdfcpu doesn't support alpha channel, opacity is simulated by blending color with white
 - **Helper functions**: Includes specialized functions for page range parsing, position conversion, color parsing, and opacity adjustment
 
-For detailed service implementation, see [`services/DESIGN.md`](services/DESIGN.md).
+For detailed service implementation, see [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md).
 
 ## Application-Level Design
 
@@ -281,7 +199,7 @@ The application-level design covers:
 - Event communication between menu and frontend
 - Data models (`models/types.go`)
 
-For detailed application-level design, see [`DESIGN.md`](DESIGN.md).
+For detailed application-level design, see [pdf_wizard/DESIGN.md](pdf_wizard/DESIGN.md).
 
 ## Technical Considerations
 
@@ -305,13 +223,13 @@ For detailed application-level design, see [`DESIGN.md`](DESIGN.md).
 - TypeScript
 - Wails runtime bindings
 - `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities` - For drag-and-drop file reordering (replaced deprecated react-beautiful-dnd)
-- Custom i18n system (`utils/i18n/`) - For internationalization (modular structure with separate translation files for 12 languages)
+- Custom i18n system (`utils/i18n/`) - For internationalization (per-language modules, `catalog.ts` merge, React `I18nProvider` / `useI18n` for 12 languages)
 
 ### Error Handling
 
 - Validate PDF files before processing (file existence, PDF format, readability)
 - Handle file access errors gracefully with descriptive messages
-- **Font encoding validation**: Merge operation validates each PDF can be read before merging, with specific error messages for font encoding issues (e.g., NULL encoding)
+- **Font encoding / read errors on merge**: After a failed merge, per-input `ReadContextFile` diagnosis yields specific messages (e.g., NULL encoding) tied to filename and index
 - **Page range validation**: All operations validate page ranges against PDF page count
 - **Output file handling**: Existing output files are removed before creating new ones to avoid pdfcpu overwrite issues
 - **Temporary file management**: Rotate and watermark operations use temporary files to avoid in-place modification issues, with automatic cleanup
@@ -548,27 +466,7 @@ func (a *App) ApplyWatermark(
 
 ### Internationalization
 
-All translation keys have been implemented and are available in all 12 supported languages:
-
-- `watermarkTab` - "Watermark PDF"
-- `selectPDFFileWatermark` - "Select PDF File"
-- `watermarkText` - "Watermark Text"
-- `fontSize` - "Font Size"
-- `fontColor` - "Font Color"
-- `opacity` - "Opacity"
-- `rotation` - "Rotation"
-- `position` - "Position"
-- `fontFamily` - "Font Family"
-- `pageRange` - "Page Range"
-- `allPages` - "All Pages"
-- `specificPages` - "Specific Pages"
-- `pages` - "Pages"
-- `applyWatermark` - "Apply Watermark"
-- `applying` - "Applying watermark..."
-- `watermarkAppliedSuccessfully` - "Watermark applied successfully! Output:"
-- `watermarkFailed` - "Watermark failed:"
-- Position options (center, top-left, top-center, etc.)
-- **Font name translations**: All font names are translated and displayed in the user's selected language (e.g., "SimSun (宋体)" in English, "宋体" in Chinese)
+Watermark strings use the same **`useI18n()`** / `Translations` pipeline as the rest of the app; keys live in **`frontend/src/utils/i18n/types.ts`** and each `*.ts` locale file. Adding or renaming keys is covered in [pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md).
 
 #### Language-Specific Font Selection
 
@@ -611,33 +509,17 @@ The watermark feature includes **intelligent font selection** based on the appli
 
 ## Testing
 
-PDF Wizard includes comprehensive testing at multiple levels:
-
-### Backend Integration Tests
-
-- **Location**: Go test files alongside service implementations
-- **Coverage**: PDF operations (merge, split, rotate, watermark), file metadata, page count, error handling, language management
-- **Run**: `go test -v ./...` from the `pdf_wizard` directory
-- **Test PDF Generation**: Backend utilities (`createTestPDF`, `createMultiPageTestPDF`) generate minimal valid PDF files for testing
-
-### Frontend E2E Tests
-
-- **Framework**: Playwright
-- **Test Files**: Organized by functionality (app, components, tabs, i18n)
-- **Test PDF**: Uses `e2e/helpers/test.pdf` for testing PDF operations
-- **Mocking**: Wails runtime and Go bindings are mocked for UI-only testing
-- **CI/CD**: GitHub Actions workflow runs tests in parallel using a matrix strategy
-
-For detailed E2E testing information, including test structure, configuration, and CI/CD setup, see [`frontend/e2e/README.md`](frontend/e2e/README.md).
+- **Backend** (from `pdf_wizard`): `go test -v ./...`. Filter: `go test -v -run TestName ./...`. Coverage: `go test -v -coverprofile=coverage.out ./...` then `go tool cover -func=coverage.out` or `go tool cover -html=coverage.out`.
+- **Frontend E2E** (Playwright): `cd frontend && npm run test:e2e`. Structure, fixtures, and CI: **[pdf_wizard/frontend/e2e/README.md](pdf_wizard/frontend/e2e/README.md)**.
 
 ## Design Documentation
 
-For detailed design information, refer to the following documents:
+Use the [Documentation map](#documentation-map) at the top of this file. Quick links:
 
-- **[Application Design](DESIGN.md)** - Main entry point, app wrapper, menu configuration, models, and configuration management
-- **[Components Design](frontend/src/components/DESIGN.md)** - Detailed design for MergeTab, SplitTab, RotateTab, WatermarkTab, and SettingsDialog components
-- **[Services Design](services/DESIGN.md)** - Backend service layer architecture and implementation (FileService, PDFService)
-- **[i18n Design](frontend/src/utils/i18n/DESIGN.md)** - Internationalization system architecture and usage
+- [pdf_wizard/DESIGN.md](pdf_wizard/DESIGN.md) — main entry, menu, config, models
+- [pdf_wizard/frontend/src/components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md) — tab components
+- [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md) — services layer
+- [pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md) — i18n
 
 ## Notes
 
@@ -650,11 +532,7 @@ For detailed design information, refer to the following documents:
 - Service-based architecture for separation of concerns
 - pdfcpu library for all PDF processing operations (merge, split, rotate, watermark)
 - @dnd-kit library for drag-and-drop file reordering in Merge tab (modern replacement for deprecated react-beautiful-dnd)
-- Custom i18n system for internationalization (12 languages: English, Chinese Simplified, Chinese Traditional, Arabic, French, Japanese, Hindi, Spanish, Portuguese, Russian, Korean, German)
-  - Modular structure: `utils/i18n/` directory with separate translation files for each language
-  - Language preference stored in JSON config file: `<UserConfigDir>/PDF Wizard/pdf_wizard_config.json`
-  - Language validation in both frontend (TypeScript) and backend (Go) for consistency
-  - Native language names displayed in language selector for better UX
+- Custom i18n (12 languages): see [pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md); config file paths in [pdf_wizard/DESIGN.md](pdf_wizard/DESIGN.md)
 - Settings accessible via application menu bar (native menu on macOS)
   - Settings menu is separate from AppMenu (which includes "About PDF Wizard" automatically)
 - Wails Events API used for communication between menu and frontend (show-settings event)

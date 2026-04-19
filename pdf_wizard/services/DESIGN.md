@@ -264,6 +264,8 @@ type RotateDefinition struct {
 
 ## Dependencies
 
+App-wide Go and npm dependencies are summarized in [SYSTEM_DESIGN.md § Technical considerations](../SYSTEM_DESIGN.md#technical-considerations). This section lists only what **services** import directly.
+
 ### Go Libraries
 
 - `github.com/pdfcpu/pdfcpu/pkg/api` - PDF processing library
