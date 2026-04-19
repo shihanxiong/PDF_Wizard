@@ -1,7 +1,9 @@
 package services
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -75,6 +77,46 @@ startxref
 %%EOF`
 
 	return os.WriteFile(path, []byte(pdfContent), 0644)
+}
+
+// createOpaqueCoverPagePDF writes a single-page PDF that fills the media box with an
+// opaque white rectangle before painting body text "(OpaqueBody)". A watermark drawn
+// under this content (pdfcpu onTop=false) is fully covered and invisible; stamp mode
+// (onTop=true) must paint the watermark after this stream so tests can assert order.
+func createOpaqueCoverPagePDF(path string) error {
+	// Stream body: no trailing newline after ET; Length counts bytes inside the stream
+	// (same convention as createTestPDF).
+	streamInner := "1 1 1 rg\n0 0 612 792 re\nf\nBT\n/F1 12 Tf\n100 400 Td\n(OpaqueBody) Tj\nET"
+	head := "%PDF-1.4\n"
+	obj1 := "1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n"
+	obj2 := "2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n"
+	obj3 := "3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/MediaBox [0 0 612 792]\n/Resources <<\n/Font <<\n/F1 4 0 R\n>>\n>>\n/Contents 5 0 R\n>>\nendobj\n"
+	obj4 := "4 0 obj\n<<\n/Type /Font\n/Subtype /Type1\n/BaseFont /Helvetica\n>>\nendobj\n"
+	obj5 := fmt.Sprintf("5 0 obj\n<<\n/Length %d\n>>\nstream\n%s\nendstream\nendobj\n", len(streamInner), streamInner)
+
+	var buf bytes.Buffer
+	buf.WriteString(head)
+	offsets := make([]int64, 6)
+	offsets[1] = int64(buf.Len())
+	buf.WriteString(obj1)
+	offsets[2] = int64(buf.Len())
+	buf.WriteString(obj2)
+	offsets[3] = int64(buf.Len())
+	buf.WriteString(obj3)
+	offsets[4] = int64(buf.Len())
+	buf.WriteString(obj4)
+	offsets[5] = int64(buf.Len())
+	buf.WriteString(obj5)
+
+	xrefStart := buf.Len()
+	buf.WriteString("xref\n0 6\n0000000000 65535 f \n")
+	for i := 1; i <= 5; i++ {
+		fmt.Fprintf(&buf, "%010d 00000 n \n", offsets[i])
+	}
+	// fmt: %%%% -> literal %% in output (required PDF end-of-file marker).
+	fmt.Fprintf(&buf, "trailer\n<<\n/Size 6\n/Root 1 0 R\n>>\nstartxref\n%d\n%%%%EOF\n", xrefStart)
+
+	return os.WriteFile(path, buf.Bytes(), 0644)
 }
 
 // setupTestDir creates a temporary directory for tests
