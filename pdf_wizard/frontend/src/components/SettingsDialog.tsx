@@ -13,16 +13,16 @@ import {
   SelectChangeEvent,
 } from '@mui/material';
 import { GetLanguage, SetLanguage } from '../../wailsjs/go/main/App';
-import { t, setLanguage, getLanguage, getNativeLanguageName, type Language } from '../utils/i18n';
+import { useI18n, getNativeLanguageName, type Language } from '../utils/i18n';
 import { SUPPORTED_LANGUAGES, isValidLanguage } from '../utils/i18n/constants';
 
 interface SettingsDialogProps {
   open: boolean;
   onClose: () => void;
-  onLanguageChange: (language: Language) => void;
 }
 
-export const SettingsDialog = ({ open, onClose, onLanguageChange }: SettingsDialogProps) => {
+export const SettingsDialog = ({ open, onClose }: SettingsDialogProps) => {
+  const { t, setLanguage } = useI18n();
   const [selectedLanguage, setSelectedLanguage] = useState<Language>('en');
   const [loading, setLoading] = useState(false);
 
@@ -54,7 +54,6 @@ export const SettingsDialog = ({ open, onClose, onLanguageChange }: SettingsDial
     try {
       await SetLanguage(selectedLanguage);
       setLanguage(selectedLanguage);
-      onLanguageChange(selectedLanguage);
       onClose();
     } catch (err) {
       console.error('Failed to save language:', err);

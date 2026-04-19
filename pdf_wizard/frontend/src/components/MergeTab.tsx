@@ -23,7 +23,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { SelectPDFFiles, GetFileMetadata, MergePDFs } from '../../wailsjs/go/main/App';
 import { SelectedFile } from '../types';
 import { formatFileSize, formatDate, convertToSelectedFile } from '../utils/formatters';
-import { t } from '../utils/i18n';
+import { useI18n } from '../utils/i18n';
 import { usePDFDrop } from '../hooks/usePDFDrop';
 import { useOutputDirectory } from '../hooks/useOutputDirectory';
 import { useErrorHandler } from '../hooks/useErrorHandler';
@@ -43,6 +43,7 @@ interface SortableFileItemProps {
 
 // Sortable file item component using @dnd-kit
 const SortableFileItem = ({ file, index, onRemove }: SortableFileItemProps) => {
+  const { t } = useI18n();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: file.path,
   });
@@ -114,6 +115,7 @@ const SortableFileItem = ({ file, index, onRemove }: SortableFileItemProps) => {
 };
 
 export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
+  const { t } = useI18n();
   const [files, setFiles] = useState<SelectedFile[]>([]);
   const [outputFilename, setOutputFilename] = useState<string>('merged');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -138,8 +140,7 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
       });
     };
     onFileDrop(handleDroppedFiles);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [t, handlePDFDrop, onFileDrop, setError]);
 
   const handleSelectFiles = async () => {
     try {

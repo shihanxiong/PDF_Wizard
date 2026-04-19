@@ -1,49 +1,7 @@
-import { Language, Translations } from './types';
-import { en } from './en';
-import { zh } from './zh';
-import { zhTW } from './zh-TW';
-import { ar } from './ar';
-import { fr } from './fr';
-import { ja } from './ja';
-import { hi } from './hi';
-import { es } from './es';
-import { pt } from './pt';
-import { ru } from './ru';
-import { ko } from './ko';
-import { de } from './de';
+import type { Language } from './types';
 
-const translations: Record<Language, Translations> = {
-  en,
-  zh,
-  'zh-TW': zhTW,
-  ar,
-  fr,
-  ja,
-  hi,
-  es,
-  pt,
-  ru,
-  ko,
-  de,
-};
-
-let currentLanguage: Language = 'en';
-
-export const setLanguage = (lang: Language) => {
-  currentLanguage = lang;
-};
-
-export const getLanguage = (): Language => {
-  return currentLanguage;
-};
-
-export const t = (key: keyof Translations): string => {
-  return translations[currentLanguage]?.[key] || translations.en[key] || key;
-};
-
-export const getTranslations = (): Translations => {
-  return translations[currentLanguage] || translations.en;
-};
+export { lookupTranslation, getTranslationsFor } from './catalog';
+export { I18nProvider, useI18n, type I18nContextValue } from './I18nProvider';
 
 // getNativeLanguageName returns the native name of a language
 // This is used in language selectors to show the language in its own name
@@ -65,5 +23,4 @@ export const getNativeLanguageName = (lang: Language): string => {
   return nativeNames[lang] || lang;
 };
 
-// Re-export types for convenience
-export type { Language, Translations };
+export type { Language, Translations } from './types';

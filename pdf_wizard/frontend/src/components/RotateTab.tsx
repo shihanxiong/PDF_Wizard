@@ -21,7 +21,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { SelectPDFFile, GetPDFMetadata, RotatePDF } from '../../wailsjs/go/main/App';
 import { SelectedPDF, RotateDefinition } from '../types';
 import { models } from '../../wailsjs/go/models';
-import { t } from '../utils/i18n';
+import { useI18n } from '../utils/i18n';
 import { MAX_ROTATIONS } from '../utils/constants';
 import { usePDFDrop } from '../hooks/usePDFDrop';
 import { useOutputDirectory } from '../hooks/useOutputDirectory';
@@ -36,6 +36,7 @@ interface RotateTabProps {
 }
 
 export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
+  const { t } = useI18n();
   const [selectedPDF, setSelectedPDF] = useState<SelectedPDF | null>(null);
   const [rotations, setRotations] = useState<RotateDefinition[]>([]);
   const [outputFilename, setOutputFilename] = useState<string>('rotated');
@@ -62,8 +63,7 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
       });
     };
     onFileDrop(handleDroppedPDF);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [t, handlePDFDrop, onFileDrop, setError]);
 
   const handleSelectPDF = async () => {
     try {

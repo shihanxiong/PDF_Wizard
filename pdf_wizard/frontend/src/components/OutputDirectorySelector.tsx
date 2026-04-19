@@ -1,6 +1,6 @@
 import { Box, Button, Typography } from '@mui/material';
 import FolderIcon from '@mui/icons-material/Folder';
-import { t, type Translations } from '../utils/i18n';
+import { useI18n, type Translations } from '../utils/i18n';
 
 interface OutputDirectorySelectorProps {
   directory: string;
@@ -13,6 +13,7 @@ interface OutputDirectorySelectorProps {
  * Shared component for output directory selection with display
  */
 export const OutputDirectorySelector = ({ directory, onSelect, labelKey, disabled }: OutputDirectorySelectorProps) => {
+  const { t } = useI18n();
   return (
     <Box sx={{ mb: 2 }}>
       <Button variant="outlined" startIcon={<FolderIcon />} onClick={onSelect} sx={{ mb: 1 }} disabled={disabled}>
