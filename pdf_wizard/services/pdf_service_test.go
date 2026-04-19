@@ -238,6 +238,9 @@ func TestPDFService_RotatePDF(t *testing.T) {
 	}
 }
 
+// ApplyWatermark integration: service returns success and writes a non-empty PDF.
+// Stamp-on-top (visible over opaque content) is enforced in ApplyWatermark via
+// api.TextWatermark(..., onTop=true); we do not assert on pdfcpu’s internal output here.
 func TestPDFService_ApplyWatermark(t *testing.T) {
 	fileService := NewFileService(context.Background())
 	service := NewPDFService(fileService)
