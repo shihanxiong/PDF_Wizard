@@ -90,30 +90,33 @@ func (s *FileService) GetFileMetadata(path string) (models.PDFMetadata, error) {
 
 // GetPDFPageCount returns the total number of pages in a PDF file
 func (s *FileService) GetPDFPageCount(path string) (int, error) {
-	// Validate file exists and is a PDF
 	if err := validatePDFFile(path); err != nil {
 		return 0, err
 	}
+	return s.getPDFPageCountForPath(path)
+}
 
-	// Use pdfcpu to read the PDF and get page count
+// getPDFPageCountForPath reads page count via pdfcpu. Caller must have already
+// validated the path (e.g. validatePDFFile or statPDFFile + validatePDFFileInfo).
+func (s *FileService) getPDFPageCountForPath(path string) (int, error) {
 	ctx, err := api.ReadContextFile(path)
 	if err != nil {
 		return 0, fmt.Errorf("failed to read PDF: %w", err)
 	}
-
-	pageCount := ctx.PageCount
-	return pageCount, nil
+	return ctx.PageCount, nil
 }
 
 // GetPDFMetadata retrieves PDF file metadata including page count
 func (s *FileService) GetPDFMetadata(path string) (models.PDFMetadata, error) {
-	info, err := os.Stat(path)
+	info, err := statPDFFile(path)
 	if err != nil {
 		return models.PDFMetadata{}, err
 	}
+	if err := validatePDFFileInfo(path, info); err != nil {
+		return models.PDFMetadata{}, err
+	}
 
-	// Get page count
-	pageCount, err := s.GetPDFPageCount(path)
+	pageCount, err := s.getPDFPageCountForPath(path)
 	if err != nil {
 		return models.PDFMetadata{}, fmt.Errorf("failed to get page count: %w", err)
 	}
@@ -123,7 +126,7 @@ func (s *FileService) GetPDFMetadata(path string) (models.PDFMetadata, error) {
 		Name:         filepath.Base(path),
 		Size:         info.Size(),
 		LastModified: info.ModTime().Format(time.RFC3339),
-		IsPDF:        isPDFFile(path),
+		IsPDF:        true,
 		TotalPages:   pageCount,
 	}, nil
 }

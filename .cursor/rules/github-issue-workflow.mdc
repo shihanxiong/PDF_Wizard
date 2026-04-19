@@ -1,5 +1,5 @@
 ---
-description: Move GitHub issue to project Todo before implementing
+description: Move GitHub issue to project In Progress before implementing
 alwaysApply: true
 ---
 
@@ -7,14 +7,14 @@ alwaysApply: true
 
 When asked to **implement**, **fix**, or **close** a GitHub issue by changing code, do this **before** editing the codebase or opening a PR:
 
-## 1. Move the issue to **Todo** on the project board
+## 1. Move the issue to **In Progress** on the project board
 
-Put the issue in the **Todo** column of the relevant **GitHub Project** (same org/user as the repo) so the board reflects that this issue is the active target.
+Put the issue in the **In Progress** column of the relevant **GitHub Project** (same org/user as the repo) so the board shows active work on that issue.
 
 Use whichever applies:
 
-- **GitHub web UI:** Projects → open the board → drag the issue card into **Todo**, or set **Status** to **Todo** on the issue’s project fields.
-- **GitHub CLI:** If the issue is already linked to a project, update its **Status** field to **Todo** via `gh project item-edit` (you need the project item id, project id, Status field id, and Todo option id from `gh project view` / `gh project field-list` for that project). If the issue is not on the project yet, add it with `gh project item-add`, then set **Todo**.
+- **GitHub web UI:** Projects → open the board → drag the issue card into **In Progress**, or set **Status** to **In Progress** on the issue’s project fields.
+- **GitHub CLI:** If the issue is already linked to a project, update its **Status** field to **In Progress** via `gh project item-edit` (you need the project item id, project id, Status field id, and **In Progress** single-select option id from `gh project view` / `gh project field-list` for that project). If the issue is not on the project yet, add it with `gh project item-add`, then set **In Progress**.
 
 For this repository, issues are often tracked on the owner’s GitHub Project (e.g. **PDF_tools**); use the project that the user or repo actually uses.
 
