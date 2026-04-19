@@ -34,6 +34,7 @@ var (
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store">
 <title>{{.Title}}</title>
 <style>
 :root{--primary:#1976d2;--primary-hover:#1565c0;--on-primary:#fff;--radius:4px}
@@ -89,6 +90,11 @@ label.btn{margin:0}
   }
   input.addEventListener('change', update);
 })();
+window.addEventListener('pageshow', function (ev) {
+  if (ev.persisted) {
+    window.location.reload();
+  }
+});
 </script>
 </body>
 </html>`))
@@ -98,6 +104,7 @@ label.btn{margin:0}
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store">
 <title>{{.DoneTitle}}</title>
 <style>
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:1rem;max-width:28rem;margin:0 auto;background:#fafafa;color:rgba(0,0,0,.87)}
@@ -121,6 +128,7 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:1r
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store">
 <title>{{.SessionClosedTitle}}</title>
 <style>
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:1rem;max-width:28rem;margin:0 auto;background:#fafafa;color:rgba(0,0,0,.87)}
@@ -245,6 +253,12 @@ func normalizePhoneCopy(c models.PhoneUploadPageCopy) models.PhoneUploadPageCopy
 		out.Dir = def.Dir
 	}
 	return out
+}
+
+// setPhonePageNoStore discourages caching of phone HTML so Back/Fetch always revalidates session state.
+func setPhonePageNoStore(w http.ResponseWriter) {
+	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+	w.Header().Set("Pragma", "no-cache")
 }
 
 func writePhoneHTML(t *template.Template, page *models.PhoneUploadPageCopy) ([]byte, error) {
@@ -493,6 +507,7 @@ func newPhoneUploadHandler(token, dir string, onUploaded func(paths []string), p
 			}
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Header().Set("Content-Language", page.Lang)
+			setPhonePageNoStore(w)
 			b, err := writePhoneHTML(tmplPhoneOK, page)
 			if err != nil {
 				http.Error(w, "Server error", http.StatusInternalServerError)
@@ -528,6 +543,7 @@ func newPhoneUploadHandler(token, dir string, onUploaded func(paths []string), p
 		case http.MethodGet:
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Header().Set("Content-Language", page.Lang)
+			setPhonePageNoStore(w)
 			if sessionDone.Load() {
 				b, err := writePhoneHTML(tmplPhoneSessionClosed, page)
 				if err != nil {
@@ -547,6 +563,7 @@ func newPhoneUploadHandler(token, dir string, onUploaded func(paths []string), p
 			if sessionDone.Load() {
 				w.Header().Set("Content-Type", "text/html; charset=utf-8")
 				w.Header().Set("Content-Language", page.Lang)
+				setPhonePageNoStore(w)
 				w.WriteHeader(http.StatusGone)
 				b, err := writePhoneHTML(tmplPhoneSessionClosed, page)
 				if err != nil {
@@ -569,6 +586,7 @@ func newPhoneUploadHandler(token, dir string, onUploaded func(paths []string), p
 			if len(files) == 0 {
 				w.Header().Set("Content-Type", "text/html; charset=utf-8")
 				w.Header().Set("Content-Language", page.Lang)
+				setPhonePageNoStore(w)
 				w.WriteHeader(http.StatusBadRequest)
 				b, err := writePhoneHTML(tmplPhoneErrNoFiles, page)
 				if err != nil {
@@ -581,6 +599,7 @@ func newPhoneUploadHandler(token, dir string, onUploaded func(paths []string), p
 			if len(files) > PhoneUploadMaxFilesPerSession {
 				w.Header().Set("Content-Type", "text/html; charset=utf-8")
 				w.Header().Set("Content-Language", page.Lang)
+				setPhonePageNoStore(w)
 				w.WriteHeader(http.StatusBadRequest)
 				b, err := writePhoneHTML(tmplPhoneErrTooMany, page)
 				if err != nil {
