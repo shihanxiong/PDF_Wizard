@@ -17,7 +17,7 @@ test.describe('PDF Wizard - UI Components', () => {
 
   test('should allow user to interact with filename input field', async ({ page }) => {
     // Get the active merge tab panel
-    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-merge');
 
     // Wait for the input field to be visible and ready (scoped to merge tab panel)
     const filenameInput = mergeTabPanel.locator('input[placeholder="merged"]');
@@ -38,13 +38,13 @@ test.describe('PDF Wizard - UI Components', () => {
 
   test('should display output filename input in all tabs', async ({ page }) => {
     // Verify Merge tab has output filename input
-    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-merge');
     await expect(mergeTabPanel.getByText('Output Filename:')).toBeVisible();
     await expect(mergeTabPanel.locator('input[placeholder="merged"]')).toBeVisible();
 
     // Switch to Rotate tab
     await page.getByRole('tab', { name: 'Rotate PDF' }).click();
-    const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-2');
+    const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-rotate');
     await expect(rotateTabPanel).toBeVisible();
 
     // Verify Rotate tab has output filename input
@@ -53,7 +53,7 @@ test.describe('PDF Wizard - UI Components', () => {
   });
 
   test('should disable action buttons when required fields are missing', async ({ page }) => {
-    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-merge');
 
     // Verify Merge button is disabled when no files are selected
     const mergeButton = mergeTabPanel.locator('button').filter({ hasText: 'Merge PDF' });
@@ -61,7 +61,7 @@ test.describe('PDF Wizard - UI Components', () => {
 
     // Switch to Split tab
     await page.getByRole('tab', { name: 'Split PDF' }).click();
-    const splitTabPanel = page.locator('#pdf-wizard-tabpanel-1');
+    const splitTabPanel = page.locator('#pdf-wizard-tabpanel-split');
     await expect(splitTabPanel).toBeVisible();
 
     // Verify Split button is disabled when no PDF is selected
@@ -70,7 +70,7 @@ test.describe('PDF Wizard - UI Components', () => {
 
     // Switch to Rotate tab
     await page.getByRole('tab', { name: 'Rotate PDF' }).click();
-    const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-2');
+    const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-rotate');
     await expect(rotateTabPanel).toBeVisible();
 
     // Verify Rotate button is disabled when no PDF is selected
@@ -83,7 +83,7 @@ test.describe('PDF Wizard - UI Components', () => {
     // Note: We can't actually trigger file operations without real file dialogs,
     // but we can verify error UI components exist
 
-    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-merge');
     await expect(mergeTabPanel).toBeVisible();
 
     // Verify error alert component can exist (check for MUI Alert classes)
@@ -97,7 +97,7 @@ test.describe('PDF Wizard - UI Components', () => {
     // Note: We can't actually trigger file operations without real file dialogs,
     // but we can verify success UI components exist
 
-    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-merge');
     await expect(mergeTabPanel).toBeVisible();
 
     // Verify success alert component can exist (check for MUI Alert classes)
@@ -109,7 +109,7 @@ test.describe('PDF Wizard - UI Components', () => {
   test('should allow user to interact with watermark text input', async ({ page }) => {
     // Navigate to Watermark tab
     await page.getByRole('tab', { name: 'Watermark PDF' }).click();
-    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-3');
+    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-watermark');
     await expect(watermarkTabPanel).toBeVisible();
 
     // Select a test PDF file
@@ -133,7 +133,7 @@ test.describe('PDF Wizard - UI Components', () => {
   test('should validate font size input in watermark tab', async ({ page }) => {
     // Navigate to Watermark tab
     await page.getByRole('tab', { name: 'Watermark PDF' }).click();
-    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-3');
+    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-watermark');
     await expect(watermarkTabPanel).toBeVisible();
 
     // Select a test PDF file
@@ -170,7 +170,7 @@ test.describe('PDF Wizard - UI Components', () => {
   test('should validate opacity input in watermark tab', async ({ page }) => {
     // Navigate to Watermark tab
     await page.getByRole('tab', { name: 'Watermark PDF' }).click();
-    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-3');
+    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-watermark');
     await expect(watermarkTabPanel).toBeVisible();
 
     // Select a test PDF file
@@ -202,7 +202,7 @@ test.describe('PDF Wizard - UI Components', () => {
   test('should toggle page range selection in watermark tab', async ({ page }) => {
     // Navigate to Watermark tab
     await page.getByRole('tab', { name: 'Watermark PDF' }).click();
-    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-3');
+    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-watermark');
     await expect(watermarkTabPanel).toBeVisible();
 
     // Select a test PDF file
@@ -237,7 +237,7 @@ test.describe('PDF Wizard - UI Components', () => {
   test('should validate page range input in watermark tab', async ({ page }) => {
     // Navigate to Watermark tab
     await page.getByRole('tab', { name: 'Watermark PDF' }).click();
-    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-3');
+    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-watermark');
     await expect(watermarkTabPanel).toBeVisible();
 
     // Select a test PDF file
@@ -272,7 +272,7 @@ test.describe('PDF Wizard - UI Components', () => {
   test('should disable Apply Watermark button when form is invalid', async ({ page }) => {
     // Navigate to Watermark tab
     await page.getByRole('tab', { name: 'Watermark PDF' }).click();
-    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-3');
+    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-watermark');
     await expect(watermarkTabPanel).toBeVisible();
 
     // Verify Apply Watermark button is disabled when no PDF is selected
@@ -320,7 +320,7 @@ test.describe('PDF Wizard - UI Components', () => {
   test('should allow user to interact with watermark form controls', async ({ page }) => {
     // Navigate to Watermark tab
     await page.getByRole('tab', { name: 'Watermark PDF' }).click();
-    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-3');
+    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-watermark');
     await expect(watermarkTabPanel).toBeVisible();
 
     // Select a test PDF file

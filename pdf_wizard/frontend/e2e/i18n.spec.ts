@@ -24,7 +24,7 @@ test.describe('PDF Wizard - Internationalization', () => {
     await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toBeVisible();
 
     // Verify Merge tab content is in English
-    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-merge');
     await expect(mergeTabPanel.getByRole('button', { name: 'Select PDF Files' })).toBeVisible();
     await expect(mergeTabPanel.getByText('Or drag and drop PDF files anywhere on the window')).toBeVisible();
   });
@@ -47,7 +47,7 @@ test.describe('PDF Wizard - Internationalization', () => {
     await expect(page.getByRole('tab', { name: '旋转 PDF' })).toBeVisible();
 
     // Verify Merge tab content is in Chinese
-    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-merge');
     await expect(mergeTabPanel.getByRole('button', { name: '选择 PDF 文件' })).toBeVisible();
     await expect(mergeTabPanel.getByText('或将 PDF 文件拖放到窗口任意位置')).toBeVisible();
   });
@@ -162,17 +162,17 @@ test.describe('PDF Wizard - Internationalization', () => {
     await page.waitForSelector('[role="tab"]', { timeout: 15000 });
 
     // Verify Merge tab buttons are translated
-    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-merge');
     await expect(mergeTabPanel.getByRole('button', { name: '选择 PDF 文件' })).toBeVisible();
 
     // Switch to Split tab
     await page.getByRole('tab', { name: '拆分 PDF' }).click();
-    const splitTabPanel = page.locator('#pdf-wizard-tabpanel-1');
+    const splitTabPanel = page.locator('#pdf-wizard-tabpanel-split');
     await expect(splitTabPanel.getByRole('button', { name: '选择 PDF 文件' })).toBeVisible();
 
     // Switch to Rotate tab
     await page.getByRole('tab', { name: '旋转 PDF' }).click();
-    const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-2');
+    const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-rotate');
     await expect(rotateTabPanel.getByRole('button', { name: '选择 PDF 文件' })).toBeVisible();
   });
 });

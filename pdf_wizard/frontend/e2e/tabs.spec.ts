@@ -34,7 +34,7 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     await expect(mergeTab).toHaveAttribute('aria-selected', 'true');
 
     // Get the active tab panel and wait for it to be visible
-    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-merge');
     await expect(mergeTabPanel).toBeVisible();
 
     // Verify Merge tab content is visible
@@ -86,11 +86,11 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     await expect(page.getByRole('tab', { name: 'Split PDF' })).toHaveAttribute('aria-selected', 'false');
 
     // Get the active tab panel and wait for it to be visible
-    const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-2');
+    const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-rotate');
     await expect(rotateTabPanel).toBeVisible();
 
     // Verify Merge tab content is hidden (check the merge tab panel)
-    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-merge');
     await expect(mergeTabPanel.getByRole('button', { name: 'Select PDF Files' })).not.toBeVisible();
 
     // Verify Rotate tab content is visible (scoped to rotate tab panel)
@@ -133,13 +133,13 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     // Test that each tab maintains its own state independently
 
     // Start on Merge tab and interact
-    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-merge');
     const mergeFilenameInput = mergeTabPanel.locator('input[placeholder="merged"]');
     await mergeFilenameInput.fill('merge-test');
 
     // Switch to Rotate tab
     await page.getByRole('tab', { name: 'Rotate PDF' }).click();
-    const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-2');
+    const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-rotate');
     await expect(rotateTabPanel).toBeVisible();
 
     // Interact with Rotate tab
@@ -165,11 +165,11 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toHaveAttribute('aria-selected', 'false');
 
     // Get the active tab panel and wait for it to be visible
-    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-3');
+    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-watermark');
     await expect(watermarkTabPanel).toBeVisible();
 
     // Verify Merge tab content is hidden
-    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-merge');
     await expect(mergeTabPanel.getByRole('button', { name: 'Select PDF Files' })).not.toBeVisible();
 
     // Verify Watermark tab content is visible (scoped to watermark tab panel)
@@ -195,7 +195,7 @@ test.describe('PDF Wizard - Tab Navigation', () => {
   test('should display watermark configuration options', async ({ page }) => {
     // Navigate to Watermark tab
     await page.getByRole('tab', { name: 'Watermark PDF' }).click();
-    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-3');
+    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-watermark');
     await expect(watermarkTabPanel).toBeVisible({ timeout: 10000 });
 
     // Verify the tab structure is correct
