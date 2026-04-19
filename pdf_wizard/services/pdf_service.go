@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/pdfcpu/pdfcpu/pkg/api"
@@ -470,11 +471,9 @@ func parsePageRange(pageRange string, totalPages int) ([]string, error) {
 	return selections, nil
 }
 
-// parseInt parses a string to int
+// parseInt parses a string to int.
 func parseInt(s string) (int, error) {
-	var result int
-	_, err := fmt.Sscanf(s, "%d", &result)
-	return result, err
+	return strconv.Atoi(s)
 }
 
 // convertPositionToAnchor converts position string to pdfcpu anchor format
