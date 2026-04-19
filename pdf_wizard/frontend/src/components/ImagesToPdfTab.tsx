@@ -3,6 +3,9 @@ import { Box, Button, Typography, IconButton, Paper, Alert, CircularProgress } f
 import DeleteIcon from '@mui/icons-material/Delete';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import ImageIcon from '@mui/icons-material/Image';
+import SmartphoneIcon from '@mui/icons-material/Smartphone';
+import QRCode from 'qrcode';
+import { EventsOn } from '../../wailsjs/runtime/runtime';
 import {
   DndContext,
   closestCenter,
@@ -20,10 +23,20 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { SelectImageFiles, GetFileMetadata, ImagesToPDF } from '../../wailsjs/go/main/App';
+import {
+  SelectImageFiles,
+  GetFileMetadata,
+  ImagesToPDF,
+  StartImagesPhoneUpload,
+  StopImagesPhoneUpload,
+} from '../../wailsjs/go/main/App';
+import { models } from '../../wailsjs/go/models';
 import { SelectedFile } from '../types';
 import { formatFileSize, formatDate, convertToSelectedFile } from '../utils/formatters';
 import { useI18n } from '../utils/i18n';
+
+/** Must match services.PhoneUploadMaxFilesPerSession in the Go LAN upload handler. */
+const PHONE_UPLOAD_MAX_FILES = 25;
 import { useImageDrop } from '../hooks/useImageDrop';
 import { useOutputDirectory } from '../hooks/useOutputDirectory';
 import { useErrorHandler } from '../hooks/useErrorHandler';
@@ -116,11 +129,13 @@ const SortableImageItem = ({ file, index, onRemove }: SortableImageItemProps) =>
 };
 
 export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [files, setFiles] = useState<SelectedFile[]>([]);
   const [outputFilename, setOutputFilename] = useState<string>('from_images');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [success, setSuccess] = useState<string | null>(null);
+  const [phoneUploadURL, setPhoneUploadURL] = useState<string | null>(null);
+  const [qrDataURL, setQrDataURL] = useState<string | null>(null);
 
   const { handleImageDrop } = useImageDrop();
   const { outputDirectory, selectDirectory } = useOutputDirectory('failedToSelectOutputDirectory');
@@ -140,6 +155,87 @@ export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
     };
     onFileDrop(handleDroppedFiles);
   }, [t, handleImageDrop, onFileDrop, setError]);
+
+  useEffect(() => {
+    if (!phoneUploadURL) {
+      setQrDataURL(null);
+      return;
+    }
+    let cancelled = false;
+    QRCode.toDataURL(phoneUploadURL, { width: 220, margin: 2, errorCorrectionLevel: 'M' }).then((dataUrl) => {
+      if (!cancelled) {
+        setQrDataURL(dataUrl);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [phoneUploadURL]);
+
+  useEffect(() => {
+    const unsubscribe = EventsOn('images-phone-upload', async (data: string) => {
+      let paths: unknown;
+      try {
+        paths = JSON.parse(data);
+      } catch {
+        return;
+      }
+      if (!Array.isArray(paths) || paths.length === 0) {
+        return;
+      }
+      const strPaths = paths.filter((p): p is string => typeof p === 'string');
+      if (strPaths.length === 0) {
+        return;
+      }
+      try {
+        const metadataResults = await Promise.all(strPaths.map((path) => GetFileMetadata(path)));
+        const newFiles = metadataResults.map(convertToSelectedFile);
+        setFiles((prev) => [...prev, ...newFiles]);
+        setError(null);
+        setPhoneUploadURL(null);
+      } catch (err) {
+        handleError(err, 'failedToLoadFiles');
+      }
+    });
+    return () => unsubscribe();
+  }, [handleError, setError]);
+
+  const handleStartPhoneUpload = async () => {
+    try {
+      setError(null);
+      const page = new models.PhoneUploadPageCopy({
+        lang: language,
+        dir: language === 'ar' ? 'rtl' : 'ltr',
+        title: t('imagesPhonePageTitle'),
+        heading: t('appTitle'),
+        intro: t('imagesPhoneReceiveHint'),
+        photosLabel: t('imagesPhonePagePhotosLabel'),
+        chooseFiles: t('imagesPhonePageChooseFiles'),
+        upload: t('imagesPhonePageUpload'),
+        doneTitle: t('imagesPhonePageDoneTitle'),
+        doneBody: t('imagesPhonePageDoneBody'),
+        noFiles: t('imagesPhonePageNoFiles'),
+        retry: t('imagesPhonePageRetry'),
+        selectedCountLine: t('imagesPhonePageSelectedCount'),
+        tooManyFiles: t('imagesPhonePageTooManyFiles').replace(/__MAX__/g, String(PHONE_UPLOAD_MAX_FILES)),
+        sessionClosedTitle: t('imagesPhonePageSessionClosedTitle'),
+        sessionClosedBody: t('imagesPhonePageSessionClosedBody'),
+      });
+      const url = await StartImagesPhoneUpload(page);
+      setPhoneUploadURL(url);
+    } catch (err) {
+      handleError(err, 'imagesPhoneReceiveFailed');
+    }
+  };
+
+  const handleStopPhoneUpload = async () => {
+    try {
+      await StopImagesPhoneUpload();
+      setPhoneUploadURL(null);
+    } catch (err) {
+      handleError(err, 'imagesPhoneReceiveFailed');
+    }
+  };
 
   const handleSelectFiles = async () => {
     try {
@@ -204,13 +300,75 @@ export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 3, overflow: 'hidden' }}>
-      <Box sx={{ mb: 1 }}>
-        <Button variant="contained" startIcon={<ImageIcon />} onClick={handleSelectFiles} sx={{ mb: 2 }} disabled={isProcessing}>
-          {t('selectImageFiles')}
-        </Button>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+      <Box sx={{ mb: 1, textAlign: 'center' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            mb: 2,
+          }}
+        >
+          <Button variant="contained" startIcon={<ImageIcon />} onClick={handleSelectFiles} disabled={isProcessing}>
+            {t('selectImageFiles')}
+          </Button>
+          {phoneUploadURL ? (
+            <Button
+              variant="outlined"
+              color="secondary"
+              startIcon={<SmartphoneIcon />}
+              onClick={handleStopPhoneUpload}
+              disabled={isProcessing}
+            >
+              {t('imagesPhoneReceiveStop')}
+            </Button>
+          ) : (
+            <Button
+              variant="outlined"
+              startIcon={<SmartphoneIcon />}
+              onClick={handleStartPhoneUpload}
+              disabled={isProcessing}
+            >
+              {t('imagesPhoneReceive')}
+            </Button>
+          )}
+        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
           {t('dragDropImagesHint')}
         </Typography>
+        {phoneUploadURL && (
+          <Box
+            sx={{
+              mb: 2,
+              p: 2,
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: 1,
+              maxWidth: 360,
+              mx: 'auto',
+              textAlign: 'left',
+            }}
+          >
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {t('imagesPhoneReceiveHint')}
+            </Typography>
+            {qrDataURL && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', mb: 1 }}>
+                <Box
+                  component="img"
+                  src={qrDataURL}
+                  alt=""
+                  sx={{ display: 'block', maxWidth: '100%', height: 'auto' }}
+                />
+              </Box>
+            )}
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, wordBreak: 'break-all' }}>
+              {phoneUploadURL}
+            </Typography>
+          </Box>
+        )}
       </Box>
 
       {error && (

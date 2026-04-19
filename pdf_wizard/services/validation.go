@@ -22,6 +22,11 @@ func isImageFile(path string) bool {
 	}
 }
 
+// IsImageFile reports whether path has a supported raster image extension.
+func IsImageFile(path string) bool {
+	return isImageFile(path)
+}
+
 // statPDFFile performs the same Stat and error mapping as the first step of
 // validatePDFFile, so callers can reuse os.FileInfo without a second Stat (#54).
 func statPDFFile(path string) (os.FileInfo, error) {
