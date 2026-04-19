@@ -238,7 +238,7 @@ export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
         <NoPDFSelected />
       )}
 
-      <Box sx={{ mt: 'auto', pt: 2, pb: 2, borderTop: '1px solid', borderColor: 'divider', flexShrink: 0 }}>
+      <Box sx={{ mt: 'auto', pt: 2, pb: 2, flexShrink: 0 }}>
         <OutputDirectorySelector
           directory={outputDirectory}
           onSelect={selectDirectory}

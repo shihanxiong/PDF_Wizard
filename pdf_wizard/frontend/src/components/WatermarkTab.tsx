@@ -596,8 +596,6 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
           mt: 'auto',
           pt: 2,
           pb: 2,
-          borderTop: '1px solid',
-          borderColor: 'divider',
           flexShrink: 0,
         }}
       >
