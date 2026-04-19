@@ -46,11 +46,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # static: off — Chocolatey mingw 15.x no longer ships libpthread.dll.a where the
+      # action’s workaround expects it; without this, Remove-Item fails the step.
       - name: Set up MinGW (Windows / CGO)
         if: runner.os == 'Windows'
         uses: egor-tensin/setup-mingw@v2
         with:
           platform: x64
+          static: '0'
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -74,6 +77,11 @@ jobs:
       - name: Install frontend dependencies
         working-directory: pdf_wizard/frontend
         run: npm ci
+
+      # main.go embeds frontend/dist; go test loads the main package and needs those files.
+      - name: Build frontend (for go:embed)
+        working-directory: pdf_wizard/frontend
+        run: npm run build
 
       - name: Go tests (services + app)
         working-directory: pdf_wizard
