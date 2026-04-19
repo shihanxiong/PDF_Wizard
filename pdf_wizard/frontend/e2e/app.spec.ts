@@ -33,14 +33,17 @@ test.describe('PDF Wizard - App Loading', () => {
     await expect(tabList).toBeVisible();
 
     // Verify all three tab panels exist (they exist in DOM but only active one is visible)
-    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-0');
+    const mergeTabPanel = page.locator('#pdf-wizard-tabpanel-merge');
     await expect(mergeTabPanel).toBeAttached();
 
-    const splitTabPanel = page.locator('#pdf-wizard-tabpanel-1');
+    const splitTabPanel = page.locator('#pdf-wizard-tabpanel-split');
     await expect(splitTabPanel).toBeAttached();
 
-    const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-2');
+    const rotateTabPanel = page.locator('#pdf-wizard-tabpanel-rotate');
     await expect(rotateTabPanel).toBeAttached();
+
+    const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-watermark');
+    await expect(watermarkTabPanel).toBeAttached();
 
     // Verify the active tab panel (Merge) is visible
     await expect(mergeTabPanel).toBeVisible();
