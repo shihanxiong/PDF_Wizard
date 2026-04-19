@@ -145,7 +145,7 @@ Splits a PDF into multiple files according to split definitions.
 
 - Validates input file exists and is a PDF
 - Validates output directory exists and is writable
-- Gets PDF page count for validation
+- Reads the PDF once (`api.ReadValidateAndOptimize` with trim command); uses `ctx.PageCount` for range checks
 - Validates all splits:
   - Start page >= 1 and <= totalPages
   - End page >= startPage and <= totalPages
@@ -154,14 +154,10 @@ Splits a PDF into multiple files according to split definitions.
 
 **Implementation:**
 
-- Uses `pdfcpu` library (`api.TrimFile()`) to extract page ranges
-- Processes each split sequentially
-- For each split:
-  - Creates output path: `outputDirectory/filename.pdf`
-  - Removes existing output file if it exists
-  - Uses `TrimFile()` with page range string (e.g., "1-10")
-  - Validates split file was created
-- pdfcpu uses 1-based page numbers
+- Opens the input once and builds a shared context via `api.ReadValidateAndOptimize` (same pipeline as `api.Trim` / `api.TrimFile`, issue #57)
+- For each split: `api.PagesForPageSelection` → `pdfcpu.ExtractPages` from that context → `api.WriteContextFile` to `outputDirectory/filename.pdf`
+- Avoids per-segment `api.TrimFile` calls, which each reopen and reparse the source
+- Removes existing output files before writing; pdfcpu uses 1-based page numbers
 
 **Error Handling:**
 
@@ -272,8 +268,9 @@ App-wide Go and npm dependencies are summarized in [SYSTEM_DESIGN.md § Technica
 
   - `ReadContextFile()` - Read PDF and get context
   - `MergeCreateFile()` - Merge multiple PDFs
-  - `TrimFile()` - Extract page ranges (used for splitting)
-  - `RotateFile()` - Rotate pages in PDF
+  - `ReadValidateAndOptimize()`, `PagesForPageSelection()`, `WriteContextFile()`, `ValidateContext()` — split uses one optimized read then per-output writes (#57)
+
+- `github.com/pdfcpu/pdfcpu/pkg/pdfcpu` - Page extraction (`ExtractPages` for split segments)
 
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model` - Configuration models
 

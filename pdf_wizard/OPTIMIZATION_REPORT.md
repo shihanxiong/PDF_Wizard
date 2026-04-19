@@ -1,6 +1,6 @@
 # Code optimization report
 
-Living document for performance and maintainability work in PDF Wizard. **Last updated:** 2026 (issue #62).
+Living document for performance and maintainability work in PDF Wizard. **Last updated:** 2026 (issues #57, #62).
 
 ---
 
@@ -15,7 +15,7 @@ Living document for performance and maintainability work in PDF Wizard. **Last u
 | TypeScript `any` in catch / strictness | **Partial** — e.g. `WatermarkTab` uses `unknown`; several tabs/hooks still use bare `catch (err)` |
 | Shared tab UI logic | **Partial** — `usePDFDrop`, `useOutputDirectory`, `useProcessingState`, `useErrorHandler` exist; Split/Rotate still overlap |
 | `GetPDFMetadata` / redundant `Stat` | **Open** — see backlog |
-| Split: multiple `TrimFile` passes | **Open** — see backlog |
+| Split: single read + per-segment extract | **Done** — `SplitPDF` (#57) |
 
 ---
 
@@ -25,7 +25,7 @@ Living document for performance and maintainability work in PDF Wizard. **Last u
 
 - **`services/validation.go`** — Centralized `isPDFFile`, `validatePDFFile`, `validateOutputDirectory` (replaces duplicated extension and directory checks).
 - **`services/constants.go`** — `PDFExtension`, `DefaultFilePerm`, `DefaultDirPerm`.
-- **`services/pdf_service.go`** — `MergePDFs` calls `api.MergeCreateFile` first; per-input `ReadContextFile` only runs when merge fails, to pinpoint a bad file without doubling work on successful merges (#53).
+- **`services/pdf_service.go`** — `MergePDFs` calls `api.MergeCreateFile` first; per-input `ReadContextFile` only runs when merge fails, to pinpoint a bad file without doubling work on successful merges (#53). `SplitPDF` uses one `ReadValidateAndOptimize` on the source and `ExtractPages` per segment instead of N× `TrimFile` (#57).
 
 ### Frontend
 
@@ -43,13 +43,12 @@ Living document for performance and maintainability work in PDF Wizard. **Last u
 2. **`GetPDFMetadata` / `GetPDFPageCount`** — `GetPDFMetadata` calls `os.Stat` then `GetPDFPageCount` → `validatePDFFile` stats again; reuse one stat or a single validated entry point (#54).
 3. **`parseInt` in page-range parsing** — Replace `fmt.Sscanf` in `parseInt` with `strconv.Atoi` in `pdf_service.go` (#55).
 4. **`removeIfExists`** — Prefer `os.Remove` + `errors.Is(…, fs.ErrNotExist)` over stat-then-remove (#56).
-5. **Split performance** — Investigate pdfcpu APIs to avoid N full `TrimFile` passes over the same source when many splits (#57).
-6. **Go error style** — Standardize `fmt.Errorf` wrapping and messages across services (no functional change required for consistency alone).
+5. **Go error style** — Standardize `fmt.Errorf` wrapping and messages across services (no functional change required for consistency alone).
 
 ### Low
 
-7. **React** — `React.memo` / `useCallback` where profiling shows benefit; `React.lazy` for heavy tabs if bundle size matters.
-8. **Organization** — Group related helpers; optional small `validation` subpackage if the service layer grows.
+6. **React** — `React.memo` / `useCallback` where profiling shows benefit; `React.lazy` for heavy tabs if bundle size matters.
+7. **Organization** — Group related helpers; optional small `validation` subpackage if the service layer grows.
 
 ---
 
@@ -58,7 +57,7 @@ Living document for performance and maintainability work in PDF Wizard. **Last u
 | Phase | Focus |
 |-------|--------|
 | **A** | TS `unknown` + error helper; `strconv.Atoi`; `removeIfExists` tidy |
-| **B** | `GetPDFMetadata` stat dedup; Split API research |
+| **B** | `GetPDFMetadata` stat dedup |
 | **C** | React perf and deeper tab abstraction as needed |
 
 ---
