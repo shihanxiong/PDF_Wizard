@@ -98,6 +98,11 @@ export const zhTW: Translations = {
   convertingImagesToPdf: '正在產生 PDF...',
   imagesToPdfSuccessfully: 'PDF 產生成功！輸出：',
   imagesToPdfFailed: '產生 PDF 失敗：',
+  imagesPhoneReceive: '從手機接收',
+  imagesPhoneReceiveHint:
+    '請確認手機與電腦在同一 Wi‑Fi。用手機掃描 QR 碼，在開啟的頁面上傳照片，照片會出現在下方清單。',
+  imagesPhoneReceiveStop: '停止接收',
+  imagesPhoneReceiveFailed: '無法啟動手機上傳：',
   modified: '修改時間：',
   selectFiles: '選擇檔案',
   selectFile: '選擇檔案',

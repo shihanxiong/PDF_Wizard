@@ -98,6 +98,11 @@ export const zh: Translations = {
   convertingImagesToPdf: '正在生成 PDF...',
   imagesToPdfSuccessfully: 'PDF 生成成功！输出：',
   imagesToPdfFailed: '生成 PDF 失败：',
+  imagesPhoneReceive: '从手机接收',
+  imagesPhoneReceiveHint:
+    '请确保手机与电脑在同一 Wi‑Fi。用手机扫描二维码，在打开的页面上传照片，照片会出现在下方列表。',
+  imagesPhoneReceiveStop: '停止接收',
+  imagesPhoneReceiveFailed: '无法启动手机上传：',
   modified: '修改时间：',
   selectFiles: '选择文件',
   selectFile: '选择文件',

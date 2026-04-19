@@ -98,6 +98,11 @@ export const ru: Translations = {
   convertingImagesToPdf: 'Создание PDF...',
   imagesToPdfSuccessfully: 'PDF успешно создан! Выход:',
   imagesToPdfFailed: 'Не удалось создать PDF:',
+  imagesPhoneReceive: 'Получить с телефона',
+  imagesPhoneReceiveHint:
+    'В той же Wi‑Fi сети отсканируйте QR телефоном, откройте страницу и загрузите изображения — они появятся в списке ниже.',
+  imagesPhoneReceiveStop: 'Остановить приём',
+  imagesPhoneReceiveFailed: 'Не удалось запустить загрузку с телефона:',
   modified: 'Изменено:',
   selectFiles: 'Выбрать файлы',
   selectFile: 'Выбрать файл',

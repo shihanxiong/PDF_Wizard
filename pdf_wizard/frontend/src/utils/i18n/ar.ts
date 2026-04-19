@@ -98,6 +98,11 @@ export const ar: Translations = {
   convertingImagesToPdf: 'جارٍ إنشاء PDF...',
   imagesToPdfSuccessfully: 'تم إنشاء PDF بنجاح! المخرجات:',
   imagesToPdfFailed: 'فشل إنشاء PDF:',
+  imagesPhoneReceive: 'استقبال من الهاتف',
+  imagesPhoneReceiveHint:
+    'على نفس شبكة Wi‑Fi، امسح رمز QR بهاتفك وافتح الصفحة وارفع الصور؛ ستظهر في القائمة أدناه.',
+  imagesPhoneReceiveStop: 'إيقاف الاستقبال',
+  imagesPhoneReceiveFailed: 'تعذر بدء الرفع من الهاتف:',
   modified: 'تم التعديل:',
   selectFiles: 'اختر الملفات',
   selectFile: 'اختر الملف',

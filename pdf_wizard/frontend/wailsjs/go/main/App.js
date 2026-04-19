@@ -61,3 +61,11 @@ export function SetLanguage(arg1) {
 export function SplitPDF(arg1, arg2, arg3) {
   return window['go']['main']['App']['SplitPDF'](arg1, arg2, arg3);
 }
+
+export function StartImagesPhoneUpload() {
+  return window['go']['main']['App']['StartImagesPhoneUpload']();
+}
+
+export function StopImagesPhoneUpload() {
+  return window['go']['main']['App']['StopImagesPhoneUpload']();
+}

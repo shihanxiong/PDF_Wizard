@@ -98,6 +98,11 @@ export const ko: Translations = {
   convertingImagesToPdf: 'PDF 생성 중...',
   imagesToPdfSuccessfully: 'PDF가 생성되었습니다! 출력:',
   imagesToPdfFailed: 'PDF 생성 실패:',
+  imagesPhoneReceive: '휴대폰에서 받기',
+  imagesPhoneReceiveHint:
+    '같은 Wi‑Fi에서 QR 코드를 스캔해 페이지를 열고 이미지를 올리면 아래 목록에 추가됩니다.',
+  imagesPhoneReceiveStop: '받기 중지',
+  imagesPhoneReceiveFailed: '휴대폰 업로드를 시작할 수 없습니다:',
   modified: '수정됨:',
   selectFiles: '파일 선택',
   selectFile: '파일 선택',

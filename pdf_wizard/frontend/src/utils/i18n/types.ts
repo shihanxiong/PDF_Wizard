@@ -114,6 +114,10 @@ export interface Translations {
   convertingImagesToPdf: string;
   imagesToPdfSuccessfully: string;
   imagesToPdfFailed: string;
+  imagesPhoneReceive: string;
+  imagesPhoneReceiveHint: string;
+  imagesPhoneReceiveStop: string;
+  imagesPhoneReceiveFailed: string;
 
   // Common
   modified: string;

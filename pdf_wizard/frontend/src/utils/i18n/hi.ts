@@ -98,6 +98,11 @@ export const hi: Translations = {
   convertingImagesToPdf: 'PDF बनाया जा रहा है...',
   imagesToPdfSuccessfully: 'PDF सफलतापूर्वक बनाया गया! आउटपुट:',
   imagesToPdfFailed: 'PDF बनाने में विफल:',
+  imagesPhoneReceive: 'फ़ोन से प्राप्त करें',
+  imagesPhoneReceiveHint:
+    'एक ही Wi‑Fi पर फ़ोन से QR कोड स्कैन करें, पृष्ठ खोलें और छवियाँ अपलोड करें; वे नीचे सूची में दिखेंगी।',
+  imagesPhoneReceiveStop: 'प्राप्ति बंद करें',
+  imagesPhoneReceiveFailed: 'फ़ोन अपलोड शुरू नहीं हो सका:',
   modified: 'संशोधित:',
   selectFiles: 'फ़ाइलें चुनें',
   selectFile: 'फ़ाइल चुनें',

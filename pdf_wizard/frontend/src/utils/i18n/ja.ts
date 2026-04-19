@@ -98,6 +98,11 @@ export const ja: Translations = {
   convertingImagesToPdf: 'PDF を作成中...',
   imagesToPdfSuccessfully: 'PDF を作成しました。出力：',
   imagesToPdfFailed: 'PDF の作成に失敗しました：',
+  imagesPhoneReceive: 'スマートフォンから受信',
+  imagesPhoneReceiveHint:
+    '同じ Wi‑Fi でスマートフォンから QR を読み取り、ページで画像をアップロードすると、下の一覧に追加されます。',
+  imagesPhoneReceiveStop: '受信を停止',
+  imagesPhoneReceiveFailed: 'スマートフォンのアップロードを開始できません：',
   modified: '変更日時：',
   selectFiles: 'ファイルを選択',
   selectFile: 'ファイルを選択',

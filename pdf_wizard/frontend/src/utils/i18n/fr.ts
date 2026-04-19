@@ -98,6 +98,11 @@ export const fr: Translations = {
   convertingImagesToPdf: 'Création du PDF...',
   imagesToPdfSuccessfully: 'PDF créé avec succès ! Sortie :',
   imagesToPdfFailed: 'Échec de la création du PDF :',
+  imagesPhoneReceive: 'Recevoir depuis le téléphone',
+  imagesPhoneReceiveHint:
+    'Sur le même Wi‑Fi, scannez le code QR avec le téléphone, ouvrez la page et envoyez les images. Elles apparaissent dans la liste ci‑dessous.',
+  imagesPhoneReceiveStop: 'Arrêter la réception',
+  imagesPhoneReceiveFailed: 'Impossible de démarrer l’envoi depuis le téléphone :',
   modified: 'Modifié :',
   selectFiles: 'Sélectionner les fichiers',
   selectFile: 'Sélectionner le fichier',

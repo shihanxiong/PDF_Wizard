@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"pdf_wizard/models"
 	"pdf_wizard/services"
@@ -18,6 +19,9 @@ type App struct {
 	ctx         context.Context
 	fileService *services.FileService
 	pdfService  *services.PDFService
+
+	phoneMu   sync.Mutex
+	phoneStop func() error
 }
 
 const (
@@ -58,6 +62,11 @@ func (a *App) startup(ctx context.Context) {
 
 	a.fileService = fileService
 	a.pdfService = pdfService
+}
+
+// shutdown stops background work before the app exits.
+func (a *App) shutdown(_ context.Context) {
+	_ = a.StopImagesPhoneUpload()
 }
 
 // EmitSettingsEvent emits an event to show the settings dialog
@@ -184,6 +193,44 @@ func (a *App) SelectImageFiles() ([]string, error) {
 // ImagesToPDF writes a PDF with one page per image in the given order.
 func (a *App) ImagesToPDF(imagePaths []string, outputDirectory string, outputFilename string) error {
 	return a.pdfService.ImagesToPDF(imagePaths, outputDirectory, outputFilename)
+}
+
+// StartImagesPhoneUpload starts an HTTP server on the LAN and returns the upload page URL for QR codes.
+// Uploaded images are emitted to the frontend as event "images-phone-upload" with a JSON array of file paths.
+func (a *App) StartImagesPhoneUpload() (string, error) {
+	if a.ctx == nil {
+		return "", fmt.Errorf("application not ready")
+	}
+	a.phoneMu.Lock()
+	defer a.phoneMu.Unlock()
+	if a.phoneStop != nil {
+		_ = a.phoneStop()
+		a.phoneStop = nil
+	}
+	url, stop, err := services.StartLANImageUploadServer(func(paths []string) {
+		data, err := json.Marshal(paths)
+		if err != nil {
+			return
+		}
+		runtime.EventsEmit(a.ctx, "images-phone-upload", string(data))
+	})
+	if err != nil {
+		return "", err
+	}
+	a.phoneStop = stop
+	return url, nil
+}
+
+// StopImagesPhoneUpload stops the LAN upload server and removes temporary files.
+func (a *App) StopImagesPhoneUpload() error {
+	a.phoneMu.Lock()
+	defer a.phoneMu.Unlock()
+	if a.phoneStop == nil {
+		return nil
+	}
+	err := a.phoneStop()
+	a.phoneStop = nil
+	return err
 }
 
 // SplitPDF splits the given PDF according to split definitions

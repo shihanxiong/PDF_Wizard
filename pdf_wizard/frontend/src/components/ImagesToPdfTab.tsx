@@ -3,6 +3,9 @@ import { Box, Button, Typography, IconButton, Paper, Alert, CircularProgress } f
 import DeleteIcon from '@mui/icons-material/Delete';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import ImageIcon from '@mui/icons-material/Image';
+import SmartphoneIcon from '@mui/icons-material/Smartphone';
+import QRCode from 'qrcode';
+import { EventsOn } from '../../wailsjs/runtime/runtime';
 import {
   DndContext,
   closestCenter,
@@ -20,7 +23,13 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { SelectImageFiles, GetFileMetadata, ImagesToPDF } from '../../wailsjs/go/main/App';
+import {
+  SelectImageFiles,
+  GetFileMetadata,
+  ImagesToPDF,
+  StartImagesPhoneUpload,
+  StopImagesPhoneUpload,
+} from '../../wailsjs/go/main/App';
 import { SelectedFile } from '../types';
 import { formatFileSize, formatDate, convertToSelectedFile } from '../utils/formatters';
 import { useI18n } from '../utils/i18n';
@@ -121,6 +130,8 @@ export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
   const [outputFilename, setOutputFilename] = useState<string>('from_images');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [success, setSuccess] = useState<string | null>(null);
+  const [phoneUploadURL, setPhoneUploadURL] = useState<string | null>(null);
+  const [qrDataURL, setQrDataURL] = useState<string | null>(null);
 
   const { handleImageDrop } = useImageDrop();
   const { outputDirectory, selectDirectory } = useOutputDirectory('failedToSelectOutputDirectory');
@@ -140,6 +151,68 @@ export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
     };
     onFileDrop(handleDroppedFiles);
   }, [t, handleImageDrop, onFileDrop, setError]);
+
+  useEffect(() => {
+    if (!phoneUploadURL) {
+      setQrDataURL(null);
+      return;
+    }
+    let cancelled = false;
+    QRCode.toDataURL(phoneUploadURL, { width: 220, margin: 2, errorCorrectionLevel: 'M' }).then((dataUrl) => {
+      if (!cancelled) {
+        setQrDataURL(dataUrl);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [phoneUploadURL]);
+
+  useEffect(() => {
+    const unsubscribe = EventsOn('images-phone-upload', async (data: string) => {
+      let paths: unknown;
+      try {
+        paths = JSON.parse(data);
+      } catch {
+        return;
+      }
+      if (!Array.isArray(paths) || paths.length === 0) {
+        return;
+      }
+      const strPaths = paths.filter((p): p is string => typeof p === 'string');
+      if (strPaths.length === 0) {
+        return;
+      }
+      try {
+        const metadataResults = await Promise.all(strPaths.map((path) => GetFileMetadata(path)));
+        const newFiles = metadataResults.map(convertToSelectedFile);
+        setFiles((prev) => [...prev, ...newFiles]);
+        setError(null);
+      } catch (err) {
+        handleError(err, 'failedToLoadFiles');
+      }
+    });
+    return () => unsubscribe();
+  }, [handleError, setError]);
+
+  const handleStartPhoneUpload = async () => {
+    try {
+      setError(null);
+      const url = await StartImagesPhoneUpload();
+      setPhoneUploadURL(url);
+    } catch (err) {
+      handleError(err, 'imagesPhoneReceiveFailed');
+    }
+  };
+
+  const handleStopPhoneUpload = async () => {
+    try {
+      await StopImagesPhoneUpload();
+      setPhoneUploadURL(null);
+    } catch (err) {
+      handleError(err, 'imagesPhoneReceiveFailed');
+    }
+  };
 
   const handleSelectFiles = async () => {
     try {
@@ -205,12 +278,47 @@ export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 3, overflow: 'hidden' }}>
       <Box sx={{ mb: 1 }}>
-        <Button variant="contained" startIcon={<ImageIcon />} onClick={handleSelectFiles} sx={{ mb: 2 }} disabled={isProcessing}>
-          {t('selectImageFiles')}
-        </Button>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', mb: 2 }}>
+          <Button variant="contained" startIcon={<ImageIcon />} onClick={handleSelectFiles} disabled={isProcessing}>
+            {t('selectImageFiles')}
+          </Button>
+          {phoneUploadURL ? (
+            <Button
+              variant="outlined"
+              color="secondary"
+              startIcon={<SmartphoneIcon />}
+              onClick={handleStopPhoneUpload}
+              disabled={isProcessing}
+            >
+              {t('imagesPhoneReceiveStop')}
+            </Button>
+          ) : (
+            <Button
+              variant="outlined"
+              startIcon={<SmartphoneIcon />}
+              onClick={handleStartPhoneUpload}
+              disabled={isProcessing}
+            >
+              {t('imagesPhoneReceive')}
+            </Button>
+          )}
+        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
           {t('dragDropImagesHint')}
         </Typography>
+        {phoneUploadURL && (
+          <Box sx={{ mb: 2, p: 2, border: 1, borderColor: 'divider', borderRadius: 1, maxWidth: 360 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {t('imagesPhoneReceiveHint')}
+            </Typography>
+            {qrDataURL && (
+              <Box component="img" src={qrDataURL} alt="" sx={{ display: 'block', maxWidth: '100%', height: 'auto' }} />
+            )}
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, wordBreak: 'break-all' }}>
+              {phoneUploadURL}
+            </Typography>
+          </Box>
+        )}
       </Box>
 
       {error && (
