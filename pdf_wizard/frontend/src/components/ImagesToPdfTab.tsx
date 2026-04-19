@@ -30,9 +30,13 @@ import {
   StartImagesPhoneUpload,
   StopImagesPhoneUpload,
 } from '../../wailsjs/go/main/App';
+import { models } from '../../wailsjs/go/models';
 import { SelectedFile } from '../types';
 import { formatFileSize, formatDate, convertToSelectedFile } from '../utils/formatters';
 import { useI18n } from '../utils/i18n';
+
+/** Must match services.PhoneUploadMaxFilesPerSession in the Go LAN upload handler. */
+const PHONE_UPLOAD_MAX_FILES = 25;
 import { useImageDrop } from '../hooks/useImageDrop';
 import { useOutputDirectory } from '../hooks/useOutputDirectory';
 import { useErrorHandler } from '../hooks/useErrorHandler';
@@ -125,7 +129,7 @@ const SortableImageItem = ({ file, index, onRemove }: SortableImageItemProps) =>
 };
 
 export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [files, setFiles] = useState<SelectedFile[]>([]);
   const [outputFilename, setOutputFilename] = useState<string>('from_images');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -188,6 +192,7 @@ export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
         const newFiles = metadataResults.map(convertToSelectedFile);
         setFiles((prev) => [...prev, ...newFiles]);
         setError(null);
+        setPhoneUploadURL(null);
       } catch (err) {
         handleError(err, 'failedToLoadFiles');
       }
@@ -198,7 +203,23 @@ export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
   const handleStartPhoneUpload = async () => {
     try {
       setError(null);
-      const url = await StartImagesPhoneUpload();
+      const page = new models.PhoneUploadPageCopy({
+        lang: language,
+        dir: language === 'ar' ? 'rtl' : 'ltr',
+        title: t('imagesPhonePageTitle'),
+        heading: t('appTitle'),
+        intro: t('imagesPhoneReceiveHint'),
+        photosLabel: t('imagesPhonePagePhotosLabel'),
+        chooseFiles: t('imagesPhonePageChooseFiles'),
+        upload: t('imagesPhonePageUpload'),
+        doneTitle: t('imagesPhonePageDoneTitle'),
+        doneBody: t('imagesPhonePageDoneBody'),
+        noFiles: t('imagesPhonePageNoFiles'),
+        retry: t('imagesPhonePageRetry'),
+        selectedCountLine: t('imagesPhonePageSelectedCount'),
+        tooManyFiles: t('imagesPhonePageTooManyFiles').replace(/__MAX__/g, String(PHONE_UPLOAD_MAX_FILES)),
+      });
+      const url = await StartImagesPhoneUpload(page);
       setPhoneUploadURL(url);
     } catch (err) {
       handleError(err, 'imagesPhoneReceiveFailed');
@@ -277,8 +298,17 @@ export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 3, overflow: 'hidden' }}>
-      <Box sx={{ mb: 1 }}>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', mb: 2 }}>
+      <Box sx={{ mb: 1, textAlign: 'center' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            mb: 2,
+          }}
+        >
           <Button variant="contained" startIcon={<ImageIcon />} onClick={handleSelectFiles} disabled={isProcessing}>
             {t('selectImageFiles')}
           </Button>
@@ -307,12 +337,30 @@ export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
           {t('dragDropImagesHint')}
         </Typography>
         {phoneUploadURL && (
-          <Box sx={{ mb: 2, p: 2, border: 1, borderColor: 'divider', borderRadius: 1, maxWidth: 360 }}>
+          <Box
+            sx={{
+              mb: 2,
+              p: 2,
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: 1,
+              maxWidth: 360,
+              mx: 'auto',
+              textAlign: 'left',
+            }}
+          >
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               {t('imagesPhoneReceiveHint')}
             </Typography>
             {qrDataURL && (
-              <Box component="img" src={qrDataURL} alt="" sx={{ display: 'block', maxWidth: '100%', height: 'auto' }} />
+              <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', mb: 1 }}>
+                <Box
+                  component="img"
+                  src={qrDataURL}
+                  alt=""
+                  sx={{ display: 'block', maxWidth: '100%', height: 'auto' }}
+                />
+              </Box>
             )}
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, wordBreak: 'break-all' }}>
               {phoneUploadURL}

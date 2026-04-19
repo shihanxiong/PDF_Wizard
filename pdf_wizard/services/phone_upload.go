@@ -1,25 +1,250 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"html/template"
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"pdf_wizard/models"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
 
 const (
-	phoneUploadMaxBody   = 120 << 20 // 120 MiB total per request
-	phoneUploadPartMemory  = 32 << 20
-	phoneUploadMaxFiles    = 40
+	phoneUploadMaxBody = 120 << 20 // 120 MiB total per request
+	phoneUploadPartMemory = 32 << 20
+	// PhoneUploadMaxFilesPerSession is the maximum number of images per phone upload POST / session.
+	PhoneUploadMaxFilesPerSession = 25
 )
+
+var (
+	tmplPhoneForm = template.Must(template.New("phoneForm").Parse(`<!DOCTYPE html>
+<html lang="{{.Lang}}" dir="{{.Dir}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}}</title>
+<style>
+:root{--primary:#1976d2;--primary-hover:#1565c0;--on-primary:#fff;--radius:4px}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:1rem;max-width:28rem;margin:0 auto;background:#fafafa;color:rgba(0,0,0,.87)}
+.page-header{display:flex;align-items:center;gap:12px;margin:0 0 1rem}
+.page-logo{flex-shrink:0;width:40px;height:40px;object-fit:contain;display:block}
+.page-title{font-size:1.5rem;font-weight:600;margin:0;line-height:1.2}
+.intro{margin:0 0 1rem;line-height:1.5;color:rgba(0,0,0,.6)}
+.field-label{display:block;font-weight:600;margin-bottom:.5rem;font-size:.875rem}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.selected-count{margin:.5rem 0 0;font-size:.875rem;line-height:1.4;color:rgba(0,0,0,.6)}
+.actions{display:flex;flex-direction:column;gap:12px;margin-top:.75rem}
+.btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:36px;padding:6px 16px;font-size:.875rem;font-weight:500;line-height:1.75;letter-spacing:.02857em;text-transform:none;text-decoration:none;border-radius:var(--radius);border:none;cursor:pointer;width:100%;transition:background .15s,box-shadow .15s;box-shadow:0 3px 1px -2px rgba(0,0,0,.2),0 2px 2px 0 rgba(0,0,0,.14),0 1px 5px 0 rgba(0,0,0,.12)}
+.btn-primary{background:var(--primary);color:var(--on-primary)}
+.btn-primary:hover{background:var(--primary-hover)}
+.btn-primary:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+label.btn{margin:0}
+</style>
+</head>
+<body>
+<header class="page-header">
+<img class="page-logo" src="logo.png" alt="" width="40" height="40" decoding="async">
+<h1 class="page-title">{{.Heading}}</h1>
+</header>
+<p class="intro">{{.Intro}}</p>
+<form method="post" enctype="multipart/form-data">
+<label class="field-label" for="phone-files">{{.PhotosLabel}}</label>
+<div class="actions">
+<input type="file" id="phone-files" class="sr-only" name="files" multiple accept="image/*,.heic,.heif" required>
+<label for="phone-files" class="btn btn-primary">{{.ChooseFiles}}</label>
+<p id="selected-count" class="selected-count" hidden></p>
+<button type="submit" class="btn btn-primary">{{.Upload}}</button>
+</div>
+</form>
+<script>
+(function(){
+  var maxFiles = {{.MaxFiles}};
+  var line = {{.SelectedLineJS}};
+  var tooMany = {{.TooManyLineJS}};
+  var el = document.getElementById('selected-count');
+  var input = document.getElementById('phone-files');
+  function update(){
+    if (!input.files || input.files.length < 1) { el.hidden = true; el.textContent = ''; return; }
+    if (input.files.length > maxFiles) {
+      alert(tooMany);
+      input.value = '';
+      el.hidden = true;
+      el.textContent = '';
+      return;
+    }
+    el.textContent = line.replace(/__COUNT__/g, String(input.files.length));
+    el.hidden = false;
+  }
+  input.addEventListener('change', update);
+})();
+</script>
+</body>
+</html>`))
+
+	tmplPhoneOK = template.Must(template.New("phoneOK").Parse(`<!DOCTYPE html>
+<html lang="{{.Lang}}" dir="{{.Dir}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.DoneTitle}}</title>
+<style>
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:1rem;max-width:28rem;margin:0 auto;background:#fafafa;color:rgba(0,0,0,.87)}
+.page-header{display:flex;align-items:center;justify-content:center;gap:12px;margin:0 0 1rem;flex-wrap:wrap}
+.page-logo{width:40px;height:40px;object-fit:contain;display:block}
+.done-title{font-size:1.25rem;font-weight:600;margin:0}
+.done-body{margin:.75rem 0 0;line-height:1.5;color:rgba(0,0,0,.6)}
+</style>
+</head>
+<body>
+<header class="page-header">
+<img class="page-logo" src="logo.png" alt="" width="40" height="40" decoding="async">
+<p class="done-title">{{.DoneTitle}}</p>
+</header>
+<p class="done-body">{{.DoneBody}}</p>
+</body>
+</html>`))
+
+	tmplPhoneErrNoFiles = template.Must(template.New("phoneErr").Parse(`<!DOCTYPE html>
+<html lang="{{.Lang}}" dir="{{.Dir}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}}</title>
+<style>
+:root{--primary:#1976d2}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:1rem;max-width:28rem;margin:0 auto;background:#fafafa;color:rgba(0,0,0,.87)}
+.page-header{display:flex;align-items:center;gap:12px;margin:0 0 1rem}
+.page-logo{width:40px;height:40px;object-fit:contain;display:block}
+.page-title{font-size:1.25rem;font-weight:600;margin:0;line-height:1.2}
+.err-msg{margin:0 0 1rem;line-height:1.5;color:rgba(0,0,0,.87)}
+.retry-link{color:var(--primary);font-weight:500;text-decoration:none}
+.retry-link:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<header class="page-header">
+<img class="page-logo" src="logo.png" alt="" width="40" height="40" decoding="async">
+<span class="page-title">{{.Heading}}</span>
+</header>
+<p class="err-msg">{{.NoFiles}}</p>
+<p><a class="retry-link" href="./">{{.Retry}}</a></p>
+</body>
+</html>`))
+
+	tmplPhoneErrTooMany = template.Must(template.New("phoneTooMany").Parse(`<!DOCTYPE html>
+<html lang="{{.Lang}}" dir="{{.Dir}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}}</title>
+<style>
+:root{--primary:#1976d2}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:1rem;max-width:28rem;margin:0 auto;background:#fafafa;color:rgba(0,0,0,.87)}
+.page-header{display:flex;align-items:center;gap:12px;margin:0 0 1rem}
+.page-logo{width:40px;height:40px;object-fit:contain;display:block}
+.page-title{font-size:1.25rem;font-weight:600;margin:0;line-height:1.2}
+.err-msg{margin:0 0 1rem;line-height:1.5;color:rgba(0,0,0,.87)}
+.retry-link{color:var(--primary);font-weight:500;text-decoration:none}
+.retry-link:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<header class="page-header">
+<img class="page-logo" src="logo.png" alt="" width="40" height="40" decoding="async">
+<span class="page-title">{{.Heading}}</span>
+</header>
+<p class="err-msg">{{.TooManyFiles}}</p>
+<p><a class="retry-link" href="./">{{.Retry}}</a></p>
+</body>
+</html>`))
+)
+
+func normalizePhoneCopy(c models.PhoneUploadPageCopy) models.PhoneUploadPageCopy {
+	def := models.PhoneUploadPageCopy{
+		Lang:        "en",
+		Dir:         "ltr",
+		Title:       "PDF Wizard — Upload",
+		Heading:     "PDF Wizard",
+		Intro:       "Add photos from this phone. They will appear in PDF Wizard on your computer.",
+		PhotosLabel: "Photos",
+		ChooseFiles: "Select images",
+		Upload:      "Upload",
+		DoneTitle:   "Upload complete.",
+		DoneBody:    "You can close this page.",
+		NoFiles:     "No images were selected. Go back and choose at least one file.",
+		Retry:       "Try again",
+		SelectedCountLine: "__COUNT__ images selected for upload",
+		TooManyFiles:      fmt.Sprintf("You can upload at most %d images per session.", PhoneUploadMaxFilesPerSession),
+	}
+	merge := func(a, b string) string {
+		if strings.TrimSpace(a) != "" {
+			return a
+		}
+		return b
+	}
+	out := models.PhoneUploadPageCopy{
+		Lang:        merge(c.Lang, def.Lang),
+		Title:       merge(c.Title, def.Title),
+		Heading:     merge(c.Heading, def.Heading),
+		Intro:       merge(c.Intro, def.Intro),
+		PhotosLabel: merge(c.PhotosLabel, def.PhotosLabel),
+		ChooseFiles: merge(c.ChooseFiles, def.ChooseFiles),
+		Upload:      merge(c.Upload, def.Upload),
+		DoneTitle:   merge(c.DoneTitle, def.DoneTitle),
+		DoneBody:    merge(c.DoneBody, def.DoneBody),
+		NoFiles:     merge(c.NoFiles, def.NoFiles),
+		Retry:       merge(c.Retry, def.Retry),
+		SelectedCountLine: merge(c.SelectedCountLine, def.SelectedCountLine),
+		TooManyFiles:      merge(c.TooManyFiles, def.TooManyFiles),
+	}
+	switch {
+	case c.Dir == "rtl" || c.Dir == "ltr":
+		out.Dir = c.Dir
+	case strings.TrimSpace(c.Lang) == "ar":
+		out.Dir = "rtl"
+	default:
+		out.Dir = def.Dir
+	}
+	return out
+}
+
+func writePhoneHTML(t *template.Template, page *models.PhoneUploadPageCopy) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, page); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func writePhoneFormHTML(page *models.PhoneUploadPageCopy) ([]byte, error) {
+	data := struct {
+		models.PhoneUploadPageCopy
+		SelectedLineJS template.JS
+		TooManyLineJS  template.JS
+		MaxFiles       int
+	}{
+		PhoneUploadPageCopy: *page,
+		SelectedLineJS:      template.JS(strconv.Quote(page.SelectedCountLine)),
+		TooManyLineJS:       template.JS(strconv.Quote(page.TooManyFiles)),
+		MaxFiles:            PhoneUploadMaxFilesPerSession,
+	}
+	var buf bytes.Buffer
+	if err := tmplPhoneForm.Execute(&buf, &data); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
 
 // PrimaryLANIPv4 returns a private IPv4 address suitable for LAN URLs, or any
 // non-loopback IPv4 if none of the RFC1918 addresses are found.
@@ -90,11 +315,14 @@ func isPrivateIPv4(ip net.IP) bool {
 // StartLANImageUploadServer listens on a random TCP port on all interfaces, serves
 // a minimal upload page at /u/{token}/, and saves posted images to a temp directory.
 // onUploaded is called with absolute paths after a successful POST (may be empty if no valid images).
+// pageCopy is translated text from the app UI (same language as PDF Wizard).
 // The returned stop function shuts down the server and removes the temp directory.
-func StartLANImageUploadServer(onUploaded func(paths []string)) (pageURL string, stop func() error, err error) {
+func StartLANImageUploadServer(onUploaded func(paths []string), pageCopy models.PhoneUploadPageCopy) (pageURL string, stop func() error, err error) {
 	if onUploaded == nil {
 		return "", nil, fmt.Errorf("onUploaded callback is required")
 	}
+
+	page := normalizePhoneCopy(pageCopy)
 
 	tokenBytes := make([]byte, 16)
 	if _, err := rand.Read(tokenBytes); err != nil {
@@ -125,7 +353,7 @@ func StartLANImageUploadServer(onUploaded func(paths []string)) (pageURL string,
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       5 * time.Minute,
 		WriteTimeout:      2 * time.Minute,
-		Handler:         newPhoneUploadHandler(token, dir, onUploaded),
+		Handler:           newPhoneUploadHandler(token, dir, onUploaded, &page),
 	}
 
 	var wg sync.WaitGroup
@@ -148,11 +376,120 @@ func StartLANImageUploadServer(onUploaded func(paths []string)) (pageURL string,
 	return pageURL, stopFn, nil
 }
 
-func newPhoneUploadHandler(token, dir string, onUploaded func(paths []string)) http.Handler {
+// cloneUploadedImagesForApp copies files from the phone session directory into
+// separate os.TempDir files so they survive StopImagesPhoneUpload (RemoveAll on
+// the session dir). Returns new absolute paths; removes originals on success.
+func cloneUploadedImagesForApp(sessionPaths []string) ([]string, error) {
+	if len(sessionPaths) == 0 {
+		return nil, nil
+	}
+	var out []string
+	cleanupOut := func() {
+		for _, p := range out {
+			_ = os.Remove(p)
+		}
+		out = nil
+	}
+	for _, p := range sessionPaths {
+		ext := filepath.Ext(p)
+		if ext == "" {
+			ext = ".jpg"
+		}
+		dst, err := os.CreateTemp("", "pdfwizard-img-*"+ext)
+		if err != nil {
+			cleanupOut()
+			return nil, fmt.Errorf("create temp: %w", err)
+		}
+		dstPath := dst.Name()
+
+		src, err := os.Open(p)
+		if err != nil {
+			_ = dst.Close()
+			_ = os.Remove(dstPath)
+			cleanupOut()
+			return nil, fmt.Errorf("open session file: %w", err)
+		}
+		_, err = io.Copy(dst, src)
+		_ = src.Close()
+		closeErr := dst.Close()
+		if err != nil {
+			_ = os.Remove(dstPath)
+			cleanupOut()
+			return nil, fmt.Errorf("copy: %w", err)
+		}
+		if closeErr != nil {
+			_ = os.Remove(dstPath)
+			cleanupOut()
+			return nil, closeErr
+		}
+		if err := validateImageFile(dstPath); err != nil {
+			_ = os.Remove(dstPath)
+			cleanupOut()
+			return nil, err
+		}
+		_ = os.Remove(p)
+		out = append(out, dstPath)
+	}
+	return out, nil
+}
+
+func phoneUploadSuccessRedirect(w http.ResponseWriter, r *http.Request, token string) {
+	u := &url.URL{
+		Scheme: "http",
+		Host:   r.Host,
+		Path:   fmt.Sprintf("/u/%s/ok", token),
+	}
+	if r.TLS != nil {
+		u.Scheme = "https"
+	}
+	http.Redirect(w, r, u.String(), http.StatusSeeOther)
+}
+
+func newPhoneUploadHandler(token, dir string, onUploaded func(paths []string), page *models.PhoneUploadPageCopy) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := strings.Trim(r.URL.Path, "/")
 		parts := strings.Split(path, "/")
-		if len(parts) != 2 || parts[0] != "u" || parts[1] != token {
+		if len(parts) < 2 || parts[0] != "u" || parts[1] != token {
+			http.NotFound(w, r)
+			return
+		}
+
+		// GET /u/{token}/ok — success page only (PRG: refresh does not resubmit POST).
+		if len(parts) == 3 && parts[2] == "ok" {
+			if r.Method != http.MethodGet {
+				w.Header().Set("Allow", http.MethodGet)
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Header().Set("Content-Language", page.Lang)
+			b, err := writePhoneHTML(tmplPhoneOK, page)
+			if err != nil {
+				http.Error(w, "Server error", http.StatusInternalServerError)
+				return
+			}
+			_, _ = w.Write(b)
+			return
+		}
+
+		// GET /u/{token}/logo.png — embedded app logo (relative logo.png in HTML; avoids data: URI escaping issues on phones).
+		if len(parts) == 3 && parts[2] == "logo.png" {
+			if r.Method != http.MethodGet {
+				w.Header().Set("Allow", http.MethodGet)
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			if len(phonePageLogoPNG) == 0 {
+				http.Error(w, "Not found", http.StatusNotFound)
+				return
+			}
+			w.Header().Set("Content-Type", "image/png")
+			w.Header().Set("Cache-Control", "public, max-age=3600")
+			_, _ = w.Write(phonePageLogoPNG)
+			return
+		}
+
+		if len(parts) != 2 {
 			http.NotFound(w, r)
 			return
 		}
@@ -160,7 +497,13 @@ func newPhoneUploadHandler(token, dir string, onUploaded func(paths []string)) h
 		switch r.Method {
 		case http.MethodGet:
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			_, _ = w.Write([]byte(phoneUploadHTML))
+			w.Header().Set("Content-Language", page.Lang)
+			b, err := writePhoneFormHTML(page)
+			if err != nil {
+				http.Error(w, "Server error", http.StatusInternalServerError)
+				return
+			}
+			_, _ = w.Write(b)
 		case http.MethodPost:
 			r.Body = http.MaxBytesReader(w, r.Body, phoneUploadMaxBody)
 			if err := r.ParseMultipartForm(phoneUploadPartMemory); err != nil {
@@ -174,12 +517,26 @@ func newPhoneUploadHandler(token, dir string, onUploaded func(paths []string)) h
 			files := r.MultipartForm.File["files"]
 			if len(files) == 0 {
 				w.Header().Set("Content-Type", "text/html; charset=utf-8")
+				w.Header().Set("Content-Language", page.Lang)
 				w.WriteHeader(http.StatusBadRequest)
-				_, _ = w.Write([]byte(phoneUploadErrHTML + "<p>No files.</p></body></html>"))
+				b, err := writePhoneHTML(tmplPhoneErrNoFiles, page)
+				if err != nil {
+					http.Error(w, "Server error", http.StatusInternalServerError)
+					return
+				}
+				_, _ = w.Write(b)
 				return
 			}
-			if len(files) > phoneUploadMaxFiles {
-				http.Error(w, "Too many files", http.StatusBadRequest)
+			if len(files) > PhoneUploadMaxFilesPerSession {
+				w.Header().Set("Content-Type", "text/html; charset=utf-8")
+				w.Header().Set("Content-Language", page.Lang)
+				w.WriteHeader(http.StatusBadRequest)
+				b, err := writePhoneHTML(tmplPhoneErrTooMany, page)
+				if err != nil {
+					http.Error(w, "Server error", http.StatusInternalServerError)
+					return
+				}
+				_, _ = w.Write(b)
 				return
 			}
 
@@ -222,48 +579,17 @@ func newPhoneUploadHandler(token, dir string, onUploaded func(paths []string)) h
 				saved = append(saved, outPath)
 			}
 
-			onUploaded(saved)
+			durable, err := cloneUploadedImagesForApp(saved)
+			if err != nil {
+				http.Error(w, "Server error", http.StatusInternalServerError)
+				return
+			}
+			onUploaded(durable)
 
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			_, _ = w.Write([]byte(phoneUploadOKHTML))
+			phoneUploadSuccessRedirect(w, r, token)
 		default:
 			w.Header().Set("Allow", "GET, POST")
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
 }
-
-const phoneUploadHTML = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Upload images</title>
-<style>
-body{font-family:system-ui,sans-serif;padding:1rem;max-width:28rem;margin:0 auto}
-button{padding:.6rem 1rem;font-size:1rem}
-input[type=file]{margin:1rem 0}
-</style>
-</head>
-<body>
-<h1>PDF Wizard</h1>
-<p>Add photos from this phone. They will appear in PDF Wizard on your computer.</p>
-<form method="post" enctype="multipart/form-data">
-<label><strong>Photos</strong><br>
-<input type="file" name="files" multiple accept="image/*,.heic,.heif">
-</label>
-<p><button type="submit">Upload</button></p>
-</form>
-</body>
-</html>`
-
-const phoneUploadOKHTML = `<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Done</title></head>
-<body style="font-family:system-ui,sans-serif;padding:1rem;text-align:center">
-<p><strong>Upload complete.</strong></p>
-<p>You can close this page.</p>
-</body></html>`
-
-const phoneUploadErrHTML = `<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Error</title></head>
-<body style="font-family:system-ui,sans-serif;padding:1rem">`

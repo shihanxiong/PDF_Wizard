@@ -32,6 +32,6 @@ export function SetLanguage(arg1:string):Promise<void>;
 
 export function SplitPDF(arg1:string,arg2:Array<models.SplitDefinition>,arg3:string):Promise<void>;
 
-export function StartImagesPhoneUpload():Promise<string>;
+export function StartImagesPhoneUpload(arg1:models.PhoneUploadPageCopy):Promise<string>;
 
 export function StopImagesPhoneUpload():Promise<void>;

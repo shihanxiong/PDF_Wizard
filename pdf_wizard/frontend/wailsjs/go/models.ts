@@ -22,6 +22,44 @@ export namespace models {
 	        this.totalPages = source["totalPages"];
 	    }
 	}
+	export class PhoneUploadPageCopy {
+	    lang: string;
+	    dir: string;
+	    title: string;
+	    heading: string;
+	    intro: string;
+	    photosLabel: string;
+	    chooseFiles: string;
+	    upload: string;
+	    doneTitle: string;
+	    doneBody: string;
+	    noFiles: string;
+	    retry: string;
+	    selectedCountLine: string;
+	    tooManyFiles: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new PhoneUploadPageCopy(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.lang = source["lang"];
+	        this.dir = source["dir"];
+	        this.title = source["title"];
+	        this.heading = source["heading"];
+	        this.intro = source["intro"];
+	        this.photosLabel = source["photosLabel"];
+	        this.chooseFiles = source["chooseFiles"];
+	        this.upload = source["upload"];
+	        this.doneTitle = source["doneTitle"];
+	        this.doneBody = source["doneBody"];
+	        this.noFiles = source["noFiles"];
+	        this.retry = source["retry"];
+	        this.selectedCountLine = source["selectedCountLine"];
+	        this.tooManyFiles = source["tooManyFiles"];
+	    }
+	}
 	export class RotateDefinition {
 	    startPage: number;
 	    endPage: number;

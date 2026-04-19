@@ -40,3 +40,24 @@ type TextWatermarkConfig struct {
 	Position   string  `json:"position"`  // "center", "top-left", etc.
 	FontFamily string  `json:"fontFamily"`
 }
+
+// PhoneUploadPageCopy is translated text for the LAN phone upload HTML pages.
+// The frontend fills this from useI18n so the phone browser matches the app language.
+type PhoneUploadPageCopy struct {
+	Lang        string `json:"lang"`        // BCP 47 tag, e.g. en, zh, zh-TW
+	Dir         string `json:"dir"`         // "ltr" or "rtl"
+	Title       string `json:"title"`       // document <title>
+	Heading     string `json:"heading"`     // main heading (usually app title)
+	Intro       string `json:"intro"`       // paragraph under heading
+	PhotosLabel string `json:"photosLabel"` // label above file input
+	ChooseFiles string `json:"chooseFiles"` // label for file picker (styled as primary button)
+	Upload      string `json:"upload"`      // submit button
+	DoneTitle   string `json:"doneTitle"`   // success primary line
+	DoneBody    string `json:"doneBody"`    // success secondary line
+	NoFiles     string `json:"noFiles"`     // error when POST has no files
+	Retry       string `json:"retry"`       // link label to return to upload form
+	// SelectedCountLine must contain "__COUNT__"; phone JS replaces it with the number of files chosen.
+	SelectedCountLine string `json:"selectedCountLine"`
+	// TooManyFiles is the full message (frontend replaces "__MAX__" with the session limit, e.g. 25).
+	TooManyFiles string `json:"tooManyFiles"`
+}

@@ -62,8 +62,8 @@ export function SplitPDF(arg1, arg2, arg3) {
   return window['go']['main']['App']['SplitPDF'](arg1, arg2, arg3);
 }
 
-export function StartImagesPhoneUpload() {
-  return window['go']['main']['App']['StartImagesPhoneUpload']();
+export function StartImagesPhoneUpload(arg1) {
+  return window['go']['main']['App']['StartImagesPhoneUpload'](arg1);
 }
 
 export function StopImagesPhoneUpload() {

@@ -196,8 +196,9 @@ func (a *App) ImagesToPDF(imagePaths []string, outputDirectory string, outputFil
 }
 
 // StartImagesPhoneUpload starts an HTTP server on the LAN and returns the upload page URL for QR codes.
+// pageCopy must match the current UI language (typically from useI18n on the Images to PDF tab).
 // Uploaded images are emitted to the frontend as event "images-phone-upload" with a JSON array of file paths.
-func (a *App) StartImagesPhoneUpload() (string, error) {
+func (a *App) StartImagesPhoneUpload(pageCopy models.PhoneUploadPageCopy) (string, error) {
 	if a.ctx == nil {
 		return "", fmt.Errorf("application not ready")
 	}
@@ -213,7 +214,13 @@ func (a *App) StartImagesPhoneUpload() (string, error) {
 			return
 		}
 		runtime.EventsEmit(a.ctx, "images-phone-upload", string(data))
-	})
+		// End the receive session after a successful upload so the phone must scan a new QR for more images.
+		if len(paths) > 0 {
+			go func() {
+				_ = a.StopImagesPhoneUpload()
+			}()
+		}
+	}, pageCopy)
 	if err != nil {
 		return "", err
 	}

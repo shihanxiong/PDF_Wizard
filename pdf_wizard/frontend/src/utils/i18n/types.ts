@@ -118,6 +118,18 @@ export interface Translations {
   imagesPhoneReceiveHint: string;
   imagesPhoneReceiveStop: string;
   imagesPhoneReceiveFailed: string;
+  imagesPhonePageTitle: string;
+  imagesPhonePagePhotosLabel: string;
+  imagesPhonePageChooseFiles: string;
+  imagesPhonePageUpload: string;
+  imagesPhonePageDoneTitle: string;
+  imagesPhonePageDoneBody: string;
+  imagesPhonePageNoFiles: string;
+  imagesPhonePageRetry: string;
+  /** Use __COUNT__ placeholder; phone page JS substitutes the number of files chosen. */
+  imagesPhonePageSelectedCount: string;
+  /** Use __MAX__ placeholder; replaced with the per-session image limit (25). */
+  imagesPhonePageTooManyFiles: string;
 
   // Common
   modified: string;
