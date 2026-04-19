@@ -304,29 +304,25 @@ func (s *PDFService) ApplyWatermark(inputPath string, watermark models.Watermark
 		return fmt.Errorf("invalid font color: %w", err)
 	}
 
-	// Create watermark using pdfcpu's TextWatermark function for proper initialization
-	// This ensures all internal maps and structures are properly initialized
-	wm, err := api.TextWatermark(watermark.TextConfig.Text, "", false, false, types.POINTS)
+	// onTop=true => pdfcpu "stamp": paint after page content. onTop=false is a true under-content
+	// watermark; opaque page backgrounds then hide the text entirely (looks like a no-op).
+	wm, err := api.TextWatermark(watermark.TextConfig.Text, "", true, false, types.POINTS)
 	if err != nil {
 		return fmt.Errorf("failed to create watermark: %w", err)
 	}
+
+	// Default TextWatermark config forces diagonal layout and overrides rotation; UI exposes explicit rotation.
+	wm.Diagonal = model.NoDiagonal
 
 	// Customize the watermark with user settings
 	wm.Pos = anchor
 	wm.FontName = watermark.TextConfig.FontFamily
 	wm.FontSize = watermark.TextConfig.FontSize
 	wm.FillColor = fillColor
+	wm.StrokeColor = fillColor
+	wm.Color = fillColor
 	wm.Rotation = float64(watermark.TextConfig.Rotation)
 	wm.Opacity = watermark.TextConfig.Opacity
-
-	// Set opacity by adjusting color alpha
-	// pdfcpu uses color.SimpleColor which doesn't have alpha, so we'll use a workaround
-	// For opacity, we can use a lighter color or adjust the color intensity
-	// Since pdfcpu doesn't directly support opacity, we'll use a workaround with color intensity
-	if watermark.TextConfig.Opacity < 1.0 {
-		// Adjust color to simulate opacity by making it lighter
-		wm.FillColor = adjustColorOpacity(fillColor, watermark.TextConfig.Opacity)
-	}
 
 	// Apply watermark using pdfcpu's AddWatermarksFile
 	err = api.AddWatermarksFile(tempPath, "", pageSelection, wm, config)
@@ -487,26 +483,6 @@ func parseColor(hexColor string) (color.SimpleColor, error) {
 	}
 
 	return c, nil
-}
-
-// adjustColorOpacity adjusts color intensity to simulate opacity
-// Since pdfcpu doesn't support alpha, we blend with white to simulate transparency
-func adjustColorOpacity(c color.SimpleColor, opacity float64) color.SimpleColor {
-	if opacity >= 1.0 {
-		return c
-	}
-	if opacity <= 0.0 {
-		return color.White
-	}
-
-	// Blend with white: result = color * opacity + white * (1 - opacity)
-	// Since white is (1.0, 1.0, 1.0) in pdfcpu format, this becomes:
-	// result = color * opacity + 1.0 * (1 - opacity)
-	r := float32(float64(c.R)*opacity + 1.0*(1.0-opacity))
-	g := float32(float64(c.G)*opacity + 1.0*(1.0-opacity))
-	b := float32(float64(c.B)*opacity + 1.0*(1.0-opacity))
-
-	return color.SimpleColor{R: r, G: g, B: b}
 }
 
 // mergeDiagnoseInputs runs ReadContextFile on each merge input to find the first

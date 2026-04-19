@@ -184,8 +184,8 @@ The backend uses a service-based architecture with clear separation of concerns:
 
 - **Temporary file strategy**: Similar to RotatePDF, uses temporary file to avoid in-place modification
 - **Page range parsing**: Supports "all" pages or specific ranges like "1,3,5-10,15"
-- **Opacity simulation**: Since pdfcpu doesn't support alpha channel, opacity is simulated by blending color with white
-- **Helper functions**: Includes specialized functions for page range parsing, position conversion, color parsing, and opacity adjustment
+- **Stamp vs underlay**: Uses pdfcpu text config with **on top** of page content (`TextWatermark` with `onTop=true`) so text stays visible on opaque PDFs; clears default diagonal mode so UI rotation/position apply; opacity uses pdfcpu `ExtGState` (`wm.Opacity`)
+- **Helper functions**: Page range parsing, position-to-anchor conversion, hex color parsing
 
 For detailed service implementation, see [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md).
 
@@ -439,13 +439,12 @@ func (s *PDFService) ApplyWatermark(
 
 - Uses pdfcpu library's `TextWatermark` API for watermark creation
 - Parses page range string to determine which pages to watermark (supports "all" or specific ranges like "1,3,5-10")
-- Renders text with specified font, size, color, opacity (simulated via color blending with white), rotation, and position
+- Renders text with specified font, size, color, opacity (pdfcpu graphics state), rotation, and position
 - **Temporary file handling**: Creates a temporary copy of the input file, applies watermark, then moves to final output location (prevents in-place modification issues)
 - **Helper functions**:
   - `parsePageRange()` - Parses page range strings (e.g., "1,3,5-10,15") into pdfcpu format
   - `convertPositionToAnchor()` - Converts position strings to pdfcpu anchor format
   - `parseColor()` - Parses hex color codes to pdfcpu color format
-  - `adjustColorOpacity()` - Simulates opacity by blending color with white
 - Handles errors gracefully with user-friendly error messages
 - Validates page numbers against PDF page count
 - Validates watermark configuration (non-empty text, valid font size, opacity range)
