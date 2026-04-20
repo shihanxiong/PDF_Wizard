@@ -27,6 +27,7 @@ jobs:
           - 'components.spec.ts'
           - 'tabs.spec.ts'
           - 'i18n.spec.ts'
+          - 'images-to-pdf.spec.ts'
 
     steps:
       - name: Checkout code

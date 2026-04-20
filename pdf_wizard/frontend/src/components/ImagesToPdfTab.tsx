@@ -82,6 +82,7 @@ const SortableImageItem = ({ file, index, onRemove }: SortableImageItemProps) =>
     >
       <Box
         {...listeners}
+        data-testid={`images-to-pdf-drag-${index}`}
         sx={{
           mr: 2,
           display: 'flex',
