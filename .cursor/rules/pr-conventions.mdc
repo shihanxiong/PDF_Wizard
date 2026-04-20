@@ -54,9 +54,9 @@ Use the GitHub UI or CLI, e.g. `gh pr edit <number> --body-file <file>` or `--bo
 
 If the PR title no longer matches the work, rename it while **keeping the `[PDF-<issue#>]` prefix**.
 
-## Distributables: `build-dist.sh` before every PR commit
+## Distributables: `build-dist.sh` before every PR commit (when artifacts change)
 
-The GitHub repo keeps **up-to-date executables and packages** under `pdf_wizard/build/bin/` and `pdf_wizard/dist/`. Any pull request that changes product code (or anything that affects the built app) must refresh those artifacts **before** you commit.
+The GitHub repo tracks **release packages** under **`pdf_wizard/dist/`** only (DMG, ZIP, Windows binaries, READMEs, as applicable). The Wails build output **`pdf_wizard/build/`** is **gitignored** and must not be committed. Any pull request that changes product code (or anything that affects the built app) should refresh **`dist/`** via `build-dist.sh` **when distributables for that platform are expected to change**, then commit those `dist/` updates.
 
 ### Required command
 
@@ -68,20 +68,18 @@ bash pdf_wizard/build-dist.sh
 
 (or `cd pdf_wizard && ./build-dist.sh` — same script at `pdf_wizard/build-dist.sh`).
 
-The script runs the full Wails pipeline for the current OS (e.g. macOS: universal binary, `PDF Wizard.app`, ZIP/DMG and related files under `pdf_wizard/dist/`). Run it on **macOS** when updating macOS bundles/archives; run on **Windows** when you need refreshed Windows executables/installers that the repo tracks.
+The script runs the full Wails pipeline for the current OS (e.g. macOS: universal binary, `PDF Wizard.app` under `build/bin/`, then ZIP/DMG under `pdf_wizard/dist/`). Run it on **macOS** when updating macOS bundles/archives; run on **Windows** when you need refreshed Windows executables/installers that the repo tracks under `dist/`.
 
 ### Policy
 
-1. **Run `build-dist.sh` before committing** changes that go into an open PR (including follow-up commits on the same PR). Do not commit only source while leaving tracked binaries/archives stale.
-2. **Stage and commit** all resulting updates under tracked paths, at minimum:
-   - `pdf_wizard/build/bin/PDF Wizard.app/` (and peers under `build/bin/` if tracked)
-   - `pdf_wizard/dist/` (DMG, ZIP, READMEs, Windows `.exe` when applicable and tracked)
-3. Prefer **including distributable updates in the same commit** as the code they belong to when practical; otherwise include them in the **same PR** before merge.
-4. If a platform build cannot be run locally (e.g. no Windows box), say so in the PR and still run `build-dist.sh` on the platform you have—do not skip the step entirely when artifacts for that OS are expected to change.
+1. **Run `build-dist.sh` when** your PR should ship updated DMG/ZIP/Windows artifacts under `pdf_wizard/dist/`. Do not commit stale `dist/` files after code changes that affect the binary.
+2. **Stage and commit** resulting updates under **`pdf_wizard/dist/`** only. Do **not** add `pdf_wizard/build/` (it is ignored).
+3. Prefer **including `dist/` updates in the same commit** as the code they belong to when practical; otherwise include them in the **same PR** before merge.
+4. If a platform build cannot be run locally (e.g. no Windows box), say so in the PR and still run `build-dist.sh` on the platform you have—do not skip refreshing `dist/` when artifacts for that OS are expected to change.
 
 ## Checklist before suggesting or creating a PR
 
-1. **`bash pdf_wizard/build-dist.sh` has been run** and tracked outputs under `pdf_wizard/build/bin/` and `pdf_wizard/dist/` are committed when they changed.
+1. When distributables change: **`bash pdf_wizard/build-dist.sh` has been run** and updates under **`pdf_wizard/dist/`** are committed. **`pdf_wizard/build/`** is not part of the commit.
 2. Branch matches `pdf-<issue#>-<description>`.
 3. PR title starts with `[PDF-<issue#>]`.
 4. Same `<issue#>` appears in both branch prefix and title tag.
