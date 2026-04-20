@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/pdfcpu/pdfcpu/pkg/api"
@@ -12,6 +13,20 @@ import (
 
 	"pdf_wizard/models"
 )
+
+func dialogTitle(primary, fallback string) string {
+	if strings.TrimSpace(primary) != "" {
+		return primary
+	}
+	return fallback
+}
+
+func filterDisplayName(primary, fallback string) string {
+	if strings.TrimSpace(primary) != "" {
+		return primary
+	}
+	return fallback
+}
 
 // FileService handles file operations and dialogs
 type FileService struct {
@@ -24,12 +39,12 @@ func NewFileService(ctx context.Context) *FileService {
 }
 
 // SelectPDFFiles opens a file dialog to select multiple PDF files
-func (s *FileService) SelectPDFFiles() ([]string, error) {
+func (s *FileService) SelectPDFFiles(labels models.FileDialogLabels) ([]string, error) {
 	selection, err := runtime.OpenMultipleFilesDialog(s.ctx, runtime.OpenDialogOptions{
-		Title: "Select PDF Files",
+		Title: dialogTitle(labels.Title, "Select PDF Files"),
 		Filters: []runtime.FileFilter{
 			{
-				DisplayName: "PDF files",
+				DisplayName: filterDisplayName(labels.FilterDisplayName, "PDF files"),
 				Pattern:     "*.pdf",
 			},
 		},
@@ -41,12 +56,12 @@ func (s *FileService) SelectPDFFiles() ([]string, error) {
 }
 
 // SelectImageFiles opens a file dialog to select multiple image files.
-func (s *FileService) SelectImageFiles() ([]string, error) {
+func (s *FileService) SelectImageFiles(labels models.FileDialogLabels) ([]string, error) {
 	selection, err := runtime.OpenMultipleFilesDialog(s.ctx, runtime.OpenDialogOptions{
-		Title: "Select Image Files",
+		Title: dialogTitle(labels.Title, "Select Image Files"),
 		Filters: []runtime.FileFilter{
 			{
-				DisplayName: "Images",
+				DisplayName: filterDisplayName(labels.FilterDisplayName, "Images"),
 				Pattern:     "*.jpg;*.jpeg;*.png;*.gif;*.webp;*.tif;*.tiff;*.bmp;*.heic;*.heif;*.HEIC;*.HEIF",
 			},
 		},
@@ -58,12 +73,12 @@ func (s *FileService) SelectImageFiles() ([]string, error) {
 }
 
 // SelectPDFFile opens a file dialog to select a single PDF file
-func (s *FileService) SelectPDFFile() (string, error) {
+func (s *FileService) SelectPDFFile(labels models.FileDialogLabels) (string, error) {
 	selection, err := runtime.OpenFileDialog(s.ctx, runtime.OpenDialogOptions{
-		Title: "Select PDF File",
+		Title: dialogTitle(labels.Title, "Select PDF File"),
 		Filters: []runtime.FileFilter{
 			{
-				DisplayName: "PDF files",
+				DisplayName: filterDisplayName(labels.FilterDisplayName, "PDF files"),
 				Pattern:     "*.pdf",
 			},
 		},
@@ -78,9 +93,9 @@ func (s *FileService) SelectPDFFile() (string, error) {
 }
 
 // SelectOutputDirectory opens a directory dialog to select output directory
-func (s *FileService) SelectOutputDirectory() (string, error) {
+func (s *FileService) SelectOutputDirectory(labels models.FileDialogLabels) (string, error) {
 	selection, err := runtime.OpenDirectoryDialog(s.ctx, runtime.OpenDialogOptions{
-		Title: "Select Output Directory",
+		Title: dialogTitle(labels.Title, "Select Output Directory"),
 	})
 	if err != nil {
 		return "", err

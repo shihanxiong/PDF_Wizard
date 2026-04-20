@@ -20,13 +20,13 @@ export function MergePDFs(arg1:Array<string>,arg2:string,arg3:string):Promise<vo
 
 export function RotatePDF(arg1:string,arg2:Array<models.RotateDefinition>,arg3:string,arg4:string):Promise<void>;
 
-export function SelectImageFiles():Promise<Array<string>>;
+export function SelectImageFiles(arg1:models.FileDialogLabels):Promise<Array<string>>;
 
-export function SelectOutputDirectory():Promise<string>;
+export function SelectOutputDirectory(arg1:models.FileDialogLabels):Promise<string>;
 
-export function SelectPDFFile():Promise<string>;
+export function SelectPDFFile(arg1:models.FileDialogLabels):Promise<string>;
 
-export function SelectPDFFiles():Promise<Array<string>>;
+export function SelectPDFFiles(arg1:models.FileDialogLabels):Promise<Array<string>>;
 
 export function SetLanguage(arg1:string):Promise<void>;
 

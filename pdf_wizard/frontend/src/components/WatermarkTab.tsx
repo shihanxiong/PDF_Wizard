@@ -91,7 +91,12 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
 
   const handleSelectPDF = async () => {
     try {
-      const path = await SelectPDFFile();
+      const path = await SelectPDFFile(
+        new models.FileDialogLabels({
+          title: t('selectPDFFileWatermark'),
+          filterDisplayName: t('fileDialogFilterPdfFiles'),
+        }),
+      );
       if (path) {
         const metadata = await GetPDFMetadata(path);
         setSelectedPDF({
@@ -112,7 +117,9 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
 
   const handleSelectOutputDirectory = async () => {
     try {
-      const dir = await SelectOutputDirectory();
+      const dir = await SelectOutputDirectory(
+        new models.FileDialogLabels({ title: t('selectOutputDirectoryWatermark'), filterDisplayName: '' }),
+      );
       if (dir) {
         setOutputDirectory(dir);
         setError(null);

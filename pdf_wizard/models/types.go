@@ -1,5 +1,12 @@
 package models
 
+// FileDialogLabels carries user-visible strings for native file/folder dialogs.
+// The frontend sets these from i18n; empty fields fall back to English defaults in FileService.
+type FileDialogLabels struct {
+	Title             string `json:"title"`
+	FilterDisplayName string `json:"filterDisplayName"` // file pickers only; optional
+}
+
 // PDFMetadata represents file information including PDF metadata
 type PDFMetadata struct {
 	Path         string `json:"path"`

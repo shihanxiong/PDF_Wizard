@@ -22,6 +22,8 @@ export const ko: Translations = {
   failedToLoadFiles: '파일 로드 실패:',
   failedToSelectFiles: '파일 선택 실패:',
   failedToSelectOutputDirectory: '출력 디렉토리 선택 실패:',
+  fileDialogFilterPdfFiles: 'PDF 파일',
+  fileDialogFilterImages: '이미지',
   selectPDFFile: 'PDF 파일 선택',
   dragDropPDFHint: '또는 PDF 파일을 창 어디에나 끌어다 놓으세요',
   addSplit: '분할 추가',

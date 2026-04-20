@@ -22,6 +22,8 @@ export const ja: Translations = {
   failedToLoadFiles: 'ファイルの読み込みに失敗しました：',
   failedToSelectFiles: 'ファイルの選択に失敗しました：',
   failedToSelectOutputDirectory: '出力ディレクトリの選択に失敗しました：',
+  fileDialogFilterPdfFiles: 'PDF ファイル',
+  fileDialogFilterImages: '画像',
   selectPDFFile: 'PDF ファイルを選択',
   dragDropPDFHint: 'または、PDF ファイルをウィンドウの任意の場所にドラッグ＆ドロップ',
   addSplit: '分割を追加',

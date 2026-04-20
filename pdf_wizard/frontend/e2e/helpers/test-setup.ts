@@ -81,10 +81,10 @@ export function setupWailsMocks() {
             (window as any).runtime.EventsEmit('show-settings');
           }
         },
-        SelectPDFFiles: async () => [],
-        SelectPDFFile: async () => pdfPath || '',
-        SelectOutputDirectory: async () => '/tmp',
-        SelectImageFiles: async () => {
+        SelectPDFFiles: async (_labels: unknown) => [],
+        SelectPDFFile: async (_labels: unknown) => pdfPath || '',
+        SelectOutputDirectory: async (_labels: unknown) => '/tmp',
+        SelectImageFiles: async (_labels: unknown) => {
           const paths = (window as any).__testImagePaths as string[] | undefined;
           return paths && paths.length ? [...paths] : [];
         },

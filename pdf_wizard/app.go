@@ -152,18 +152,18 @@ func (a *App) SetLanguage(language string) error {
 }
 
 // SelectPDFFiles opens a file dialog to select multiple PDF files
-func (a *App) SelectPDFFiles() ([]string, error) {
-	return a.fileService.SelectPDFFiles()
+func (a *App) SelectPDFFiles(labels models.FileDialogLabels) ([]string, error) {
+	return a.fileService.SelectPDFFiles(labels)
 }
 
 // SelectPDFFile opens a file dialog to select a single PDF file
-func (a *App) SelectPDFFile() (string, error) {
-	return a.fileService.SelectPDFFile()
+func (a *App) SelectPDFFile(labels models.FileDialogLabels) (string, error) {
+	return a.fileService.SelectPDFFile(labels)
 }
 
 // SelectOutputDirectory opens a directory dialog to select output directory
-func (a *App) SelectOutputDirectory() (string, error) {
-	return a.fileService.SelectOutputDirectory()
+func (a *App) SelectOutputDirectory(labels models.FileDialogLabels) (string, error) {
+	return a.fileService.SelectOutputDirectory(labels)
 }
 
 // GetFileMetadata retrieves file metadata (TotalPages will be 0 unless needed)
@@ -187,8 +187,8 @@ func (a *App) MergePDFs(inputPaths []string, outputDirectory string, outputFilen
 }
 
 // SelectImageFiles opens a dialog to select multiple image files.
-func (a *App) SelectImageFiles() ([]string, error) {
-	return a.fileService.SelectImageFiles()
+func (a *App) SelectImageFiles(labels models.FileDialogLabels) ([]string, error) {
+	return a.fileService.SelectImageFiles(labels)
 }
 
 // ImagesToPDF writes a PDF with one page per image in the given order.
