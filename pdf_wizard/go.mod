@@ -3,6 +3,7 @@ module pdf_wizard
 go 1.25
 
 require (
+	github.com/disintegration/imaging v1.6.2
 	github.com/gen2brain/heic v0.4.9
 	github.com/pdfcpu/pdfcpu v0.11.1
 	github.com/wailsapp/wails/v2 v2.12.0

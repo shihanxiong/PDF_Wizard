@@ -251,7 +251,7 @@ Creates one PDF with one page per image, preserving order.
 
 **Implementation:**
 
-- `resolveImagePathsForPDF()` replaces HEIC/HEIF paths with temporary JPEGs (`heic_jpeg.go`); `defer` cleanup removes temps
+- `resolveImagePathsForPDF()` replaces HEIC/HEIF paths with temporary JPEGs (`heic_jpeg.go`), then runs **JPEG/PNG/GIF/TIFF/BMP** through **`github.com/disintegration/imaging`** with **`AutoOrientation(true)`** so **EXIF orientation** matches how the photo appears on a phone (pdfcpu imports raw pixels otherwise). WebP is passed through unchanged. `defer` cleanup removes temps
 - `api.ImportImagesFile` with `pdfcpu.DefaultImportConfig()` and `model.NewDefaultConfiguration()`
 - Removes existing output file before write; verifies output exists after import
 

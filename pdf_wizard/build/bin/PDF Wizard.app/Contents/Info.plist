@@ -12,11 +12,11 @@
         <key>CFBundleIdentifier</key>
         <string>com.wails.pdf_wizard</string>
         <key>CFBundleVersion</key>
-        <string>1.0.0</string>
+        <string>1.0.1</string>
         <key>CFBundleGetInfoString</key>
         <string>A modern PDF toolkit built with Wails v2</string>
         <key>CFBundleShortVersionString</key>
-        <string>1.0.0</string>
+        <string>1.0.1</string>
         <key>CFBundleIconFile</key>
         <string>iconfile</string>
         <key>LSMinimumSystemVersion</key>

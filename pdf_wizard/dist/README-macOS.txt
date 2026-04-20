@@ -17,9 +17,6 @@ SYSTEM REQUIREMENTS:
 - Works on Intel and Apple Silicon Macs
 
 TROUBLESHOOTING:
-Copying the app via AirDrop, WeChat, USB, etc. does not bypass macOS security.
-You may still need Right-click → Open (or signed/notarized builds from the developer).
-
 If you see "App is damaged and can't be opened":
 1. Right-click the app → Open → Click "Open"
 2. Or run: xattr -cr "PDF Wizard.app"
