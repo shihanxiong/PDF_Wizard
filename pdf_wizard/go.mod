@@ -7,6 +7,7 @@ require (
 	github.com/gen2brain/heic v0.4.9
 	github.com/pdfcpu/pdfcpu v0.11.1
 	github.com/wailsapp/wails/v2 v2.12.0
+	golang.org/x/sync v0.17.0
 )
 
 require (

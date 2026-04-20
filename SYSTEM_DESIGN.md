@@ -204,7 +204,7 @@ The backend uses a service-based architecture with clear separation of concerns:
 #### ImagesToPDF
 
 - **Input validation**: Non-empty path list; each path validated with `validateImageFile()` (supported extensions include `.heic` / `.heif`)
-- **HEIC/HEIF**: `resolveImagePathsForPDF()` in `heic_jpeg.go` decodes HEIC/HEIF once to temporary JPEG files so `api.ImportImagesFile` uses pdfcpu’s JPEG import path; temps removed in a `defer` cleanup
+- **HEIC/HEIF**: `resolveImagePathsForPDF()` in `heic_jpeg.go` decodes HEIC/HEIF once to temporary JPEG files (up to **four** inputs prepared concurrently) so `api.ImportImagesFile` uses pdfcpu’s JPEG import path; temps removed in a `defer` cleanup; order matches the selected file list
 - **Import**: `api.ImportImagesFile(paths, outputPath, pdfcpu.DefaultImportConfig(), model.NewDefaultConfiguration())` — one PDF page per image, order preserved. Before import, **`resolveImagePathsForPDF`** applies **EXIF orientation** (via `imaging.AutoOrientation`) for JPEG/PNG/GIF/TIFF/BMP so camera photos match on-screen orientation; HEIC is converted to JPEG first, then normalized.
 - **Output**: Same overwrite pattern as merge (remove existing output, verify file exists after write)
 
