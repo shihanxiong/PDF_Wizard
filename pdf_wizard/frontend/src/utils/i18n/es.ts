@@ -22,6 +22,8 @@ export const es: Translations = {
   failedToLoadFiles: 'Error al cargar archivos:',
   failedToSelectFiles: 'Error al seleccionar archivos:',
   failedToSelectOutputDirectory: 'Error al seleccionar directorio de salida:',
+  fileDialogFilterPdfFiles: 'Archivos PDF',
+  fileDialogFilterImages: 'Imágenes',
   selectPDFFile: 'Seleccionar archivo PDF',
   dragDropPDFHint: 'O arrastra y suelta un archivo PDF en cualquier lugar de la ventana',
   addSplit: 'Agregar división',

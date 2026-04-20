@@ -32,6 +32,10 @@ export interface Translations {
   failedToLoadFiles: string;
   failedToSelectFiles: string;
   failedToSelectOutputDirectory: string;
+  /** Native file-dialog filter label for PDFs */
+  fileDialogFilterPdfFiles: string;
+  /** Native file-dialog filter label for raster images */
+  fileDialogFilterImages: string;
 
   // Split Tab
   selectPDFFile: string;

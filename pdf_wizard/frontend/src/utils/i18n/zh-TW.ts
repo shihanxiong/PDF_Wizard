@@ -22,6 +22,8 @@ export const zhTW: Translations = {
   failedToLoadFiles: '載入檔案失敗：',
   failedToSelectFiles: '選擇檔案失敗：',
   failedToSelectOutputDirectory: '選擇輸出目錄失敗：',
+  fileDialogFilterPdfFiles: 'PDF 檔案',
+  fileDialogFilterImages: '圖片',
   selectPDFFile: '選擇 PDF 檔案',
   dragDropPDFHint: '或將 PDF 檔案拖放到視窗任意位置',
   addSplit: '新增拆分',

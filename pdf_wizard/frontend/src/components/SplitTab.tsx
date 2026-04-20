@@ -38,7 +38,10 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
   const [success, setSuccess] = useState<string | null>(null);
 
   const { handlePDFDrop } = usePDFDrop();
-  const { outputDirectory, selectDirectory } = useOutputDirectory('failedToSelectOutputDirectorySplit');
+  const { outputDirectory, selectDirectory } = useOutputDirectory(
+    'failedToSelectOutputDirectorySplit',
+    'selectOutputDirectorySplit',
+  );
   const { error, setError, handleError } = useErrorHandler();
 
   // Register drag and drop handler with App component
@@ -61,7 +64,12 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
 
   const handleSelectPDF = async () => {
     try {
-      const path = await SelectPDFFile();
+      const path = await SelectPDFFile(
+        new models.FileDialogLabels({
+          title: t('selectPDFFile'),
+          filterDisplayName: t('fileDialogFilterPdfFiles'),
+        }),
+      );
       if (path) {
         const metadata = await GetPDFMetadata(path);
         setSelectedPDF({

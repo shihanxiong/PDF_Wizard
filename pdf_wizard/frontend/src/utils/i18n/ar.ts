@@ -22,6 +22,8 @@ export const ar: Translations = {
   failedToLoadFiles: 'فشل تحميل الملفات:',
   failedToSelectFiles: 'فشل اختيار الملفات:',
   failedToSelectOutputDirectory: 'فشل اختيار مجلد الإخراج:',
+  fileDialogFilterPdfFiles: 'ملفات PDF',
+  fileDialogFilterImages: 'صور',
   selectPDFFile: 'اختر ملف PDF',
   dragDropPDFHint: 'أو اسحب وأفلت ملف PDF في أي مكان على النافذة',
   addSplit: 'إضافة تقسيم',

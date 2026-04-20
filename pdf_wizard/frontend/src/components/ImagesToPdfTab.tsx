@@ -139,7 +139,7 @@ export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
   const [qrDataURL, setQrDataURL] = useState<string | null>(null);
 
   const { handleImageDrop } = useImageDrop();
-  const { outputDirectory, selectDirectory } = useOutputDirectory('failedToSelectOutputDirectory');
+  const { outputDirectory, selectDirectory } = useOutputDirectory('failedToSelectOutputDirectory', 'selectOutputDirectory');
   const { error, setError, handleError } = useErrorHandler();
 
   useEffect(() => {
@@ -240,7 +240,12 @@ export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
 
   const handleSelectFiles = async () => {
     try {
-      const paths = await SelectImageFiles();
+      const paths = await SelectImageFiles(
+        new models.FileDialogLabels({
+          title: t('selectImageFiles'),
+          filterDisplayName: t('fileDialogFilterImages'),
+        }),
+      );
       if (paths && paths.length > 0) {
         const metadataPromises = paths.map((path) => GetFileMetadata(path));
         const metadataResults = await Promise.all(metadataPromises);

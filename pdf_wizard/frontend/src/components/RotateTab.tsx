@@ -44,7 +44,10 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
   const [success, setSuccess] = useState<string | null>(null);
 
   const { handlePDFDrop } = usePDFDrop();
-  const { outputDirectory, selectDirectory } = useOutputDirectory('failedToSelectOutputDirectoryRotate');
+  const { outputDirectory, selectDirectory } = useOutputDirectory(
+    'failedToSelectOutputDirectoryRotate',
+    'selectOutputDirectoryRotate',
+  );
   const { error, setError, handleError } = useErrorHandler();
 
   // Register drag and drop handler with App component
@@ -67,7 +70,12 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
 
   const handleSelectPDF = async () => {
     try {
-      const path = await SelectPDFFile();
+      const path = await SelectPDFFile(
+        new models.FileDialogLabels({
+          title: t('selectPDFFile'),
+          filterDisplayName: t('fileDialogFilterPdfFiles'),
+        }),
+      );
       if (path) {
         const metadata = await GetPDFMetadata(path);
         setSelectedPDF({

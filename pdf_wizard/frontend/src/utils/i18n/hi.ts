@@ -22,6 +22,8 @@ export const hi: Translations = {
   failedToLoadFiles: 'फ़ाइलें लोड करने में विफल:',
   failedToSelectFiles: 'फ़ाइलें चुनने में विफल:',
   failedToSelectOutputDirectory: 'आउटपुट निर्देशिका चुनने में विफल:',
+  fileDialogFilterPdfFiles: 'PDF फ़ाइलें',
+  fileDialogFilterImages: 'छवियाँ',
   selectPDFFile: 'PDF फ़ाइल चुनें',
   dragDropPDFHint: 'या विंडो पर कहीं भी PDF फ़ाइल खींचें और छोड़ें',
   addSplit: 'विभाजन जोड़ें',

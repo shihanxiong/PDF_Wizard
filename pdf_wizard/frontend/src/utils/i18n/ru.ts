@@ -22,6 +22,8 @@ export const ru: Translations = {
   failedToLoadFiles: 'Ошибка загрузки файлов:',
   failedToSelectFiles: 'Ошибка выбора файлов:',
   failedToSelectOutputDirectory: 'Ошибка выбора папки для сохранения:',
+  fileDialogFilterPdfFiles: 'PDF-файлы',
+  fileDialogFilterImages: 'Изображения',
   selectPDFFile: 'Выбрать PDF файл',
   dragDropPDFHint: 'Или перетащите PDF файл в любое место окна',
   addSplit: 'Добавить разделение',

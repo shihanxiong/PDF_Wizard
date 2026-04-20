@@ -1,5 +1,19 @@
 export namespace models {
 	
+	export class FileDialogLabels {
+	    title: string;
+	    filterDisplayName: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new FileDialogLabels(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.title = source["title"];
+	        this.filterDisplayName = source["filterDisplayName"];
+	    }
+	}
 	export class PDFMetadata {
 	    path: string;
 	    name: string;

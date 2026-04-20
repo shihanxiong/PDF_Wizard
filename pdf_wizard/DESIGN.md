@@ -178,21 +178,21 @@ Emits a "show-settings" event to the frontend.
 All PDF and file operations delegate to services:
 
 ```go
-// File operations
-func (a *App) SelectPDFFiles() ([]string, error) {
-    return a.fileService.SelectPDFFiles()
+// File operations (labels: dialog title + filter display name for file pickers)
+func (a *App) SelectPDFFiles(labels models.FileDialogLabels) ([]string, error) {
+    return a.fileService.SelectPDFFiles(labels)
 }
 
-func (a *App) SelectPDFFile() (string, error) {
-    return a.fileService.SelectPDFFile()
+func (a *App) SelectPDFFile(labels models.FileDialogLabels) (string, error) {
+    return a.fileService.SelectPDFFile(labels)
 }
 
-func (a *App) SelectImageFiles() ([]string, error) {
-    return a.fileService.SelectImageFiles()
+func (a *App) SelectImageFiles(labels models.FileDialogLabels) ([]string, error) {
+    return a.fileService.SelectImageFiles(labels)
 }
 
-func (a *App) SelectOutputDirectory() (string, error) {
-    return a.fileService.SelectOutputDirectory()
+func (a *App) SelectOutputDirectory(labels models.FileDialogLabels) (string, error) {
+    return a.fileService.SelectOutputDirectory(labels)
 }
 
 func (a *App) GetFileMetadata(path string) (models.PDFMetadata, error) {

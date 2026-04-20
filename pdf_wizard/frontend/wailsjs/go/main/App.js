@@ -38,20 +38,20 @@ export function RotatePDF(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['RotatePDF'](arg1, arg2, arg3, arg4);
 }
 
-export function SelectImageFiles() {
-  return window['go']['main']['App']['SelectImageFiles']();
+export function SelectImageFiles(arg1) {
+  return window['go']['main']['App']['SelectImageFiles'](arg1);
 }
 
-export function SelectOutputDirectory() {
-  return window['go']['main']['App']['SelectOutputDirectory']();
+export function SelectOutputDirectory(arg1) {
+  return window['go']['main']['App']['SelectOutputDirectory'](arg1);
 }
 
-export function SelectPDFFile() {
-  return window['go']['main']['App']['SelectPDFFile']();
+export function SelectPDFFile(arg1) {
+  return window['go']['main']['App']['SelectPDFFile'](arg1);
 }
 
-export function SelectPDFFiles() {
-  return window['go']['main']['App']['SelectPDFFiles']();
+export function SelectPDFFiles(arg1) {
+  return window['go']['main']['App']['SelectPDFFiles'](arg1);
 }
 
 export function SetLanguage(arg1) {

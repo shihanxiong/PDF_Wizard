@@ -21,6 +21,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SelectPDFFiles, GetFileMetadata, MergePDFs } from '../../wailsjs/go/main/App';
+import { models } from '../../wailsjs/go/models';
 import { SelectedFile } from '../types';
 import { formatFileSize, formatDate, convertToSelectedFile } from '../utils/formatters';
 import { useI18n } from '../utils/i18n';
@@ -122,7 +123,7 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
   const [success, setSuccess] = useState<string | null>(null);
 
   const { handlePDFDrop } = usePDFDrop();
-  const { outputDirectory, selectDirectory } = useOutputDirectory('failedToSelectOutputDirectory');
+  const { outputDirectory, selectDirectory } = useOutputDirectory('failedToSelectOutputDirectory', 'selectOutputDirectory');
   const { error, setError, handleError } = useErrorHandler();
 
   // Register drag and drop handler with App component
@@ -144,7 +145,12 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
 
   const handleSelectFiles = async () => {
     try {
-      const paths = await SelectPDFFiles();
+      const paths = await SelectPDFFiles(
+        new models.FileDialogLabels({
+          title: t('selectPDFFiles'),
+          filterDisplayName: t('fileDialogFilterPdfFiles'),
+        }),
+      );
       if (paths && paths.length > 0) {
         const metadataPromises = paths.map((path) => GetFileMetadata(path));
         const metadataResults = await Promise.all(metadataPromises);

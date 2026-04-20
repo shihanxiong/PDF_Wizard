@@ -55,35 +55,35 @@ func NewFileService(ctx context.Context) *FileService {
 
 ### Methods
 
-#### `SelectPDFFiles() ([]string, error)`
+#### `SelectPDFFiles(labels models.FileDialogLabels) ([]string, error)`
 
 Opens a native file dialog to select multiple PDF files.
 
-- Uses `runtime.OpenMultipleFilesDialog()` with PDF filter
+- Uses `runtime.OpenMultipleFilesDialog()` with PDF filter; dialog title and filter display name come from `labels` (empty strings fall back to English defaults)
 - Returns array of selected file paths
 - Returns error if dialog is cancelled or fails
 
-#### `SelectPDFFile() (string, error)`
+#### `SelectPDFFile(labels models.FileDialogLabels) (string, error)`
 
 Opens a native file dialog to select a single PDF file.
 
-- Uses `runtime.OpenFileDialog()` with PDF filter
+- Uses `runtime.OpenFileDialog()` with PDF filter; `labels` supplies localized title and filter label (empty → English defaults)
 - Returns selected file path
 - Returns error if no file selected or dialog fails
 
-#### `SelectImageFiles() ([]string, error)`
+#### `SelectImageFiles(labels models.FileDialogLabels) ([]string, error)`
 
 Opens a native file dialog to select multiple image files.
 
-- Uses `runtime.OpenMultipleFilesDialog()` with an image filter (JPEG, PNG, WebP, TIFF, GIF, BMP, HEIC, HEIF)
+- Uses `runtime.OpenMultipleFilesDialog()` with an image filter (JPEG, PNG, WebP, TIFF, GIF, BMP, HEIC, HEIF); `labels` for title and filter display name
 - Returns array of selected paths
 - Returns error if dialog is cancelled or fails
 
-#### `SelectOutputDirectory() (string, error)`
+#### `SelectOutputDirectory(labels models.FileDialogLabels) (string, error)`
 
 Opens a native directory dialog to select an output directory.
 
-- Uses `runtime.OpenDirectoryDialog()`
+- Uses `runtime.OpenDirectoryDialog()`; `labels.Title` is the dialog title (`filterDisplayName` is unused for directories)
 - Returns selected directory path
 - Returns error if dialog is cancelled or fails
 
