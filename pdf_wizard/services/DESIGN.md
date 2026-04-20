@@ -251,7 +251,7 @@ Creates one PDF with one page per image, preserving order.
 
 **Implementation:**
 
-- `resolveImagePathsForPDF()` (`heic_jpeg.go`) prepares each input **in parallel** with a bounded **`errgroup`** (up to **4** workers, capped by input count): HEIC/HEIF → temporary JPEG, then **JPEG/PNG/GIF/TIFF/BMP** through **`github.com/disintegration/imaging`** with **`AutoOrientation(true)`** for **EXIF orientation** (pdfcpu imports raw pixels otherwise). WebP is passed through unchanged. Output order matches `imagePaths`; `defer` cleanup removes all temps. Memory: at most a few full decoded images at once (HEIC decode + encode).
+- `resolveImagePathsForPDF()` (`heic_jpeg.go`) prepares each input **in parallel** with a bounded **`errgroup`** (up to **4** workers, capped by input count): HEIC/HEIF → temporary JPEG, then **`normalizeRasterOrientation`** (`image_orientation.go`) for **JPEG/PNG/GIF/TIFF/BMP**. **JPEG only:** a lightweight EXIF scan (same rules as `imaging`’s internal reader) skips decode/re-encode when orientation is **missing or 1** (already upright). Other JPEG orientations and non-JPEG rasters still use **`imaging.AutoOrientation(true)`** (decode + save to temp when needed). WebP passes through unchanged. pdfcpu imports raw pixels otherwise. Output order matches `imagePaths`; `defer` cleanup removes all temps. Memory: at most a few full decoded images at once (HEIC decode + encode).
 - `api.ImportImagesFile` with `pdfcpu.DefaultImportConfig()` and `model.NewDefaultConfiguration()`
 - Removes existing output file before write; verifies output exists after import
 
