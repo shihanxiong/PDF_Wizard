@@ -9,6 +9,7 @@ $OutputDir = Join-Path $ScriptDir "dist"
 
 Write-Host "🔨 Building PDF Wizard for Windows..." -ForegroundColor Cyan
 Set-Location $ScriptDir
+& (Join-Path $ScriptDir "scripts\sync-app-icon.ps1")
 
 # Clean previous build
 if (Test-Path $BuildDir) {

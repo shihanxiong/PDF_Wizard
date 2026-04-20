@@ -31,6 +31,7 @@ OS=$(detect_os)
 
 echo "🔨 Building PDF Wizard for $OS..."
 cd "$SCRIPT_DIR"
+bash "$SCRIPT_DIR/scripts/sync-app-icon.sh"
 
 # Clean previous build
 if [ -d "$BUILD_DIR" ]; then

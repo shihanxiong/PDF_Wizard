@@ -8,10 +8,14 @@ Edit **`wails.json`** for Wails project settings. Reference: [Wails project conf
 
 ## Development
 
+Wails reads **`build/appicon.png`** for the macOS dock / Windows taskbar icon. Because **`build/` is gitignored**, the committed source is **`icons/appicon.png`**, copied into `build/` by the script below. If you run plain `wails dev` without that copy, you may see the default Wails icon.
+
 ```bash
 cd pdf_wizard
-wails dev
+./dev.sh
 ```
+
+Equivalent: `bash scripts/sync-app-icon.sh && wails dev`. On Windows, use **`.\dev.ps1`** or `.\scripts\sync-app-icon.ps1` then `wails dev`.
 
 Vite hot reload; optional browser devtools UI at `http://localhost:34115`.
 

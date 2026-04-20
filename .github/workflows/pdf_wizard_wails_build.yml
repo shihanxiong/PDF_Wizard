@@ -87,6 +87,10 @@ jobs:
         working-directory: pdf_wizard
         run: go test ./...
 
+      - name: Sync app icon for Wails
+        working-directory: pdf_wizard
+        run: bash scripts/sync-app-icon.sh
+
       - name: Wails build
         working-directory: pdf_wizard
         run: wails build -platform ${{ matrix.platform }}
