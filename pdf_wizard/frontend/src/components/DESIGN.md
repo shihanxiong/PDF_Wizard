@@ -16,6 +16,8 @@ Components use Material-UI. Strings use **`useI18n()`** from `utils/i18n` (see [
 
 When the UI language is English, **`App.tsx`** applies a slightly smaller `Tabs` label font so five tabs fit comfortably without crowding.
 
+`App.tsx` lazy-loads the five main tabs with **`React.lazy` + `Suspense`**. The shell (`AppBar`, tab strip, drag/drop wiring, settings dialog) renders immediately; each tab chunk is fetched on first activation and then stays mounted for local state continuity.
+
 ## Images to PDF Tab
 
 ### Functional requirements

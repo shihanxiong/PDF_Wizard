@@ -61,7 +61,7 @@ pdf_wizard/
 ├── frontend/
 │   ├── src/
 │   │   ├── main.tsx       # React entry; wraps App in I18nProvider
-│   │   ├── App.tsx        # Main application component with tab navigation
+│   │   ├── App.tsx        # Main shell + tab navigation (lazy-loads tab bundles on first activation)
 │   │   ├── hooks/         # Shared hooks (PDF/image drop, errors, processing state, output directory)
 │   │   ├── components/    # React components
 │   │   │   ├── MergeTab.tsx
