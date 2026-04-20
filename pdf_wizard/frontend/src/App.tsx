@@ -1,11 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import './App.css';
-import { Box, Tabs, Tab, AppBar, Toolbar, Typography } from '@mui/material';
-import { MergeTab } from './components/MergeTab';
-import { SplitTab } from './components/SplitTab';
-import { RotateTab } from './components/RotateTab';
-import { WatermarkTab } from './components/WatermarkTab';
-import { ImagesToPdfTab } from './components/ImagesToPdfTab';
+import { Box, Tabs, Tab, AppBar, Toolbar, Typography, CircularProgress } from '@mui/material';
 import { SettingsDialog } from './components/SettingsDialog';
 import logo from './assets/img/app_logo.png';
 import { OnFileDrop, OnFileDropOff, EventsOn } from '../wailsjs/runtime/runtime';
@@ -48,9 +43,38 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
+interface TabComponentProps {
+  onFileDrop: (handler: (paths: string[]) => void) => void;
+}
+
+const MergeTab = lazy(() =>
+  import('./components/MergeTab').then((module) => ({ default: module.MergeTab })),
+);
+const SplitTab = lazy(() =>
+  import('./components/SplitTab').then((module) => ({ default: module.SplitTab })),
+);
+const RotateTab = lazy(() =>
+  import('./components/RotateTab').then((module) => ({ default: module.RotateTab })),
+);
+const WatermarkTab = lazy(() =>
+  import('./components/WatermarkTab').then((module) => ({ default: module.WatermarkTab })),
+);
+const ImagesToPdfTab = lazy(() =>
+  import('./components/ImagesToPdfTab').then((module) => ({ default: module.ImagesToPdfTab })),
+);
+
+const TAB_COMPONENT: Record<MainTabId, React.LazyExoticComponent<React.ComponentType<TabComponentProps>>> = {
+  merge: MergeTab,
+  split: SplitTab,
+  rotate: RotateTab,
+  watermark: WatermarkTab,
+  imagesToPdf: ImagesToPdfTab,
+};
+
 export const App = () => {
   const { t, setLanguage, language } = useI18n();
   const [tabId, setTabId] = useState<MainTabId>('merge');
+  const [visitedTabs, setVisitedTabs] = useState<Set<MainTabId>>(() => new Set<MainTabId>(['merge']));
   const [settingsOpen, setSettingsOpen] = useState(false);
   const activeTabIdRef = useRef<MainTabId>('merge');
   const dropHandlersRef = useRef<Partial<Record<MainTabId, (paths: string[]) => void>>>({});
@@ -85,6 +109,14 @@ export const App = () => {
   // Keep ref in sync for OnFileDrop callback (registered once on mount)
   useEffect(() => {
     activeTabIdRef.current = tabId;
+    setVisitedTabs((prev) => {
+      if (prev.has(tabId)) {
+        return prev;
+      }
+      const next = new Set(prev);
+      next.add(tabId);
+      return next;
+    });
   }, [tabId]);
 
   // Set up drag and drop at app level to work anywhere on the window
@@ -121,6 +153,26 @@ export const App = () => {
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: unknown) => {
     setTabId(newValue as MainTabId);
+  };
+
+  const renderTabPanel = (panelId: MainTabId) => {
+    const shouldRender = visitedTabs.has(panelId);
+    const TabComponent = TAB_COMPONENT[panelId];
+    return (
+      <TabPanel key={panelId} activeTabId={tabId} panelId={panelId}>
+        {shouldRender ? (
+          <Suspense
+            fallback={
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', py: 8 }}>
+                <CircularProgress size={24} />
+              </Box>
+            }
+          >
+            <TabComponent onFileDrop={(handler: (paths: string[]) => void) => (dropHandlersRef.current[panelId] = handler)} />
+          </Suspense>
+        ) : null}
+      </TabPanel>
+    );
   };
 
   return (
@@ -172,25 +224,7 @@ export const App = () => {
         </Toolbar>
       </AppBar>
       <Box sx={{ flex: 1, overflow: 'hidden', backgroundColor: '#ffffff' }}>
-        <TabPanel activeTabId={tabId} panelId="merge">
-          <MergeTab onFileDrop={(handler: (paths: string[]) => void) => (dropHandlersRef.current.merge = handler)} />
-        </TabPanel>
-        <TabPanel activeTabId={tabId} panelId="split">
-          <SplitTab onFileDrop={(handler: (paths: string[]) => void) => (dropHandlersRef.current.split = handler)} />
-        </TabPanel>
-        <TabPanel activeTabId={tabId} panelId="rotate">
-          <RotateTab onFileDrop={(handler: (paths: string[]) => void) => (dropHandlersRef.current.rotate = handler)} />
-        </TabPanel>
-        <TabPanel activeTabId={tabId} panelId="watermark">
-          <WatermarkTab
-            onFileDrop={(handler: (paths: string[]) => void) => (dropHandlersRef.current.watermark = handler)}
-          />
-        </TabPanel>
-        <TabPanel activeTabId={tabId} panelId="imagesToPdf">
-          <ImagesToPdfTab
-            onFileDrop={(handler: (paths: string[]) => void) => (dropHandlersRef.current.imagesToPdf = handler)}
-          />
-        </TabPanel>
+        {MAIN_TAB_IDS.map((id) => renderTabPanel(id))}
       </Box>
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </Box>
