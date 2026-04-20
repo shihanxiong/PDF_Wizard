@@ -21,6 +21,19 @@ func normalizeRasterOrientation(path string) (outPath string, ok bool, err error
 		return path, false, nil
 	}
 
+	// JPEG fast path: skip decode/re-encode when EXIF orientation is missing or 1 (normal),
+	// matching imaging.AutoOrientation behavior for “already upright” pixels.
+	if ext == ".jpg" || ext == ".jpeg" {
+		f, err := os.Open(path)
+		if err == nil {
+			o, isJPEG := readJPEGExifOrientation(f)
+			_ = f.Close()
+			if isJPEG && (o == 0 || o == 1) {
+				return path, false, nil
+			}
+		}
+	}
+
 	img, err := imaging.Open(path, imaging.AutoOrientation(true))
 	if err != nil {
 		return path, false, nil
