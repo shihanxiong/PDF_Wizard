@@ -15,7 +15,7 @@ The App struct in `app.go` acts as a thin wrapper that delegates to these servic
 
 ## LAN phone image upload
 
-**Files:** `phone_upload.go`, `phone_upload_logo.go`, embedded `app_logo.png` (keep in sync with `frontend/src/assets/img/app_logo.png`).
+**Files:** `phone_upload.go`, `phone_upload_logo.go`, embedded `app_logo.png` (canonical source: repository root **`assets/img/app_logo.png`**; run **`scripts/update-app-icons.sh`** from the repo root after logo changes).
 
 **Entry:** `StartLANImageUploadServer(onUploaded func([]string), pageCopy models.PhoneUploadPageCopy) (pageURL string, stop func() error, err error)` — listens on `0.0.0.0:random port`, serves token-scoped routes under `/u/{token}/`.
 

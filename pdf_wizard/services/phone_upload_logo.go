@@ -4,7 +4,7 @@ import (
 	_ "embed"
 )
 
-// App logo bytes served at GET /u/{token}/logo.png (same file as frontend/src/assets/img/app_logo.png; update both when replacing).
+// App logo bytes served at GET /u/{token}/logo.png (synced from repo-root assets/img/app_logo.png via scripts/update-app-icons.sh).
 //
 //go:embed app_logo.png
 var phonePageLogoPNG []byte
