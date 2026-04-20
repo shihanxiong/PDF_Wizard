@@ -54,6 +54,10 @@ func NewApp() *App {
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
+	// Dock icon: packaged .app uses Info.plist + icns; wails dev runs a bare binary,
+	// so set NSApplication.applicationIconImage from the same PNG Wails uses at build time.
+	applyEmbeddedDockIcon(embeddedAppIconPNG)
+
 	// Save context for runtime operations
 	a.ctx = ctx
 

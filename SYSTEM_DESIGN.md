@@ -39,6 +39,8 @@ Avoid duplicating long procedures across files. Use this table to find the **sin
 
 ### Project Structure
 
+**Branding:** The canonical app logo is **`assets/img/app_logo.png`** (repository root). From the repo root, run **`bash scripts/update-app-icons.sh`** to regenerate **`pdf_wizard/build/appicon.png`** (1024×1024 for Wails) and copy the logo into **`pdf_wizard/frontend/src/assets/img/`** and **`pdf_wizard/services/`**.
+
 ```
 pdf_wizard/
 ├── main.go                 # Application entry point
@@ -50,7 +52,7 @@ pdf_wizard/
 │   ├── heic_jpeg.go       # HEIC/HEIF → temporary JPEG for pdfcpu import
 │   ├── phone_upload.go    # LAN HTTP server for phone → images upload; HTML templates
 │   ├── phone_upload_logo.go # go:embed app logo for phone pages (mirrors frontend asset)
-│   ├── app_logo.png       # Embedded copy of frontend logo (keep in sync when changing branding)
+│   ├── app_logo.png       # Embedded logo (sync from assets/img/app_logo.png; see scripts/update-app-icons.sh)
 │   ├── validation.go      # File and directory validation utilities
 │   ├── constants.go       # Service constants (file extensions, permissions)
 │   └── DESIGN.md          # Backend services design
@@ -296,7 +298,7 @@ Users can **start receiving** on the desktop to run a small **HTTP server** on t
 **Behavior (summary):**
 
 - **Token URL** — `http://<LAN-IPv4>:<port>/u/<token>/` (see `PrimaryLANIPv4()` + `StartLANImageUploadServer` in `services/phone_upload.go`).
-- **Logo** — `GET /u/{token}/logo.png` serves an embedded PNG (`services/app_logo.png`, same as `frontend/src/assets/img/app_logo.png`).
+- **Logo** — `GET /u/{token}/logo.png` serves an embedded PNG (`services/app_logo.png`, synced with `frontend/src/assets/img/app_logo.png` from **`assets/img/app_logo.png`**).
 - **Limit** — Up to **25** images per upload request (`PhoneUploadMaxFilesPerSession`); server and client enforce this.
 - **After a successful upload** — The app emits `images-phone-upload` with JSON path array, then **stops the LAN server** after a short delay so the phone can load the **success** (`/ok`) page first; the desktop clears the QR receive state. Further batches require **Receive from phone** again (new QR).
 - **Session closed** — After upload, revisiting the upload URL shows a **session ended** page; repeat **POST** returns **410** with the same copy. HTML responses use **`Cache-Control: no-store`**; the upload form uses **`pageshow` + bfcache reload** so Back does not show a stale form from cache.
