@@ -15,6 +15,8 @@ wails dev
 
 Vite hot reload; optional browser devtools UI at `http://localhost:34115`.
 
+**Dock icon in dev:** `wails dev` runs a bare binary (no `.app` bundle), so macOS does not apply `Info.plist` / `icns`. The app sets **`NSApplication.applicationIconImage`** on startup from the embedded `build/appicon.png`, matching the packaged app icon.
+
 ## Build and distribution
 
 - **App icon**: `build/appicon.png` is **committed** (Wails uses it for the dock / taskbar icon in `wails dev` and `wails build`). It is generated at **1024×1024** from the canonical **`../assets/img/app_logo.png`** — from the **repository root**, run **`bash scripts/update-app-icons.sh`** after changing that file (it also refreshes `frontend/src/assets/img/app_logo.png` and `services/app_logo.png`). Everything else under `build/` is gitignored.
