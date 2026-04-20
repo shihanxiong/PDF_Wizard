@@ -10,6 +10,13 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const TEST_PDF_PATH = path.join(__dirname, 'test.pdf');
+const TEST_IMAGE_PATH = path.join(__dirname, 'test-image.png');
+const TEST_IMAGE_PATH_2 = path.join(__dirname, 'test-image-2.png');
+
+export type SetupTestPageOptions = {
+  /** Absolute paths returned by SelectImageFiles mock (defaults to two tiny PNGs). */
+  imagePaths?: string[];
+};
 
 /**
  * Sets up Wails runtime and Go bindings mocks
@@ -77,7 +84,32 @@ export function setupWailsMocks() {
         SelectPDFFiles: async () => [],
         SelectPDFFile: async () => pdfPath || '',
         SelectOutputDirectory: async () => '/tmp',
-        GetFileMetadata: async () => ({}),
+        SelectImageFiles: async () => {
+          const paths = (window as any).__testImagePaths as string[] | undefined;
+          return paths && paths.length ? [...paths] : [];
+        },
+        GetFileMetadata: async (filePath: string) => {
+          const name = filePath.replace(/^.*[/\\\\]/, '') || filePath;
+          const lower = name.toLowerCase();
+          if (lower.endsWith('.pdf')) {
+            return {
+              path: filePath,
+              name,
+              size: 520,
+              lastModified: new Date().toISOString(),
+              isPDF: true,
+              totalPages: 1,
+            };
+          }
+          return {
+            path: filePath,
+            name,
+            size: 70,
+            lastModified: new Date().toISOString(),
+            isPDF: false,
+            totalPages: 0,
+          };
+        },
         GetPDFMetadata: async (path: string) => {
           if (path === pdfPath || path) {
             return {
@@ -101,6 +133,20 @@ export function setupWailsMocks() {
         SplitPDF: async () => {},
         RotatePDF: async () => {},
         ApplyWatermark: async () => {},
+        ImagesToPDF: async (paths: string[], outputDirectory: string, outputFilename: string) => {
+          (window as any).__imagesToPdfLastCall = {
+            paths: [...paths],
+            outputDirectory,
+            outputFilename,
+          };
+        },
+        StartImagesPhoneUpload: async () => {
+          (window as any).__phoneUploadSessionCount = ((window as any).__phoneUploadSessionCount || 0) + 1;
+          return 'http://127.0.0.1:65530/u/e2e-mock-token/';
+        },
+        StopImagesPhoneUpload: async () => {
+          (window as any).__phoneUploadStopped = true;
+        },
       },
     },
   };
@@ -110,14 +156,16 @@ export function setupWailsMocks() {
  * Common beforeEach setup for all tests
  * Sets up mocks, navigates to app, and waits for React to render
  */
-export async function setupTestPage(page: Page) {
+export async function setupTestPage(page: Page, options?: SetupTestPageOptions) {
+  const imagePaths = options?.imagePaths?.length ? options.imagePaths : [TEST_IMAGE_PATH, TEST_IMAGE_PATH_2];
+
   // Mock Wails runtime and Go bindings BEFORE the app loads
-  // Pass test PDF path to browser context
   await page.addInitScript(
-    ({ pdfPath }: { pdfPath: string }) => {
+    ({ pdfPath, imagePaths: imgs }: { pdfPath: string; imagePaths: string[] }) => {
       (window as any).__testPDFPath = pdfPath;
+      (window as any).__testImagePaths = imgs;
     },
-    { pdfPath: TEST_PDF_PATH },
+    { pdfPath: TEST_PDF_PATH, imagePaths },
   );
   await page.addInitScript(setupWailsMocks);
 
