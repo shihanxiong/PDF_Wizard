@@ -17,6 +17,7 @@ Vite hot reload; optional browser devtools UI at `http://localhost:34115`.
 
 ## Build and distribution
 
+- **App icon**: `build/appicon.png` is **committed** (Wails uses it for the dock / taskbar icon in `wails dev` and `wails build`). Everything else under `build/` is gitignored.
 - **Binary**: `wails build` → `build/bin/` (gitignored; not committed)
 - **DMG / ZIP / renamed Windows artifacts**: `./build-dist.sh` or `.\build-dist.ps1` after a successful build — full procedure in **[DISTRIBUTION.md](DISTRIBUTION.md)** only.
 

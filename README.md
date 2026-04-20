@@ -182,7 +182,7 @@ For development instructions, see [pdf_wizard/README.md](pdf_wizard/README.md).
 
 ## Building
 
-From `pdf_wizard/`, run `wails build` (output under `pdf_wizard/build/bin/`; that directory is gitignored). Committed release packages live under **`pdf_wizard/dist/`** only. Universal macOS builds, `build-dist.sh` / `build-dist.ps1`, DMG/ZIP/Windows artifacts, and NSIS notes are documented only in **[pdf_wizard/DISTRIBUTION.md](pdf_wizard/DISTRIBUTION.md)**.
+From `pdf_wizard/`, run `wails build` (output under `pdf_wizard/build/bin/`; that tree is gitignored except the tracked **`pdf_wizard/build/appicon.png`**). Committed release packages live under **`pdf_wizard/dist/`** only. Universal macOS builds, `build-dist.sh` / `build-dist.ps1`, DMG/ZIP/Windows artifacts, and NSIS notes are documented only in **[pdf_wizard/DISTRIBUTION.md](pdf_wizard/DISTRIBUTION.md)**.
 
 ## Testing
 

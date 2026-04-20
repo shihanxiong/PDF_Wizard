@@ -2,7 +2,7 @@
 
 Step-by-step packaging for maintainers (DMG, ZIP, Windows binaries, NSIS). Prerequisites and the global documentation index are in the repository **[README.md](../README.md)**; architecture notes live in **[SYSTEM_DESIGN.md](../SYSTEM_DESIGN.md)**. This file intentionally holds the **release build** detail so it is not duplicated in the root README.
 
-**Version control:** Prebuilt packages that ship from this repo (DMG, ZIP, Windows binaries, READMEs) live under **`pdf_wizard/dist/`** only. The Wails output tree **`pdf_wizard/build/`** is listed in `.gitignore` and is **not** committed—run `wails build` or `./build-dist.sh` locally to create `build/` before packaging.
+**Version control:** Prebuilt packages that ship from this repo (DMG, ZIP, Windows binaries, READMEs) live under **`pdf_wizard/dist/`** only. Wails build outputs under **`pdf_wizard/build/`** (binaries, generated plists, etc.) are **gitignored** and not committed—run `wails build` or `./build-dist.sh` locally to create them. The exception is **`pdf_wizard/build/appicon.png`**, which **is** tracked so `wails dev` / `wails build` always have the application icon.
 
 ## Building for Distribution
 

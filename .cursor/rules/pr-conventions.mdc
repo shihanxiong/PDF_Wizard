@@ -56,7 +56,7 @@ If the PR title no longer matches the work, rename it while **keeping the `[PDF-
 
 ## Distributables: `build-dist.sh` before every PR commit (when artifacts change)
 
-The GitHub repo tracks **release packages** under **`pdf_wizard/dist/`** only (DMG, ZIP, Windows binaries, READMEs, as applicable). The Wails build output **`pdf_wizard/build/`** is **gitignored** and must not be committed. Any pull request that changes product code (or anything that affects the built app) should refresh **`dist/`** via `build-dist.sh` **when distributables for that platform are expected to change**, then commit those `dist/` updates.
+The GitHub repo tracks **release packages** under **`pdf_wizard/dist/`** only (DMG, ZIP, Windows binaries, READMEs, as applicable). Wails outputs under **`pdf_wizard/build/`** are **gitignored** and must not be committed **except** the maintained **`pdf_wizard/build/appicon.png`** (required for dock/taskbar icons). Any pull request that changes product code (or anything that affects the built app) should refresh **`dist/`** via `build-dist.sh` **when distributables for that platform are expected to change**, then commit those `dist/` updates.
 
 ### Required command
 
@@ -73,13 +73,13 @@ The script runs the full Wails pipeline for the current OS (e.g. macOS: universa
 ### Policy
 
 1. **Run `build-dist.sh` when** your PR should ship updated DMG/ZIP/Windows artifacts under `pdf_wizard/dist/`. Do not commit stale `dist/` files after code changes that affect the binary.
-2. **Stage and commit** resulting updates under **`pdf_wizard/dist/`** only. Do **not** add `pdf_wizard/build/` (it is ignored).
+2. **Stage and commit** resulting updates under **`pdf_wizard/dist/`** only. Do **not** add paths under `pdf_wizard/build/` other than the intentional **`appicon.png`** (everything else is ignored).
 3. Prefer **including `dist/` updates in the same commit** as the code they belong to when practical; otherwise include them in the **same PR** before merge.
 4. If a platform build cannot be run locally (e.g. no Windows box), say so in the PR and still run `build-dist.sh` on the platform you have—do not skip refreshing `dist/` when artifacts for that OS are expected to change.
 
 ## Checklist before suggesting or creating a PR
 
-1. When distributables change: **`bash pdf_wizard/build-dist.sh` has been run** and updates under **`pdf_wizard/dist/`** are committed. **`pdf_wizard/build/`** is not part of the commit.
+1. When distributables change: **`bash pdf_wizard/build-dist.sh` has been run** and updates under **`pdf_wizard/dist/`** are committed. **`pdf_wizard/build/`** is not part of the commit except **`appicon.png`** when that asset changes.
 2. Branch matches `pdf-<issue#>-<description>`.
 3. PR title starts with `[PDF-<issue#>]`.
 4. Same `<issue#>` appears in both branch prefix and title tag.

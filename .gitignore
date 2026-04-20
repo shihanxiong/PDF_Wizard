@@ -4,8 +4,10 @@
 # Logs
 *.log
 
-# Wails / Go build output
-pdf_wizard/build/
+# Wails / Go build output (binaries, plists, etc.). Wails expects build/appicon.png
+# for the dock/taskbar icon — that file stays tracked (see negation below).
+pdf_wizard/build/**
+!pdf_wizard/build/appicon.png
 
 # Node.js / Frontend
 pdf_wizard/frontend/node_modules
