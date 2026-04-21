@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { getErrorMessage } from '../utils/errors';
 
 /**
  * Hook for managing processing state (loading, error, success) consistently
@@ -16,14 +17,8 @@ export function useProcessingState() {
       try {
         await operation();
         setSuccess(successMessage);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : typeof err === 'string'
-            ? err
-            : err?.toString() || 'Unknown error occurred';
-        setError(errorMessage);
+      } catch (err: unknown) {
+        setError(getErrorMessage(err));
         throw err; // Re-throw for component-specific handling
       } finally {
         setIsProcessing(false);

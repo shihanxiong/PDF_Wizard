@@ -22,7 +22,7 @@ export function useOutputDirectory(errorKey: keyof Translations, dialogTitleKey:
         setOutputDirectory(dir);
         setError(null);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       handleError(err, errorKey);
     }
   }, [dialogTitleKey, errorKey, handleError, setError, t]);

@@ -26,6 +26,7 @@ import { MAX_ROTATIONS } from '../utils/constants';
 import { usePDFDrop } from '../hooks/usePDFDrop';
 import { useOutputDirectory } from '../hooks/useOutputDirectory';
 import { useErrorHandler } from '../hooks/useErrorHandler';
+import { getErrorMessage } from '../utils/errors';
 import { PDFInfoCard } from './PDFInfoCard';
 import { FilenameInput } from './FilenameInput';
 import { OutputDirectorySelector } from './OutputDirectorySelector';
@@ -89,7 +90,7 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
         setRotations([]);
         setError(null);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       handleError(err, 'failedToSelectPDFRotate');
     }
   };
@@ -156,9 +157,8 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
       setSelectedPDF(null);
       setRotations([]);
       setOutputFilename('rotated');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : err?.toString() || 'Unknown error occurred';
-      setError(`${t('rotateFailed')} ${errorMessage}`);
+    } catch (err: unknown) {
+      setError(`${t('rotateFailed')} ${getErrorMessage(err)}`);
     } finally {
       setIsProcessing(false);
     }

@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useI18n, type Translations } from '../utils/i18n';
+import { getErrorMessage } from '../utils/errors';
 
 /**
  * Hook for consistent error handling across components
@@ -10,13 +11,7 @@ export function useErrorHandler() {
 
   const handleError = useCallback(
     (err: unknown, errorKey: keyof Translations) => {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : typeof err === 'string'
-            ? err
-            : err?.toString() || 'Unknown error occurred';
-      setError(`${t(errorKey)} ${errorMessage}`);
+      setError(`${t(errorKey)} ${getErrorMessage(err)}`);
     },
     [t]
   );

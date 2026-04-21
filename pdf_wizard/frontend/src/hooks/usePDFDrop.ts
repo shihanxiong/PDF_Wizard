@@ -3,6 +3,7 @@ import { GetFileMetadata, GetPDFMetadata } from '../../wailsjs/go/main/App';
 import { useI18n } from '../utils/i18n';
 import { convertToSelectedFile } from '../utils/formatters';
 import { SelectedFile, SelectedPDF } from '../types';
+import { getErrorMessage } from '../utils/errors';
 
 /**
  * Hook for handling PDF file drops with consistent validation
@@ -53,14 +54,8 @@ export function usePDFDrop() {
           };
           onSuccess(pdf);
         }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : typeof err === 'string'
-            ? err
-            : 'Unknown error occurred';
-        onError(errorMessage);
+      } catch (err: unknown) {
+        onError(getErrorMessage(err));
       }
     },
     [t]

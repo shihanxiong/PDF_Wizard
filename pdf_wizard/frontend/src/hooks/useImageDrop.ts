@@ -3,6 +3,7 @@ import { GetFileMetadata } from '../../wailsjs/go/main/App';
 import { useI18n } from '../utils/i18n';
 import { convertToSelectedFile } from '../utils/formatters';
 import { SelectedFile } from '../types';
+import { getErrorMessage } from '../utils/errors';
 
 const IMAGE_EXTENSIONS = [
   '.jpg',
@@ -48,14 +49,8 @@ export function useImageDrop() {
         const metadataResults = await Promise.all(metadataPromises);
         const files = metadataResults.map(convertToSelectedFile);
         onSuccess(files);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : typeof err === 'string'
-            ? err
-            : 'Unknown error occurred';
-        onError(errorMessage);
+      } catch (err: unknown) {
+        onError(getErrorMessage(err));
       }
     },
     [t]
