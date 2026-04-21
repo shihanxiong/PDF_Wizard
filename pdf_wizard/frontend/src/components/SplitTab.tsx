@@ -22,6 +22,7 @@ import { MAX_SPLITS } from '../utils/constants';
 import { usePDFDrop } from '../hooks/usePDFDrop';
 import { useOutputDirectory } from '../hooks/useOutputDirectory';
 import { useErrorHandler } from '../hooks/useErrorHandler';
+import { getErrorMessage } from '../utils/errors';
 import { PDFInfoCard } from './PDFInfoCard';
 import { OutputDirectorySelector } from './OutputDirectorySelector';
 import { NoPDFSelected } from './NoPDFSelected';
@@ -83,7 +84,7 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
         setSplits([]);
         setError(null);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       handleError(err, 'failedToSelectPDF');
     }
   };
@@ -149,9 +150,8 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
       setSuccess(`${t('pdfSplitSuccessfully')} ${splits.length} ${t('createdFiles')} ${outputFiles}`);
       // Clear splits after successful split
       setSplits([]);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : err?.toString() || 'Unknown error occurred';
-      setError(`${t('splitFailed')} ${errorMessage}`);
+    } catch (err: unknown) {
+      setError(`${t('splitFailed')} ${getErrorMessage(err)}`);
     } finally {
       setIsProcessing(false);
     }

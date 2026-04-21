@@ -28,6 +28,7 @@ import { useI18n } from '../utils/i18n';
 import { usePDFDrop } from '../hooks/usePDFDrop';
 import { useOutputDirectory } from '../hooks/useOutputDirectory';
 import { useErrorHandler } from '../hooks/useErrorHandler';
+import { getErrorMessage } from '../utils/errors';
 import { FilenameInput } from './FilenameInput';
 import { OutputDirectorySelector } from './OutputDirectorySelector';
 import { NoPDFSelected } from './NoPDFSelected';
@@ -158,7 +159,7 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
         setFiles((prev) => [...prev, ...newFiles]);
         setError(null);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       handleError(err, 'failedToSelectFiles');
     }
   };
@@ -201,9 +202,7 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
       setFiles([]);
       setOutputFilename('merged');
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : typeof err === 'string' ? err : String(err) || 'Unknown error occurred';
-      setError(`${t('mergeFailed')} ${errorMessage}`);
+      setError(`${t('mergeFailed')} ${getErrorMessage(err)}`);
     } finally {
       setIsProcessing(false);
     }
