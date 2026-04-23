@@ -7,7 +7,7 @@ This document describes the backend service layer architecture and implementatio
 The backend uses a service-based architecture with clear separation of concerns:
 
 - **FileService** (`file_service.go`): Handles file selection, directory selection, and file metadata operations
-- **PDFService** (`pdf_service.go`): Handles all PDF processing operations (merge, split, rotate, watermark, images→PDF)
+- **PDFService** (`pdf_service.go`): Handles all PDF processing operations (merge, split, rotate, watermark, images→PDF, lock, unlock)
 - **HEIC helpers** (`heic_jpeg.go`): Decode HEIC/HEIF to temporary JPEG for `api.ImportImagesFile`
 - **LAN phone upload** (`phone_upload.go`, `phone_upload_logo.go`): Optional HTTP server for sending images from a phone on the same LAN (see [§ LAN phone image upload](#lan-phone-image-upload))
 
@@ -125,6 +125,8 @@ PDFService handles all PDF processing operations:
 - Rotating specific page ranges in a PDF
 - Applying text watermarks (`ApplyWatermark`)
 - Building one PDF from ordered images (`ImagesToPDF`)
+- Locking PDFs with password-based encryption (`LockPDF`)
+- Unlocking password-protected PDFs (`UnlockPDF`)
 
 ### Structure
 

@@ -69,6 +69,7 @@ pdf_wizard/
 │   │   │   ├── RotateTab.tsx
 │   │   │   ├── WatermarkTab.tsx
 │   │   │   ├── ImagesToPdfTab.tsx
+│   │   │   ├── LockUnlockTab.tsx
 │   │   │   ├── SettingsDialog.tsx
 │   │   │   └── DESIGN.md  # Components design
 │   │   ├── types/         # TypeScript type definitions
@@ -102,19 +103,20 @@ pdf_wizard/
 
 ### Tab-Based Layout
 
-The application features a tabbed interface with five main tabs:
+The application features a tabbed interface with six main tabs:
 
 1. **Merge PDF Tab** - For combining multiple PDF files
 2. **Split PDF Tab** - For dividing a PDF into multiple files
 3. **Rotate PDF Tab** - For rotating specific page ranges in a PDF
 4. **Watermark PDF Tab** - For adding text or image watermarks to PDF files
 5. **Images to PDF Tab** - For building one PDF from multiple ordered images (including HEIC/HEIF)
+6. **Lock / Unlock PDF Tab** - For encrypting PDFs with a password or decrypting password-protected PDFs
 
 ### Tab Component Structure
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│  [Merge PDF] [Split PDF] [Rotate PDF] [Watermark PDF] [Images to PDF]     │
+│ [Merge PDF] [Split PDF] [Rotate PDF] [Watermark PDF] [Images to PDF] [Lock/Unlock] │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  Tab Content Area                                                            │
@@ -127,7 +129,7 @@ The application features a tabbed interface with five main tabs:
 Drag and drop file handling is implemented at the App level to work anywhere on the window:
 
 - A single `OnFileDrop` handler is registered at the App component level with `useDropTarget=false` to work anywhere on the window
-- The handler routes dropped files using **stable tab ids** (`merge`, `split`, `rotate`, `watermark`, `imagesToPdf`) defined by `MAIN_TAB_IDS` in `utils/constants.ts`. `activeTabIdRef` holds the current tab id; each tab registers a handler in `dropHandlersRef`, a `Partial<Record<MainTabId, ...>>` keyed by that id (not by numeric tab index)
+- The handler routes dropped files using **stable tab ids** (`merge`, `split`, `rotate`, `watermark`, `imagesToPdf`, `lockUnlock`) defined by `MAIN_TAB_IDS` in `utils/constants.ts`. `activeTabIdRef` holds the current tab id; each tab registers a handler in `dropHandlersRef`, a `Partial<Record<MainTabId, ...>>` keyed by that id (not by numeric tab index)
 - Each tab component registers its own drop handler via a callback prop
 - Cross-platform compatibility:
   - **Windows**: `DisableWebViewDrop: true` in Wails config prevents WebView2 from intercepting drag-and-drop events
@@ -145,13 +147,14 @@ Menu construction, Wails `options.App`, the JSON config path, and `GetLanguage` 
 
 ## Component Design
 
-The application consists of five main tab components:
+The application consists of six main tab components:
 
 1. **MergeTab** - Combines multiple PDF files into one
 2. **SplitTab** - Divides a PDF into multiple files
 3. **RotateTab** - Rotates specific page ranges in a PDF
 4. **WatermarkTab** - Adds text or image watermarks to PDF files
 5. **ImagesToPdfTab** - Builds one PDF from ordered images; composes `useImageDrop` for window-level drops (see [components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md))
+6. **LockUnlockTab** - Encrypts PDFs with passwords and decrypts protected PDFs to a new output file
 
 Each component handles its own state, file selection, validation, and processing.
 
@@ -162,7 +165,7 @@ For detailed component design and implementation, see [pdf_wizard/frontend/src/c
 The backend uses a service-based architecture with clear separation of concerns:
 
 - **FileService** - Handles file selection, directory selection, and file metadata operations (including `SelectImageFiles` for the images tab)
-- **PDFService** - Handles all PDF processing operations (merge, split, rotate, watermark, images→PDF via `ImagesToPDF`)
+- **PDFService** - Handles all PDF processing operations (merge, split, rotate, watermark, images→PDF via `ImagesToPDF`, plus `LockPDF` and `UnlockPDF`)
 - **LAN phone upload** (`services/phone_upload.go`) - Optional HTTP server on the LAN for the Images to PDF tab: token-scoped URL `/u/{token}/`, multipart uploads, `PrimaryLANIPv4` for the QR base URL; not a separate service struct, but documented in [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md)
 - **Validation utilities** (`validation.go`) - File and directory validation functions
   - `validatePDFFile()` - Validates file exists, is readable, and has PDF extension

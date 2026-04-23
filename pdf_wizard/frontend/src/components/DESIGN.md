@@ -4,19 +4,20 @@ This document describes the design and implementation of the React components in
 
 ## Overview
 
-The application features five main tab components for PDF manipulation:
+The application features six main tab components for PDF manipulation:
 
 - **MergeTab** — combines multiple PDFs
 - **SplitTab** — divides a PDF by page ranges
 - **RotateTab** — rotates page ranges
 - **WatermarkTab** — text watermarks (see [SYSTEM_DESIGN.md — Watermark PDF Tab](../../../../SYSTEM_DESIGN.md#watermark-pdf-tab) for product-level requirements)
 - **ImagesToPdfTab** — ordered images to one PDF (see [SYSTEM_DESIGN.md — Images to PDF Tab](../../../../SYSTEM_DESIGN.md#images-to-pdf-tab)); uses **`useImageDrop`** in `hooks/useImageDrop.ts` for the same window-level drop pattern as PDF tabs
+- **LockUnlockTab** — lock PDFs with a password or unlock password-protected PDFs into a new file
 
 Components use Material-UI. Strings use **`useI18n()`** from `utils/i18n` (see [utils/i18n/DESIGN.md](../utils/i18n/DESIGN.md)).
 
 When the UI language is English, **`App.tsx`** applies a slightly smaller `Tabs` label font so five tabs fit comfortably without crowding.
 
-`App.tsx` lazy-loads the five main tabs with **`React.lazy` + `Suspense`**. The shell (`AppBar`, tab strip, drag/drop wiring, settings dialog) renders immediately; each tab chunk is fetched on first activation and then stays mounted for local state continuity.
+`App.tsx` lazy-loads the six main tabs with **`React.lazy` + `Suspense`**. The shell (`AppBar`, tab strip, drag/drop wiring, settings dialog) renders immediately; each tab chunk is fetched on first activation and then stays mounted for local state continuity.
 
 ## Images to PDF Tab
 

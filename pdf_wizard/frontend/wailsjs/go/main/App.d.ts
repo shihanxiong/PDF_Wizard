@@ -16,6 +16,8 @@ export function GetPDFPageCount(arg1:string):Promise<number>;
 
 export function ImagesToPDF(arg1:Array<string>,arg2:string,arg3:string):Promise<void>;
 
+export function LockPDF(arg1:string,arg2:string,arg3:string,arg4:string):Promise<void>;
+
 export function MergePDFs(arg1:Array<string>,arg2:string,arg3:string):Promise<void>;
 
 export function RotatePDF(arg1:string,arg2:Array<models.RotateDefinition>,arg3:string,arg4:string):Promise<void>;
@@ -35,3 +37,5 @@ export function SplitPDF(arg1:string,arg2:Array<models.SplitDefinition>,arg3:str
 export function StartImagesPhoneUpload(arg1:models.PhoneUploadPageCopy):Promise<string>;
 
 export function StopImagesPhoneUpload():Promise<void>;
+
+export function UnlockPDF(arg1:string,arg2:string,arg3:string,arg4:string):Promise<void>;

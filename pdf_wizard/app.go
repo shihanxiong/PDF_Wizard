@@ -200,6 +200,16 @@ func (a *App) ImagesToPDF(imagePaths []string, outputDirectory string, outputFil
 	return a.pdfService.ImagesToPDF(imagePaths, outputDirectory, outputFilename)
 }
 
+// LockPDF encrypts a PDF with the provided password.
+func (a *App) LockPDF(inputPath string, password string, outputDirectory string, outputFilename string) error {
+	return a.pdfService.LockPDF(inputPath, password, outputDirectory, outputFilename)
+}
+
+// UnlockPDF decrypts a PDF using the provided password.
+func (a *App) UnlockPDF(inputPath string, password string, outputDirectory string, outputFilename string) error {
+	return a.pdfService.UnlockPDF(inputPath, password, outputDirectory, outputFilename)
+}
+
 // StartImagesPhoneUpload starts an HTTP server on the LAN and returns the upload page URL for QR codes.
 // pageCopy must match the current UI language (typically from useI18n on the Images to PDF tab).
 // Uploaded images are emitted to the frontend as event "images-phone-upload" with a JSON array of file paths.

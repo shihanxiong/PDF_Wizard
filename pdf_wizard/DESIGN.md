@@ -216,6 +216,14 @@ func (a *App) ImagesToPDF(imagePaths []string, outputDirectory string, outputFil
     return a.pdfService.ImagesToPDF(imagePaths, outputDirectory, outputFilename)
 }
 
+func (a *App) LockPDF(inputPath string, password string, outputDirectory string, outputFilename string) error {
+    return a.pdfService.LockPDF(inputPath, password, outputDirectory, outputFilename)
+}
+
+func (a *App) UnlockPDF(inputPath string, password string, outputDirectory string, outputFilename string) error {
+    return a.pdfService.UnlockPDF(inputPath, password, outputDirectory, outputFilename)
+}
+
 func (a *App) SplitPDF(inputPath string, splits []models.SplitDefinition, outputDirectory string) error {
     return a.pdfService.SplitPDF(inputPath, splits, outputDirectory)
 }

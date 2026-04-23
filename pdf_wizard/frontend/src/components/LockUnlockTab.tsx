@@ -1,0 +1,257 @@
+import { useCallback, useEffect, useState } from 'react';
+import { Alert, Box, Button, Card, CardContent, CircularProgress, TextField, Typography } from '@mui/material';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import FolderIcon from '@mui/icons-material/Folder';
+import { SelectedPDF } from '../types';
+import { formatDate, formatFileSize } from '../utils/formatters';
+import { useI18n } from '../utils/i18n';
+import { models } from '../../wailsjs/go/models';
+import { GetPDFMetadata, LockPDF, SelectOutputDirectory, SelectPDFFile, UnlockPDF } from '../../wailsjs/go/main/App';
+import { NoPDFSelected } from './NoPDFSelected';
+
+interface LockUnlockTabProps {
+  onFileDrop: (handler: (paths: string[]) => void) => void;
+}
+
+type Mode = 'lock' | 'unlock';
+
+export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
+  const { t } = useI18n();
+  const [mode, setMode] = useState<Mode>('lock');
+  const [selectedPDF, setSelectedPDF] = useState<SelectedPDF | null>(null);
+  const [password, setPassword] = useState('');
+  const [outputDirectory, setOutputDirectory] = useState('');
+  const [outputFilename, setOutputFilename] = useState('locked');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const defaultFilename = mode === 'lock' ? 'locked' : 'unlocked';
+
+  useEffect(() => {
+    setOutputFilename(defaultFilename);
+  }, [defaultFilename]);
+
+  const loadPDF = useCallback(
+    async (path: string) => {
+      const metadata = await GetPDFMetadata(path);
+      setSelectedPDF({
+        path: metadata.path,
+        name: metadata.name,
+        size: metadata.size,
+        lastModified: new Date(metadata.lastModified),
+        totalPages: metadata.totalPages,
+      });
+      setError(null);
+    },
+    []
+  );
+
+  const handleDroppedPDF = useCallback(
+    async (paths: string[]) => {
+      const pdfPaths = paths.filter((path) => path.toLowerCase().endsWith('.pdf'));
+      if (pdfPaths.length === 0) {
+        setError(t('noPDFFilesFound'));
+        return;
+      }
+      if (pdfPaths.length > 1) {
+        setError(t('pleaseDropOnlyOnePDF'));
+        return;
+      }
+      try {
+        await loadPDF(pdfPaths[0]);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
+        setError(`${t('lockUnlockFailedToLoadPDF')} ${message}`);
+      }
+    },
+    [loadPDF, t]
+  );
+
+  useEffect(() => {
+    onFileDrop(handleDroppedPDF);
+  }, [onFileDrop, handleDroppedPDF]);
+
+  const handleSelectPDF = async () => {
+    try {
+      const path = await SelectPDFFile(
+        new models.FileDialogLabels({
+          title: t('lockUnlockSelectPDF'),
+          filterDisplayName: t('fileDialogFilterPdfFiles'),
+        }),
+      );
+      if (!path) {
+        return;
+      }
+      await loadPDF(path);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
+      setError(`${t('lockUnlockFailedToSelectPDF')} ${message}`);
+    }
+  };
+
+  const handleSelectOutputDirectory = async () => {
+    try {
+      const dir = await SelectOutputDirectory(
+        new models.FileDialogLabels({ title: t('lockUnlockSelectOutputDirectory'), filterDisplayName: '' }),
+      );
+      if (!dir) {
+        return;
+      }
+      setOutputDirectory(dir);
+      setError(null);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
+      setError(`${t('lockUnlockFailedToSelectOutputDirectory')} ${message}`);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedPDF || !outputDirectory || !outputFilename.trim() || !password.trim()) {
+      return;
+    }
+    setIsProcessing(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      if (mode === 'lock') {
+        await LockPDF(selectedPDF.path, password, outputDirectory, outputFilename.trim());
+      } else {
+        await UnlockPDF(selectedPDF.path, password, outputDirectory, outputFilename.trim());
+      }
+      setSuccess(`${t(mode === 'lock' ? 'lockUnlockSuccessLocked' : 'lockUnlockSuccessUnlocked')} ${outputDirectory}/${outputFilename.trim()}.pdf`);
+      setSelectedPDF(null);
+      setPassword('');
+      setOutputFilename(defaultFilename);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
+      setError(`${t(mode === 'lock' ? 'lockUnlockLockFailed' : 'lockUnlockUnlockFailed')} ${message}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const canSubmit =
+    selectedPDF !== null &&
+    password.trim().length > 0 &&
+    outputDirectory.length > 0 &&
+    outputFilename.trim().length > 0 &&
+    !isProcessing;
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 3, overflow: 'hidden' }}>
+      <Box sx={{ mb: 1, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+        <Button
+          variant={mode === 'lock' ? 'contained' : 'outlined'}
+          onClick={() => setMode('lock')}
+          disabled={isProcessing}
+        >
+          {t('lockUnlockModeLock')}
+        </Button>
+        <Button
+          variant={mode === 'unlock' ? 'contained' : 'outlined'}
+          onClick={() => setMode('unlock')}
+          disabled={isProcessing}
+        >
+          {t('lockUnlockModeUnlock')}
+        </Button>
+      </Box>
+
+      <Box sx={{ mb: 1, flexShrink: 0 }}>
+        <Button
+          variant="contained"
+          startIcon={<CloudUploadIcon />}
+          onClick={handleSelectPDF}
+          sx={{ mb: 2 }}
+          disabled={isProcessing}
+        >
+          {t('lockUnlockSelectPDF')}
+        </Button>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t('dragDropPDFHint')}
+        </Typography>
+      </Box>
+
+      {error && (
+        <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2, flexShrink: 0 }}>
+          {error}
+        </Alert>
+      )}
+      {success && (
+        <Alert severity="success" onClose={() => setSuccess(null)} sx={{ mb: 2, flexShrink: 0 }}>
+          {success}
+        </Alert>
+      )}
+
+      {selectedPDF ? (
+        <Card sx={{ mb: 2, flexShrink: 0 }}>
+          <CardContent>
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              📄 {selectedPDF.name}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              {selectedPDF.path}
+            </Typography>
+            <Typography variant="body2">
+              {formatFileSize(selectedPDF.size)} • {selectedPDF.totalPages} {t('pages')} • {t('modified')} {formatDate(selectedPDF.lastModified)}
+            </Typography>
+          </CardContent>
+        </Card>
+      ) : (
+        <NoPDFSelected />
+      )}
+
+      <Box sx={{ mt: 'auto', pt: 2, pb: 2, flexShrink: 0 }}>
+        <TextField
+          label={t('lockUnlockPassword')}
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          size="small"
+          fullWidth
+          sx={{ mb: 2 }}
+          disabled={isProcessing}
+        />
+        <Box sx={{ mb: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<FolderIcon />}
+            onClick={handleSelectOutputDirectory}
+            sx={{ mb: 1 }}
+            disabled={isProcessing}
+          >
+            {t('lockUnlockSelectOutputDirectory')}
+          </Button>
+          {outputDirectory && (
+            <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+              {outputDirectory}
+            </Typography>
+          )}
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+          <Typography variant="body2">{t('outputFilename')}</Typography>
+          <TextField
+            value={outputFilename}
+            onChange={(e) => setOutputFilename(e.target.value)}
+            size="small"
+            sx={{ width: '220px' }}
+            disabled={isProcessing}
+          />
+          <Typography variant="body2">.pdf</Typography>
+        </Box>
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={!canSubmit}
+          fullWidth
+          sx={{ py: 1.5, mb: 2 }}
+          startIcon={isProcessing ? <CircularProgress size={16} color="inherit" /> : undefined}
+        >
+          {isProcessing
+            ? t(mode === 'lock' ? 'lockUnlockLocking' : 'lockUnlockUnlocking')
+            : t(mode === 'lock' ? 'lockUnlockActionLock' : 'lockUnlockActionUnlock')}
+        </Button>
+      </Box>
+    </Box>
+  );
+};
