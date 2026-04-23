@@ -5,6 +5,7 @@ go 1.25
 require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/gen2brain/heic v0.4.9
+	github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728
 	github.com/pdfcpu/pdfcpu v0.11.1
 	github.com/wailsapp/wails/v2 v2.12.0
 	golang.org/x/sync v0.17.0

@@ -127,6 +127,7 @@ PDFService handles all PDF processing operations:
 - Building one PDF from ordered images (`ImagesToPDF`)
 - Locking PDFs with password-based encryption (`LockPDF`)
 - Unlocking password-protected PDFs (`UnlockPDF`)
+- Extracting plain text for the PDF-to-Text tab (`ExtractPDFText` in `pdf_text_extract.go`; uses `github.com/ledongthuc/pdf` with a **pdfcpu decrypt-to-temp** fallback when the reader cannot open the encryption, for example AES-256 from `LockPDF`)
 
 ### Structure
 
@@ -257,6 +258,26 @@ Creates one PDF with one page per image, preserving order.
 - `api.ImportImagesFile` with `pdfcpu.DefaultImportConfig()` and `model.NewDefaultConfiguration()`
 - Removes existing output file before write; verifies output exists after import
 
+### ExtractPDFText (PDF to Text tab)
+
+#### `ExtractPDFText(path string, password string) (string, error)`
+
+Returns human-readable text from an existing PDF for the **PDF to Text** tab.
+
+**Validation:**
+
+- `validatePDFFile(path)`
+
+**Implementation:**
+
+- Tries `github.com/ledongthuc/pdf` (`NewReaderEncrypted`) with optional user password (tried after an empty password attempt for encrypted files).
+- **Fallback:** if opening or reading fails and pdfcpu can decrypt the file, writes a **temporary decrypted copy** with `api.DecryptFile` (same password configuration as `UnlockPDF`), then runs the text extractor on that copy and deletes the temp file. This covers **AES-256** PDFs produced by `LockPDF`, which the ledongthuc reader does not open directly.
+- Per-page extraction prefers **row-grouped** text (`GetTextByRow`) for rough reading order; falls back to `GetPlainText` when rows are empty or row grouping errors.
+
+**Limitations:**
+
+- Image-only or scanned pages typically yield little or no text (no OCR in this feature).
+
 ## Validation (`validation.go`)
 
 Shared helpers used by services:
@@ -331,12 +352,15 @@ App-wide Go and npm dependencies are summarized in [SYSTEM_DESIGN.md § Technica
 
 - `github.com/pdfcpu/pdfcpu/pkg/api` - PDF processing library
 
+  - `DecryptFile()` — decrypt to temp for `ExtractPDFText` when needed
   - `ReadContextFile()` - Read PDF and get context
   - `MergeCreateFile()` - Merge multiple PDFs
   - `ReadValidateAndOptimize()`, `PagesForPageSelection()`, `WriteContextFile()`, `ValidateContext()` — split uses one optimized read then per-output writes (#57)
   - `ImportImagesFile()` — images→PDF (one page per image)
 
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu` - Page extraction (`ExtractPages` for split segments)
+
+- `github.com/ledongthuc/pdf` — text extraction for `ExtractPDFText` (`pdf_text_extract.go`)
 
 - `github.com/gen2brain/heic` — decode HEIC/HEIF for `heic_jpeg.go` (combined with standard library `image/jpeg` encode)
 

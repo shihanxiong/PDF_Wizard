@@ -224,6 +224,10 @@ func (a *App) UnlockPDF(inputPath string, password string, outputDirectory strin
     return a.pdfService.UnlockPDF(inputPath, password, outputDirectory, outputFilename)
 }
 
+func (a *App) ExtractPDFText(path string, password string) (string, error) {
+    return a.pdfService.ExtractPDFText(path, password)
+}
+
 func (a *App) SplitPDF(inputPath string, splits []models.SplitDefinition, outputDirectory string) error {
     return a.pdfService.SplitPDF(inputPath, splits, outputDirectory)
 }

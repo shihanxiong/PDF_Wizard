@@ -30,7 +30,7 @@ Avoid duplicating long procedures across files. Use this table to find the **sin
 
 - **Backend**: Go 1.25 with Wails v2.12.0
 - **Frontend**: React 18+ with TypeScript, Material-UI (MUI) v7
-- **PDF Processing**: `github.com/pdfcpu/pdfcpu v0.11.1` - Native Go PDF library
+- **PDF Processing**: `github.com/pdfcpu/pdfcpu v0.11.1` - Native Go PDF library; **`github.com/ledongthuc/pdf`** for PDF-to-Text extraction (with pdfcpu decrypt fallback for strong encryption)
 - **Build Tool**: Wails CLI v2.12.0 (align with `github.com/wailsapp/wails/v2 v2.12.0` in `go.mod`)
 - **UI Framework**: Material-UI
 - **Drag and Drop**: `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities` for file reordering (replaced deprecated react-beautiful-dnd)
@@ -103,20 +103,21 @@ pdf_wizard/
 
 ### Tab-Based Layout
 
-The application features a tabbed interface with six main tabs:
+The application features a tabbed interface with seven main tabs:
 
 1. **Merge PDF Tab** - For combining multiple PDF files
 2. **Split PDF Tab** - For dividing a PDF into multiple files
 3. **Rotate PDF Tab** - For rotating specific page ranges in a PDF
 4. **Watermark PDF Tab** - For adding text or image watermarks to PDF files
 5. **Images to PDF Tab** - For building one PDF from multiple ordered images (including HEIC/HEIF)
-6. **Lock / Unlock PDF Tab** - For encrypting PDFs with a password or decrypting password-protected PDFs
+6. **PDF to Text Tab** - For extracting plain text from a PDF into an editable area (with copy); scanned/image-only PDFs may return little or no text (no OCR in this release)
+7. **Lock / Unlock PDF Tab** - For encrypting PDFs with a password or decrypting password-protected PDFs
 
 ### Tab Component Structure
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ [Merge PDF] [Split PDF] [Rotate PDF] [Watermark PDF] [Images to PDF] [Lock/Unlock] │
+│ [Merge PDF] [Split PDF] [Rotate PDF] [Watermark PDF] [Images to PDF] [PDF to Text] [Lock/Unlock] │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  Tab Content Area                                                            │
@@ -129,7 +130,7 @@ The application features a tabbed interface with six main tabs:
 Drag and drop file handling is implemented at the App level to work anywhere on the window:
 
 - A single `OnFileDrop` handler is registered at the App component level with `useDropTarget=false` to work anywhere on the window
-- The handler routes dropped files using **stable tab ids** (`merge`, `split`, `rotate`, `watermark`, `imagesToPdf`, `lockUnlock`) defined by `MAIN_TAB_IDS` in `utils/constants.ts`. `activeTabIdRef` holds the current tab id; each tab registers a handler in `dropHandlersRef`, a `Partial<Record<MainTabId, ...>>` keyed by that id (not by numeric tab index)
+- The handler routes dropped files using **stable tab ids** (`merge`, `split`, `rotate`, `watermark`, `imagesToPdf`, `pdfToText`, `lockUnlock`) defined by `MAIN_TAB_IDS` in `utils/constants.ts`. `activeTabIdRef` holds the current tab id; each tab registers a handler in `dropHandlersRef`, a `Partial<Record<MainTabId, ...>>` keyed by that id (not by numeric tab index)
 - Each tab component registers its own drop handler via a callback prop
 - Cross-platform compatibility:
   - **Windows**: `DisableWebViewDrop: true` in Wails config prevents WebView2 from intercepting drag-and-drop events
@@ -147,14 +148,15 @@ Menu construction, Wails `options.App`, the JSON config path, and `GetLanguage` 
 
 ## Component Design
 
-The application consists of six main tab components:
+The application consists of seven main tab components:
 
 1. **MergeTab** - Combines multiple PDF files into one
 2. **SplitTab** - Divides a PDF into multiple files
 3. **RotateTab** - Rotates specific page ranges in a PDF
 4. **WatermarkTab** - Adds text or image watermarks to PDF files
 5. **ImagesToPdfTab** - Builds one PDF from ordered images; composes `useImageDrop` for window-level drops (see [components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md))
-6. **LockUnlockTab** - Encrypts PDFs with passwords and decrypts protected PDFs to a new output file
+6. **PdfToTextTab** - Extracts text from one PDF via `ExtractPDFText`; optional password; copy/select-all on the result
+7. **LockUnlockTab** - Encrypts PDFs with passwords and decrypts protected PDFs to a new output file
 
 Each component handles its own state, file selection, validation, and processing.
 
@@ -165,7 +167,7 @@ For detailed component design and implementation, see [pdf_wizard/frontend/src/c
 The backend uses a service-based architecture with clear separation of concerns:
 
 - **FileService** - Handles file selection, directory selection, and file metadata operations (including `SelectImageFiles` for the images tab)
-- **PDFService** - Handles all PDF processing operations (merge, split, rotate, watermark, images→PDF via `ImagesToPDF`, plus `LockPDF` and `UnlockPDF`)
+- **PDFService** - Handles all PDF processing operations (merge, split, rotate, watermark, images→PDF via `ImagesToPDF`, plain-text extraction via `ExtractPDFText`, plus `LockPDF` and `UnlockPDF`)
 - **LAN phone upload** (`services/phone_upload.go`) - Optional HTTP server on the LAN for the Images to PDF tab: token-scoped URL `/u/{token}/`, multipart uploads, `PrimaryLANIPv4` for the QR base URL; not a separate service struct, but documented in [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md)
 - **Validation utilities** (`validation.go`) - File and directory validation functions
   - `validatePDFFile()` - Validates file exists, is readable, and has PDF extension
@@ -235,6 +237,7 @@ For detailed application-level design, see [pdf_wizard/DESIGN.md](pdf_wizard/DES
 - `github.com/wailsapp/wails/v2/pkg/runtime` - File dialogs and runtime operations
 - `github.com/wailsapp/wails/v2/pkg/menu` - Application menu
 - `github.com/pdfcpu/pdfcpu/pkg/api` - PDF processing library
+- `github.com/ledongthuc/pdf` - Plain-text extraction for the PDF to Text tab (`ExtractPDFText`)
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu` - Low-level helpers (e.g. `ExtractPages` after a shared read context for split)
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model` - Configuration models
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu/color` - Color handling for watermarks
@@ -316,6 +319,21 @@ Users can **start receiving** on the desktop to run a small **HTTP server** on t
 5. **i18n** — Tab label, buttons, phone page copy, and errors use `useI18n()` like other tabs; phone-specific keys live in `Translations` and `PhoneUploadPageCopy`.
 
 For component-level UI and state shape, see [pdf_wizard/frontend/src/components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md).
+
+## PDF to Text Tab
+
+### Overview
+
+The **PDF to Text** tab extracts **plain text** from a single selected PDF into a large multiline field. Users can **copy** the result or **select all** for manual editing. An optional **password** supports encrypted PDFs (including AES-256 files produced by **Lock PDF**, via a temporary decrypt step on the backend).
+
+### Limitations
+
+- **Scanned or image-only pages** often yield little or no text; **OCR is not included** in this release.
+
+### Implementation (summary)
+
+- **Frontend** — `PdfToTextTab.tsx`; Wails `ExtractPDFText(path, password)`; same window-level drop routing as other single-PDF tabs (`pdfToText` in `MAIN_TAB_IDS`).
+- **Backend** — `PDFService.ExtractPDFText` in `services/pdf_text_extract.go` (`github.com/ledongthuc/pdf` plus pdfcpu `DecryptFile` fallback). Details: [pdf_wizard/services/DESIGN.md — ExtractPDFText](pdf_wizard/services/DESIGN.md#extractpdftext-pdf-to-text-tab).
 
 ## Watermark PDF Tab
 
@@ -583,7 +601,7 @@ Use the [Documentation map](#documentation-map) at the top of this file. Quick l
 - TypeScript for type safety
 - Go structs with JSON tags for data exchange
 - Service-based architecture for separation of concerns
-- pdfcpu library for all PDF processing operations (merge, split, rotate, watermark)
+- pdfcpu library for merge, split, rotate, watermark, lock/unlock, and decrypt fallback; ledongthuc/pdf for text extraction in the PDF to Text tab
 - @dnd-kit library for drag-and-drop file reordering in Merge tab (modern replacement for deprecated react-beautiful-dnd)
 - Custom i18n (12 languages): see [pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md); config file paths in [pdf_wizard/DESIGN.md](pdf_wizard/DESIGN.md)
 - Settings accessible via application menu bar (native menu on macOS)

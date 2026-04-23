@@ -11,13 +11,14 @@ import { MAIN_TAB_IDS, type MainTabId } from './utils/constants';
 
 const TAB_LABEL_KEY: Record<
   MainTabId,
-  'mergeTab' | 'splitTab' | 'rotateTab' | 'watermarkTab' | 'imagesToPdfTab' | 'lockUnlockTab'
+  'mergeTab' | 'splitTab' | 'rotateTab' | 'watermarkTab' | 'imagesToPdfTab' | 'pdfToTextTab' | 'lockUnlockTab'
 > = {
   merge: 'mergeTab',
   split: 'splitTab',
   rotate: 'rotateTab',
   watermark: 'watermarkTab',
   imagesToPdf: 'imagesToPdfTab',
+  pdfToText: 'pdfToTextTab',
   lockUnlock: 'lockUnlockTab',
 };
 
@@ -66,6 +67,9 @@ const ImagesToPdfTab = lazy(() =>
 const LockUnlockTab = lazy(() =>
   import('./components/LockUnlockTab').then((module) => ({ default: module.LockUnlockTab })),
 );
+const PdfToTextTab = lazy(() =>
+  import('./components/PdfToTextTab').then((module) => ({ default: module.PdfToTextTab })),
+);
 
 const TAB_COMPONENT: Record<MainTabId, React.LazyExoticComponent<React.ComponentType<TabComponentProps>>> = {
   merge: MergeTab,
@@ -73,6 +77,7 @@ const TAB_COMPONENT: Record<MainTabId, React.LazyExoticComponent<React.Component
   rotate: RotateTab,
   watermark: WatermarkTab,
   imagesToPdf: ImagesToPdfTab,
+  pdfToText: PdfToTextTab,
   lockUnlock: LockUnlockTab,
 };
 
