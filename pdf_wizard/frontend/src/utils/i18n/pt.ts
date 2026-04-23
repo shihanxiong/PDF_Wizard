@@ -121,7 +121,6 @@ export const pt: Translations = {
   imagesPhonePageSessionClosedTitle: 'Esta sessão terminou',
   imagesPhonePageSessionClosedBody:
     'Não pode voltar a enviar a partir desta página. Para enviar mais imagens, inicie uma nova receção no PDF Wizard no computador e leia o novo código QR.',
-  pdfToTextSelectPDF: 'Selecionar PDF para texto',
   pdfToTextExtract: 'Extrair texto',
   pdfToTextExtracting: 'A extrair texto...',
   pdfToTextCopy: 'Copiar texto',

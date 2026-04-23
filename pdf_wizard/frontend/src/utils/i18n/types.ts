@@ -140,7 +140,6 @@ export interface Translations {
   imagesPhonePageSessionClosedBody: string;
 
   // PDF to Text tab
-  pdfToTextSelectPDF: string;
   pdfToTextExtract: string;
   pdfToTextExtracting: string;
   pdfToTextCopy: string;

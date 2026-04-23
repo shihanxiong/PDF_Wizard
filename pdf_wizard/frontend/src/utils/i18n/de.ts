@@ -121,7 +121,6 @@ export const de: Translations = {
   imagesPhonePageSessionClosedTitle: 'Diese Sitzung ist beendet',
   imagesPhonePageSessionClosedBody:
     'Sie können von dieser Seite nicht erneut hochladen. Um weitere Bilder zu senden, starten Sie in PDF Wizard auf dem Computer eine neue Empfangssitzung und scannen Sie den neuen QR-Code.',
-  pdfToTextSelectPDF: 'PDF für Textauswahl wählen',
   pdfToTextExtract: 'Text extrahieren',
   pdfToTextExtracting: 'Text wird extrahiert...',
   pdfToTextCopy: 'Text kopieren',

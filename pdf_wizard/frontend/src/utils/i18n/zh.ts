@@ -119,7 +119,6 @@ export const zh: Translations = {
   imagesPhonePageTooManyFiles: '每个会话最多可上传 __MAX__ 张图片。',
   imagesPhonePageSessionClosedTitle: '此会话已结束',
   imagesPhonePageSessionClosedBody: '无法从此页面再次上传。若要发送更多图片，请在电脑上的 PDF Wizard 中重新开始接收并扫描新的二维码。',
-  pdfToTextSelectPDF: '选择要提取文本的 PDF',
   pdfToTextExtract: '提取文本',
   pdfToTextExtracting: '正在提取文本...',
   pdfToTextCopy: '复制文本',

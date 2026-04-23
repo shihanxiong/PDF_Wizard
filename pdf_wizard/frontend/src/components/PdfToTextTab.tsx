@@ -75,7 +75,7 @@ export const PdfToTextTab = ({ onFileDrop }: PdfToTextTabProps) => {
     try {
       const path = await SelectPDFFile(
         new models.FileDialogLabels({
-          title: t('pdfToTextSelectPDF'),
+          title: t('selectPDFFile'),
           filterDisplayName: t('fileDialogFilterPdfFiles'),
         }),
       );
@@ -141,9 +141,9 @@ export const PdfToTextTab = ({ onFileDrop }: PdfToTextTabProps) => {
           sx={{ mb: 2 }}
           disabled={isExtracting}
         >
-          {t('pdfToTextSelectPDF')}
+          {t('selectPDFFile')}
         </Button>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {t('dragDropPDFHint')}
         </Typography>
         <Alert severity="info" sx={{ mb: 2 }}>

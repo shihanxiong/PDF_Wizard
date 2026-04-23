@@ -121,7 +121,6 @@ export const ar: Translations = {
   imagesPhonePageSessionClosedTitle: 'انتهت هذه الجلسة',
   imagesPhonePageSessionClosedBody:
     'لا يمكنك الرفع مرة أخرى من هذه الصفحة. لإرسال المزيد من الصور، ابدأ جلسة استقبال جديدة في PDF Wizard على الكمبيوتر وامسح رمز QR الجديد.',
-  pdfToTextSelectPDF: 'اختر PDF لاستخراج النص',
   pdfToTextExtract: 'استخراج النص',
   pdfToTextExtracting: 'جارٍ استخراج النص...',
   pdfToTextCopy: 'نسخ النص',

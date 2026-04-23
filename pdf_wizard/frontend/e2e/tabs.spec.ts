@@ -213,7 +213,7 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     await expect(page.getByRole('tab', { name: 'PDF to Text' })).toHaveAttribute('aria-selected', 'true');
     const panel = page.locator('#pdf-wizard-tabpanel-pdfToText');
     await expect(panel).toBeVisible();
-    await expect(panel.getByRole('button', { name: 'Select PDF for text' })).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'Select PDF File' })).toBeVisible();
     await expect(panel.getByRole('button', { name: 'Extract text' })).toBeVisible();
     await expect(panel.getByRole('button', { name: 'Extract text' })).toBeDisabled();
   });
