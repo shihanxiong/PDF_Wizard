@@ -6,7 +6,7 @@ import { SelectedPDF } from '../types';
 import { formatDate, formatFileSize } from '../utils/formatters';
 import { useI18n } from '../utils/i18n';
 import { models } from '../../wailsjs/go/models';
-import { GetPDFMetadata, LockPDF, SelectOutputDirectory, SelectPDFFile, UnlockPDF } from '../../wailsjs/go/main/App';
+import { GetFileMetadata, GetPDFMetadata, LockPDF, SelectOutputDirectory, SelectPDFFile, UnlockPDF } from '../../wailsjs/go/main/App';
 import { NoPDFSelected } from './NoPDFSelected';
 
 interface LockUnlockTabProps {
@@ -33,14 +33,14 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
   }, [defaultFilename]);
 
   const loadPDF = useCallback(
-    async (path: string) => {
-      const metadata = await GetPDFMetadata(path);
+    async (path: string, currentMode: Mode) => {
+      const metadata = currentMode === 'unlock' ? await GetFileMetadata(path) : await GetPDFMetadata(path);
       setSelectedPDF({
         path: metadata.path,
         name: metadata.name,
         size: metadata.size,
         lastModified: new Date(metadata.lastModified),
-        totalPages: metadata.totalPages,
+        totalPages: metadata.totalPages || 0,
       });
       setError(null);
     },
@@ -59,13 +59,13 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
         return;
       }
       try {
-        await loadPDF(pdfPaths[0]);
+        await loadPDF(pdfPaths[0], mode);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
         setError(`${t('lockUnlockFailedToLoadPDF')} ${message}`);
       }
     },
-    [loadPDF, t]
+    [loadPDF, mode, t]
   );
 
   useEffect(() => {
@@ -83,7 +83,7 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
       if (!path) {
         return;
       }
-      await loadPDF(path);
+      await loadPDF(path, mode);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
       setError(`${t('lockUnlockFailedToSelectPDF')} ${message}`);
@@ -140,23 +140,6 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 3, overflow: 'hidden' }}>
-      <Box sx={{ mb: 1, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-        <Button
-          variant={mode === 'lock' ? 'contained' : 'outlined'}
-          onClick={() => setMode('lock')}
-          disabled={isProcessing}
-        >
-          {t('lockUnlockModeLock')}
-        </Button>
-        <Button
-          variant={mode === 'unlock' ? 'contained' : 'outlined'}
-          onClick={() => setMode('unlock')}
-          disabled={isProcessing}
-        >
-          {t('lockUnlockModeUnlock')}
-        </Button>
-      </Box>
-
       <Box sx={{ mb: 1, flexShrink: 0 }}>
         <Button
           variant="contained"
@@ -202,6 +185,22 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
       )}
 
       <Box sx={{ mt: 'auto', pt: 2, pb: 2, flexShrink: 0 }}>
+        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, flexWrap: 'wrap' }}>
+          <Button
+            variant={mode === 'lock' ? 'contained' : 'outlined'}
+            onClick={() => setMode('lock')}
+            disabled={isProcessing}
+          >
+            {t('lockUnlockModeLock')}
+          </Button>
+          <Button
+            variant={mode === 'unlock' ? 'contained' : 'outlined'}
+            onClick={() => setMode('unlock')}
+            disabled={isProcessing}
+          >
+            {t('lockUnlockModeUnlock')}
+          </Button>
+        </Box>
         <TextField
           label={t('lockUnlockPassword')}
           type="password"

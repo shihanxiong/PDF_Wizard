@@ -46,14 +46,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # static: off — Chocolatey mingw 15.x no longer ships libpthread.dll.a where the
-      # action’s workaround expects it; without this, Remove-Item fails the step.
-      - name: Set up MinGW (Windows / CGO)
+      # Use MSYS2 packages directly instead of Chocolatey-backed setup-mingw,
+      # which can fail intermittently with community feed 499 responses.
+      - name: Set up MSYS2 MinGW toolchain (Windows / CGO)
         if: runner.os == 'Windows'
-        uses: egor-tensin/setup-mingw@v2
+        uses: msys2/setup-msys2@v2
         with:
-          platform: x64
-          static: '0'
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+
+      - name: Configure Windows CGO compiler
+        if: runner.os == 'Windows'
+        run: |
+          echo "CC=x86_64-w64-mingw32-gcc" >> "$GITHUB_ENV"
+          echo "CXX=x86_64-w64-mingw32-g++" >> "$GITHUB_ENV"
 
       - name: Set up Go
         uses: actions/setup-go@v5
