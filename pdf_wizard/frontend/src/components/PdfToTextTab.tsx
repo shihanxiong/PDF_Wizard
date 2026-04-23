@@ -5,7 +5,6 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
   CircularProgress,
   TextField,
   Typography,
@@ -17,7 +16,7 @@ import { SelectedPDF } from '../types';
 import { formatDate, formatFileSize } from '../utils/formatters';
 import { useI18n } from '../utils/i18n';
 import { models } from '../../wailsjs/go/models';
-import { ExtractPDFText, GetFileMetadata, GetPDFMetadata, SelectPDFFile } from '../../wailsjs/go/main/App';
+import { ExtractPDFText, GetPDFMetadata, SelectPDFFile } from '../../wailsjs/go/main/App';
 import { NoPDFSelected } from './NoPDFSelected';
 
 interface PdfToTextTabProps {
@@ -27,48 +26,23 @@ interface PdfToTextTabProps {
 export const PdfToTextTab = ({ onFileDrop }: PdfToTextTabProps) => {
   const { t } = useI18n();
   const [selectedPDF, setSelectedPDF] = useState<SelectedPDF | null>(null);
-  const [needsPassword, setNeedsPassword] = useState(false);
-  const [password, setPassword] = useState('');
   const [extractedText, setExtractedText] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  const isPasswordProtectedReadError = (message: string) => {
-    const m = message.toLowerCase();
-    return m.includes('password') || m.includes('encrypt');
-  };
-
   const loadPDF = useCallback(async (path: string) => {
-    setPassword('');
     setExtractedText('');
     setInfo(null);
-    try {
-      const metadata = await GetPDFMetadata(path);
-      setNeedsPassword(false);
-      setSelectedPDF({
-        path: metadata.path,
-        name: metadata.name,
-        size: metadata.size,
-        lastModified: new Date(metadata.lastModified),
-        totalPages: metadata.totalPages,
-      });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (!isPasswordProtectedReadError(message)) {
-        throw err;
-      }
-      setNeedsPassword(true);
-      const metadata = await GetFileMetadata(path);
-      setSelectedPDF({
-        path: metadata.path,
-        name: metadata.name,
-        size: metadata.size,
-        lastModified: new Date(metadata.lastModified),
-        totalPages: 0,
-      });
-    }
+    const metadata = await GetPDFMetadata(path);
+    setSelectedPDF({
+      path: metadata.path,
+      name: metadata.name,
+      size: metadata.size,
+      lastModified: new Date(metadata.lastModified),
+      totalPages: metadata.totalPages,
+    });
     setError(null);
   }, []);
 
@@ -123,7 +97,7 @@ export const PdfToTextTab = ({ onFileDrop }: PdfToTextTabProps) => {
     setError(null);
     setInfo(null);
     try {
-      const text = await ExtractPDFText(selectedPDF.path, password);
+      const text = await ExtractPDFText(selectedPDF.path);
       setExtractedText(text);
       if (!text.trim()) {
         setInfo(t('pdfToTextEmptyResult'));
@@ -191,34 +165,14 @@ export const PdfToTextTab = ({ onFileDrop }: PdfToTextTabProps) => {
       {selectedPDF ? (
         <Card sx={{ mb: 2, flexShrink: 0 }}>
           <CardContent>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 1,
-                mb: 1,
-                flexWrap: 'wrap',
-                textAlign: 'center',
-              }}
-            >
-              <Typography variant="subtitle1" component="span" sx={{ minWidth: 0, fontWeight: 600 }}>
-                📄 {selectedPDF.name}
-              </Typography>
-              <Chip
-                size="small"
-                label={needsPassword ? t('lockUnlockStatusLocked') : t('lockUnlockStatusUnlocked')}
-                color={needsPassword ? 'warning' : 'success'}
-                variant="filled"
-                sx={{ fontWeight: 600, flexShrink: 0 }}
-              />
-            </Box>
+            <Typography variant="subtitle1" component="div" sx={{ mb: 1, fontWeight: 600, textAlign: 'center' }}>
+              📄 {selectedPDF.name}
+            </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
               {selectedPDF.path}
             </Typography>
             <Typography variant="body2">
-              {formatFileSize(selectedPDF.size)}
-              {selectedPDF.totalPages > 0 ? ` • ${selectedPDF.totalPages} ${t('pages')}` : ''} • {t('modified')}{' '}
+              {formatFileSize(selectedPDF.size)} • {selectedPDF.totalPages} {t('pages')} • {t('modified')}{' '}
               {formatDate(selectedPDF.lastModified)}
             </Typography>
           </CardContent>
@@ -226,18 +180,6 @@ export const PdfToTextTab = ({ onFileDrop }: PdfToTextTabProps) => {
       ) : (
         <NoPDFSelected />
       )}
-
-      <TextField
-        label={t('lockUnlockPassword')}
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        size="small"
-        fullWidth
-        sx={{ mb: 2, flexShrink: 0 }}
-        disabled={isExtracting}
-        helperText={t('pdfToTextPasswordHint')}
-      />
 
       <Box sx={{ display: 'flex', gap: 1, mb: 2, flexShrink: 0, flexWrap: 'wrap' }}>
         <Button

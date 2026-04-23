@@ -127,7 +127,7 @@ PDFService handles all PDF processing operations:
 - Building one PDF from ordered images (`ImagesToPDF`)
 - Locking PDFs with password-based encryption (`LockPDF`)
 - Unlocking password-protected PDFs (`UnlockPDF`)
-- Extracting plain text for the PDF-to-Text tab (`ExtractPDFText` in `pdf_text_extract.go`; uses `github.com/ledongthuc/pdf` with a **pdfcpu decrypt-to-temp** fallback when the reader cannot open the encryption, for example AES-256 from `LockPDF`)
+- Extracting plain text for the PDF-to-Text tab (`ExtractPDFText` in `pdf_text_extract.go`; uses `github.com/ledongthuc/pdf`; **password-protected PDFs are not supported**)
 
 ### Structure
 
@@ -260,7 +260,7 @@ Creates one PDF with one page per image, preserving order.
 
 ### ExtractPDFText (PDF to Text tab)
 
-#### `ExtractPDFText(path string, password string) (string, error)`
+#### `ExtractPDFText(path string) (string, error)`
 
 Returns human-readable text from an existing PDF for the **PDF to Text** tab.
 
@@ -270,13 +270,13 @@ Returns human-readable text from an existing PDF for the **PDF to Text** tab.
 
 **Implementation:**
 
-- Tries `github.com/ledongthuc/pdf` (`NewReaderEncrypted`) with optional user password (tried after an empty password attempt for encrypted files).
-- **Fallback:** if opening or reading fails and pdfcpu can decrypt the file, writes a **temporary decrypted copy** with `api.DecryptFile` (same password configuration as `UnlockPDF`), then runs the text extractor on that copy and deletes the temp file. This covers **AES-256** PDFs produced by `LockPDF`, which the ledongthuc reader does not open directly.
+- Opens the file with `github.com/ledongthuc/pdf` (`NewReader`). Encrypted PDFs are rejected by the reader; users should unlock the file first (**Lock / Unlock** tab).
 - Per-page extraction prefers **row-grouped** text (`GetTextByRow`) for rough reading order; falls back to `GetPlainText` when rows are empty or row grouping errors.
 
 **Limitations:**
 
 - Image-only or scanned pages typically yield little or no text (no OCR in this feature).
+- **No password support** for this feature.
 
 ## Validation (`validation.go`)
 
@@ -352,7 +352,6 @@ App-wide Go and npm dependencies are summarized in [SYSTEM_DESIGN.md § Technica
 
 - `github.com/pdfcpu/pdfcpu/pkg/api` - PDF processing library
 
-  - `DecryptFile()` — decrypt to temp for `ExtractPDFText` when needed
   - `ReadContextFile()` - Read PDF and get context
   - `MergeCreateFile()` - Merge multiple PDFs
   - `ReadValidateAndOptimize()`, `PagesForPageSelection()`, `WriteContextFile()`, `ValidateContext()` — split uses one optimized read then per-output writes (#57)

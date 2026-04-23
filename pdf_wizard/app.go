@@ -210,9 +210,9 @@ func (a *App) UnlockPDF(inputPath string, password string, outputDirectory strin
 	return a.pdfService.UnlockPDF(inputPath, password, outputDirectory, outputFilename)
 }
 
-// ExtractPDFText returns plain text extracted from the PDF (optional password for encrypted files).
-func (a *App) ExtractPDFText(path string, password string) (string, error) {
-	return a.pdfService.ExtractPDFText(path, password)
+// ExtractPDFText returns plain text extracted from the PDF. Encrypted PDFs are not supported.
+func (a *App) ExtractPDFText(path string) (string, error) {
+	return a.pdfService.ExtractPDFText(path)
 }
 
 // StartImagesPhoneUpload starts an HTTP server on the LAN and returns the upload page URL for QR codes.

@@ -122,7 +122,6 @@ export const de: Translations = {
   imagesPhonePageSessionClosedBody:
     'Sie können von dieser Seite nicht erneut hochladen. Um weitere Bilder zu senden, starten Sie in PDF Wizard auf dem Computer eine neue Empfangssitzung und scannen Sie den neuen QR-Code.',
   pdfToTextSelectPDF: 'PDF für Textauswahl wählen',
-  pdfToTextPasswordHint: 'Nur erforderlich, wenn das PDF passwortgeschützt ist',
   pdfToTextExtract: 'Text extrahieren',
   pdfToTextExtracting: 'Text wird extrahiert...',
   pdfToTextCopy: 'Text kopieren',

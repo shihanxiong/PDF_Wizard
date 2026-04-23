@@ -122,7 +122,6 @@ export const hi: Translations = {
   imagesPhonePageSessionClosedBody:
     'इस पृष्ठ से फिर अपलोड नहीं किया जा सकता। और छवियाँ भेजने के लिए अपने कंप्यूटर पर PDF Wizard में नया प्राप्ति सत्र शुरू करें और नया QR कोड स्कैन करें।',
   pdfToTextSelectPDF: 'टेक्स्ट के लिए PDF चुनें',
-  pdfToTextPasswordHint: 'केवल तभी जब PDF पासवर्ड से सुरक्षित हो',
   pdfToTextExtract: 'टेक्स्ट निकालें',
   pdfToTextExtracting: 'टेक्स्ट निकाला जा रहा है...',
   pdfToTextCopy: 'टेक्स्ट कॉपी करें',

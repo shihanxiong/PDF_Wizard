@@ -122,7 +122,6 @@ export const ja: Translations = {
   imagesPhonePageSessionClosedBody:
     'このページから再度アップロードすることはできません。さらに送信するには、コンピューター上の PDF Wizard で受信をやり直し、新しい QR コードを読み取ってください。',
   pdfToTextSelectPDF: 'テキスト抽出用の PDF を選択',
-  pdfToTextPasswordHint: 'PDF がパスワード保護されている場合のみ必要です',
   pdfToTextExtract: 'テキストを抽出',
   pdfToTextExtracting: 'テキストを抽出中...',
   pdfToTextCopy: 'テキストをコピー',

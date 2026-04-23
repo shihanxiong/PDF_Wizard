@@ -122,7 +122,6 @@ export const ko: Translations = {
   imagesPhonePageSessionClosedBody:
     '이 페이지에서 다시 업로드할 수 없습니다. 더 보내려면 컴퓨터의 PDF Wizard에서 새로 받기를 시작하고 새 QR 코드를 스캔하세요.',
   pdfToTextSelectPDF: '텍스트 추출용 PDF 선택',
-  pdfToTextPasswordHint: 'PDF에 암호가 설정된 경우에만 필요합니다',
   pdfToTextExtract: '텍스트 추출',
   pdfToTextExtracting: '텍스트 추출 중...',
   pdfToTextCopy: '텍스트 복사',

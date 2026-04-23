@@ -141,7 +141,6 @@ export interface Translations {
 
   // PDF to Text tab
   pdfToTextSelectPDF: string;
-  pdfToTextPasswordHint: string;
   pdfToTextExtract: string;
   pdfToTextExtracting: string;
   pdfToTextCopy: string;

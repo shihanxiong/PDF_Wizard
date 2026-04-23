@@ -122,7 +122,6 @@ export const ru: Translations = {
   imagesPhonePageSessionClosedBody:
     'Повторная загрузка с этой страницы недоступна. Чтобы отправить ещё изображения, начните новый приём в PDF Wizard на компьютере и отсканируйте новый QR-код.',
   pdfToTextSelectPDF: 'Выбрать PDF для извлечения текста',
-  pdfToTextPasswordHint: 'Только если PDF защищён паролем',
   pdfToTextExtract: 'Извлечь текст',
   pdfToTextExtracting: 'Извлечение текста...',
   pdfToTextCopy: 'Копировать текст',

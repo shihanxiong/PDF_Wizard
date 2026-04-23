@@ -10,8 +10,8 @@ export function EmitSettingsEvent() {
   return window['go']['main']['App']['EmitSettingsEvent']();
 }
 
-export function ExtractPDFText(arg1, arg2) {
-  return window['go']['main']['App']['ExtractPDFText'](arg1, arg2);
+export function ExtractPDFText(arg1) {
+  return window['go']['main']['App']['ExtractPDFText'](arg1);
 }
 
 export function GetFileMetadata(arg1) {

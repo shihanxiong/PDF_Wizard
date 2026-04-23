@@ -120,7 +120,6 @@ export const zhTW: Translations = {
   imagesPhonePageSessionClosedTitle: '此工作階段已結束',
   imagesPhonePageSessionClosedBody: '無法從此頁面再次上傳。若要傳送更多圖片，請在電腦上的 PDF Wizard 中重新開始接收並掃描新的 QR 碼。',
   pdfToTextSelectPDF: '選擇要擷取文字的 PDF',
-  pdfToTextPasswordHint: '僅在 PDF 受密碼保護時需要',
   pdfToTextExtract: '擷取文字',
   pdfToTextExtracting: '正在擷取文字...',
   pdfToTextCopy: '複製文字',

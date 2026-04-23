@@ -122,7 +122,6 @@ export const es: Translations = {
   imagesPhonePageSessionClosedBody:
     'No puede volver a subir desde esta página. Para enviar más imágenes, inicie una nueva recepción en PDF Wizard en el ordenador y escanee el nuevo código QR.',
   pdfToTextSelectPDF: 'Seleccionar PDF para texto',
-  pdfToTextPasswordHint: 'Solo si el PDF está protegido con contraseña',
   pdfToTextExtract: 'Extraer texto',
   pdfToTextExtracting: 'Extrayendo texto...',
   pdfToTextCopy: 'Copiar texto',

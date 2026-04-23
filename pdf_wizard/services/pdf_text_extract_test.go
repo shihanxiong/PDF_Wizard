@@ -38,7 +38,7 @@ func TestPDFService_ExtractPDFText(t *testing.T) {
 	pdfPath := filepath.Join(testDir, "hello.pdf")
 	createExtractFriendlyPDF(t, pdfPath)
 
-	out, err := service.ExtractPDFText(pdfPath, "")
+	out, err := service.ExtractPDFText(pdfPath)
 	if err != nil {
 		t.Fatalf("ExtractPDFText: %v", err)
 	}
@@ -51,13 +51,13 @@ func TestPDFService_ExtractPDFText_invalidPath(t *testing.T) {
 	fileService := NewFileService(context.Background())
 	service := NewPDFService(fileService)
 
-	_, err := service.ExtractPDFText("", "")
+	_, err := service.ExtractPDFText("")
 	if err == nil {
 		t.Fatal("expected error for empty path")
 	}
 }
 
-func TestPDFService_ExtractPDFText_wrongPassword(t *testing.T) {
+func TestPDFService_ExtractPDFText_encryptedNotSupported(t *testing.T) {
 	fileService := NewFileService(context.Background())
 	service := NewPDFService(fileService)
 
@@ -71,36 +71,9 @@ func TestPDFService_ExtractPDFText_wrongPassword(t *testing.T) {
 		t.Fatalf("LockPDF: %v", err)
 	}
 
-	_, err := service.ExtractPDFText(locked, "wrong")
+	_, err := service.ExtractPDFText(locked)
 	if err == nil {
-		t.Fatal("expected error for wrong password")
-	}
-	msg := strings.ToLower(err.Error())
-	if !strings.Contains(msg, "password") && !strings.Contains(msg, "decrypt") {
-		t.Fatalf("expected password/decrypt-related error, got: %v", err)
-	}
-}
-
-func TestPDFService_ExtractPDFText_encryptedOK(t *testing.T) {
-	fileService := NewFileService(context.Background())
-	service := NewPDFService(fileService)
-
-	testDir := setupTestDir(t)
-	defer cleanupTestDir(t, testDir)
-
-	plain := filepath.Join(testDir, "plain2.pdf")
-	locked := filepath.Join(testDir, "locked2.pdf")
-	createExtractFriendlyPDF(t, plain)
-	if err := service.LockPDF(plain, "secret123", testDir, "locked2"); err != nil {
-		t.Fatalf("LockPDF: %v", err)
-	}
-
-	out, err := service.ExtractPDFText(locked, "secret123")
-	if err != nil {
-		t.Fatalf("ExtractPDFText: %v", err)
-	}
-	if !strings.Contains(out, "Test PDF") {
-		t.Fatalf("expected 'Test PDF' in output, got: %q", out)
+		t.Fatal("expected error for password-protected PDF")
 	}
 }
 
@@ -130,19 +103,5 @@ func TestExtractPageTextPreferRows_fallbackStillReadsText(t *testing.T) {
 	}
 	if !strings.Contains(s, "Test PDF") {
 		t.Fatalf("expected text, got %q", s)
-	}
-}
-
-func TestWriteDecryptedPDFTempCopy_rejectsPlainFile(t *testing.T) {
-	testDir := setupTestDir(t)
-	defer cleanupTestDir(t, testDir)
-	p := filepath.Join(testDir, "plain3.pdf")
-	createExtractFriendlyPDF(t, p)
-	_, err := writeDecryptedPDFTempCopy(p, "")
-	if err == nil {
-		t.Fatal("expected error decrypting non-encrypted file")
-	}
-	if !strings.Contains(strings.ToLower(err.Error()), "not encrypted") {
-		t.Fatalf("expected not encrypted, got: %v", err)
 	}
 }

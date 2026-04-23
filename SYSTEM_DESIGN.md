@@ -110,7 +110,7 @@ The application features a tabbed interface with seven main tabs:
 3. **Rotate PDF Tab** - For rotating specific page ranges in a PDF
 4. **Watermark PDF Tab** - For adding text or image watermarks to PDF files
 5. **Images to PDF Tab** - For building one PDF from multiple ordered images (including HEIC/HEIF)
-6. **PDF to Text Tab** - For extracting plain text from a PDF into an editable area (with copy); scanned/image-only PDFs may return little or no text (no OCR in this release)
+6. **PDF to Text Tab** - For extracting plain text from a PDF into an editable area (with copy); **unencrypted PDFs only**; scanned/image-only PDFs may return little or no text (no OCR in this release)
 7. **Lock / Unlock PDF Tab** - For encrypting PDFs with a password or decrypting password-protected PDFs
 
 ### Tab Component Structure
@@ -155,7 +155,7 @@ The application consists of seven main tab components:
 3. **RotateTab** - Rotates specific page ranges in a PDF
 4. **WatermarkTab** - Adds text or image watermarks to PDF files
 5. **ImagesToPdfTab** - Builds one PDF from ordered images; composes `useImageDrop` for window-level drops (see [components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md))
-6. **PdfToTextTab** - Extracts text from one PDF via `ExtractPDFText`; optional password; copy/select-all on the result
+6. **PdfToTextTab** - Extracts text from one PDF via `ExtractPDFText`; copy/select-all on the result (unencrypted PDFs only)
 7. **LockUnlockTab** - Encrypts PDFs with passwords and decrypts protected PDFs to a new output file
 
 Each component handles its own state, file selection, validation, and processing.
@@ -324,7 +324,7 @@ For component-level UI and state shape, see [pdf_wizard/frontend/src/components/
 
 ### Overview
 
-The **PDF to Text** tab extracts **plain text** from a single selected PDF into a large multiline field. Users can **copy** the result or **select all** for manual editing. An optional **password** supports encrypted PDFs (including AES-256 files produced by **Lock PDF**, via a temporary decrypt step on the backend).
+The **PDF to Text** tab extracts **plain text** from a single selected PDF into a large multiline field. Users can **copy** the result or **select all** for manual editing. **Password-protected PDFs are not supported**; unlock the file first on the **Lock / Unlock** tab.
 
 ### Limitations
 
@@ -332,8 +332,8 @@ The **PDF to Text** tab extracts **plain text** from a single selected PDF into 
 
 ### Implementation (summary)
 
-- **Frontend** — `PdfToTextTab.tsx`; Wails `ExtractPDFText(path, password)`; same window-level drop routing as other single-PDF tabs (`pdfToText` in `MAIN_TAB_IDS`).
-- **Backend** — `PDFService.ExtractPDFText` in `services/pdf_text_extract.go` (`github.com/ledongthuc/pdf` plus pdfcpu `DecryptFile` fallback). Details: [pdf_wizard/services/DESIGN.md — ExtractPDFText](pdf_wizard/services/DESIGN.md#extractpdftext-pdf-to-text-tab).
+- **Frontend** — `PdfToTextTab.tsx`; Wails `ExtractPDFText(path)`; same window-level drop routing as other single-PDF tabs (`pdfToText` in `MAIN_TAB_IDS`).
+- **Backend** — `PDFService.ExtractPDFText` in `services/pdf_text_extract.go` (`github.com/ledongthuc/pdf`). Details: [pdf_wizard/services/DESIGN.md — ExtractPDFText](pdf_wizard/services/DESIGN.md#extractpdftext-pdf-to-text-tab).
 
 ## Watermark PDF Tab
 
@@ -601,7 +601,7 @@ Use the [Documentation map](#documentation-map) at the top of this file. Quick l
 - TypeScript for type safety
 - Go structs with JSON tags for data exchange
 - Service-based architecture for separation of concerns
-- pdfcpu library for merge, split, rotate, watermark, lock/unlock, and decrypt fallback; ledongthuc/pdf for text extraction in the PDF to Text tab
+- pdfcpu library for merge, split, rotate, watermark, lock/unlock; ledongthuc/pdf for text extraction in the PDF to Text tab
 - @dnd-kit library for drag-and-drop file reordering in Merge tab (modern replacement for deprecated react-beautiful-dnd)
 - Custom i18n (12 languages): see [pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md); config file paths in [pdf_wizard/DESIGN.md](pdf_wizard/DESIGN.md)
 - Settings accessible via application menu bar (native menu on macOS)
