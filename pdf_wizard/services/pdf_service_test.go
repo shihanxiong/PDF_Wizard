@@ -487,3 +487,59 @@ func TestPDFService_ImagesToPDF_HEIC(t *testing.T) {
 		t.Fatalf("expected 1 page, got %d", n)
 	}
 }
+
+func TestPDFService_LockAndUnlockPDF(t *testing.T) {
+	fileService := NewFileService(context.Background())
+	service := NewPDFService(fileService)
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	input := filepath.Join(testDir, "plain.pdf")
+	if err := createTestPDF(input); err != nil {
+		t.Fatalf("create test PDF: %v", err)
+	}
+
+	lockPassword := "s3cret-pass"
+	if err := service.LockPDF(input, lockPassword, testDir, "locked"); err != nil {
+		t.Fatalf("LockPDF failed: %v", err)
+	}
+
+	lockedPath := filepath.Join(testDir, "locked.pdf")
+	if _, err := api.ReadContextFile(lockedPath); err == nil {
+		t.Fatal("expected locked PDF to require a password")
+	}
+
+	if err := service.UnlockPDF(lockedPath, lockPassword, testDir, "unlocked"); err != nil {
+		t.Fatalf("UnlockPDF failed: %v", err)
+	}
+
+	unlockedPath := filepath.Join(testDir, "unlocked.pdf")
+	if _, err := api.ReadContextFile(unlockedPath); err != nil {
+		t.Fatalf("expected unlocked PDF to be readable without password: %v", err)
+	}
+}
+
+func TestPDFService_UnlockPDF_WrongPassword(t *testing.T) {
+	fileService := NewFileService(context.Background())
+	service := NewPDFService(fileService)
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	input := filepath.Join(testDir, "plain.pdf")
+	if err := createTestPDF(input); err != nil {
+		t.Fatalf("create test PDF: %v", err)
+	}
+
+	conf := model.NewAESConfiguration("correct-password", "correct-password", 256)
+	lockedPath := filepath.Join(testDir, "locked.pdf")
+	if err := api.EncryptFile(input, lockedPath, conf); err != nil {
+		t.Fatalf("api.EncryptFile failed: %v", err)
+	}
+
+	err := service.UnlockPDF(lockedPath, "wrong-password", testDir, "should_fail")
+	if err == nil {
+		t.Fatal("expected UnlockPDF to fail with wrong password")
+	}
+}

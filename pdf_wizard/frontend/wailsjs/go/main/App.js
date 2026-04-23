@@ -30,6 +30,10 @@ export function ImagesToPDF(arg1, arg2, arg3) {
   return window['go']['main']['App']['ImagesToPDF'](arg1, arg2, arg3);
 }
 
+export function LockPDF(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['LockPDF'](arg1, arg2, arg3, arg4);
+}
+
 export function MergePDFs(arg1, arg2, arg3) {
   return window['go']['main']['App']['MergePDFs'](arg1, arg2, arg3);
 }
@@ -68,4 +72,8 @@ export function StartImagesPhoneUpload(arg1) {
 
 export function StopImagesPhoneUpload() {
   return window['go']['main']['App']['StopImagesPhoneUpload']();
+}
+
+export function UnlockPDF(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['UnlockPDF'](arg1, arg2, arg3, arg4);
 }

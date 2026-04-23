@@ -66,7 +66,7 @@ The application menu is configured as follows:
 Mac: &mac.Options{
     About: &mac.AboutInfo{
         Title:   "PDF Wizard",
-        Message: "A modern PDF toolkit built with Wails v2\n\nAuthor: Hanxiong Shi\nVersion 1.0.1\nCopyright © 2026",
+        Message: "A modern PDF toolkit built with Wails v2\n\nAuthor: Hanxiong Shi\nVersion 1.0.3\nCopyright © 2026",
     },
 }
 ```
@@ -214,6 +214,14 @@ func (a *App) MergePDFs(inputPaths []string, outputDirectory string, outputFilen
 
 func (a *App) ImagesToPDF(imagePaths []string, outputDirectory string, outputFilename string) error {
     return a.pdfService.ImagesToPDF(imagePaths, outputDirectory, outputFilename)
+}
+
+func (a *App) LockPDF(inputPath string, password string, outputDirectory string, outputFilename string) error {
+    return a.pdfService.LockPDF(inputPath, password, outputDirectory, outputFilename)
+}
+
+func (a *App) UnlockPDF(inputPath string, password string, outputDirectory string, outputFilename string) error {
+    return a.pdfService.UnlockPDF(inputPath, password, outputDirectory, outputFilename)
 }
 
 func (a *App) SplitPDF(inputPath string, splits []models.SplitDefinition, outputDirectory string) error {

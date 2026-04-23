@@ -11,6 +11,7 @@ export interface Translations {
   rotateTab: string;
   watermarkTab: string;
   imagesToPdfTab: string;
+  lockUnlockTab: string;
 
   // Settings
   settings: string;
@@ -136,6 +137,26 @@ export interface Translations {
   imagesPhonePageTooManyFiles: string;
   imagesPhonePageSessionClosedTitle: string;
   imagesPhonePageSessionClosedBody: string;
+
+  // Lock / Unlock Tab
+  lockUnlockSelectPDF: string;
+  /** Shown on selected file metadata when pdfcpu can open the PDF without a password. */
+  lockUnlockStatusUnlocked: string;
+  /** Shown on selected file metadata when opening requires a password (encrypt/protect). */
+  lockUnlockStatusLocked: string;
+  lockUnlockPassword: string;
+  lockUnlockSelectOutputDirectory: string;
+  lockUnlockActionLock: string;
+  lockUnlockActionUnlock: string;
+  lockUnlockLocking: string;
+  lockUnlockUnlocking: string;
+  lockUnlockSuccessLocked: string;
+  lockUnlockSuccessUnlocked: string;
+  lockUnlockLockFailed: string;
+  lockUnlockUnlockFailed: string;
+  lockUnlockFailedToLoadPDF: string;
+  lockUnlockFailedToSelectPDF: string;
+  lockUnlockFailedToSelectOutputDirectory: string;
 
   // Common
   modified: string;

@@ -127,6 +127,69 @@ func (s *PDFService) ImagesToPDF(imagePaths []string, outputDirectory string, ou
 	return nil
 }
 
+// LockPDF encrypts a PDF with a password.
+func (s *PDFService) LockPDF(inputPath string, password string, outputDirectory string, outputFilename string) error {
+	if err := validatePDFFile(inputPath); err != nil {
+		return fmt.Errorf("input file: %w", err)
+	}
+	if strings.TrimSpace(password) == "" {
+		return fmt.Errorf("password cannot be empty")
+	}
+	if err := validateOutputDirectory(outputDirectory); err != nil {
+		return err
+	}
+	if strings.TrimSpace(outputFilename) == "" {
+		return fmt.Errorf("output filename cannot be empty")
+	}
+
+	outputPath := filepath.Join(outputDirectory, strings.TrimSpace(outputFilename)+PDFExtension)
+	if err := removeIfExists(outputPath); err != nil {
+		return err
+	}
+
+	conf := model.NewAESConfiguration(password, password, 256)
+	conf.Permissions = model.PermissionsNone
+	if err := api.EncryptFile(inputPath, outputPath, conf); err != nil {
+		return fmt.Errorf("failed to lock PDF: %w", err)
+	}
+	if _, err := os.Stat(outputPath); os.IsNotExist(err) {
+		return fmt.Errorf("locked file was not created at: %s", outputPath)
+	}
+	return nil
+}
+
+// UnlockPDF decrypts a password-protected PDF.
+func (s *PDFService) UnlockPDF(inputPath string, password string, outputDirectory string, outputFilename string) error {
+	if err := validatePDFFile(inputPath); err != nil {
+		return fmt.Errorf("input file: %w", err)
+	}
+	if strings.TrimSpace(password) == "" {
+		return fmt.Errorf("password cannot be empty")
+	}
+	if err := validateOutputDirectory(outputDirectory); err != nil {
+		return err
+	}
+	if strings.TrimSpace(outputFilename) == "" {
+		return fmt.Errorf("output filename cannot be empty")
+	}
+
+	outputPath := filepath.Join(outputDirectory, strings.TrimSpace(outputFilename)+PDFExtension)
+	if err := removeIfExists(outputPath); err != nil {
+		return err
+	}
+
+	conf := model.NewDefaultConfiguration()
+	conf.UserPW = password
+	conf.OwnerPW = password
+	if err := api.DecryptFile(inputPath, outputPath, conf); err != nil {
+		return fmt.Errorf("failed to unlock PDF: %w", err)
+	}
+	if _, err := os.Stat(outputPath); os.IsNotExist(err) {
+		return fmt.Errorf("unlocked file was not created at: %s", outputPath)
+	}
+	return nil
+}
+
 // SplitPDF splits the given PDF according to split definitions
 func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition, outputDirectory string) error {
 	// Validate input file exists and is a PDF
