@@ -66,7 +66,7 @@ The application menu is configured as follows:
 Mac: &mac.Options{
     About: &mac.AboutInfo{
         Title:   "PDF Wizard",
-        Message: "A modern PDF toolkit built with Wails v2\n\nAuthor: Hanxiong Shi\nVersion 1.0.1\nCopyright © 2026",
+        Message: "A modern PDF toolkit built with Wails v2\n\nAuthor: Hanxiong Shi\nVersion 1.0.3\nCopyright © 2026",
     },
 }
 ```
