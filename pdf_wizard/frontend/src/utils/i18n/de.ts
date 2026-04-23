@@ -120,9 +120,9 @@ export const de: Translations = {
   imagesPhonePageSessionClosedTitle: 'Diese Sitzung ist beendet',
   imagesPhonePageSessionClosedBody:
     'Sie können von dieser Seite nicht erneut hochladen. Um weitere Bilder zu senden, starten Sie in PDF Wizard auf dem Computer eine neue Empfangssitzung und scannen Sie den neuen QR-Code.',
-  lockUnlockModeLock: 'PDF sperren',
-  lockUnlockModeUnlock: 'PDF entsperren',
   lockUnlockSelectPDF: 'PDF-Datei auswählen',
+  lockUnlockStatusUnlocked: 'Entsperrt',
+  lockUnlockStatusLocked: 'Gesperrt',
   lockUnlockPassword: 'Passwort',
   lockUnlockSelectOutputDirectory: 'Ausgabeverzeichnis auswählen',
   lockUnlockActionLock: 'PDF sperren',

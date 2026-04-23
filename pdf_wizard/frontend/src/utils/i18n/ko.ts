@@ -120,9 +120,9 @@ export const ko: Translations = {
   imagesPhonePageSessionClosedTitle: '이 세션이 종료되었습니다',
   imagesPhonePageSessionClosedBody:
     '이 페이지에서 다시 업로드할 수 없습니다. 더 보내려면 컴퓨터의 PDF Wizard에서 새로 받기를 시작하고 새 QR 코드를 스캔하세요.',
-  lockUnlockModeLock: 'PDF 잠금',
-  lockUnlockModeUnlock: 'PDF 잠금 해제',
   lockUnlockSelectPDF: 'PDF 파일 선택',
+  lockUnlockStatusUnlocked: '잠금 없음',
+  lockUnlockStatusLocked: '잠김',
   lockUnlockPassword: '비밀번호',
   lockUnlockSelectOutputDirectory: '출력 디렉토리 선택',
   lockUnlockActionLock: 'PDF 잠금',

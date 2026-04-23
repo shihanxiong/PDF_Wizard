@@ -120,9 +120,9 @@ export const hi: Translations = {
   imagesPhonePageSessionClosedTitle: 'यह सत्र समाप्त हो गया',
   imagesPhonePageSessionClosedBody:
     'इस पृष्ठ से फिर अपलोड नहीं किया जा सकता। और छवियाँ भेजने के लिए अपने कंप्यूटर पर PDF Wizard में नया प्राप्ति सत्र शुरू करें और नया QR कोड स्कैन करें।',
-  lockUnlockModeLock: 'PDF लॉक करें',
-  lockUnlockModeUnlock: 'PDF अनलॉक करें',
   lockUnlockSelectPDF: 'PDF फ़ाइल चुनें',
+  lockUnlockStatusUnlocked: 'अनलॉक',
+  lockUnlockStatusLocked: 'लॉक',
   lockUnlockPassword: 'पासवर्ड',
   lockUnlockSelectOutputDirectory: 'आउटपुट निर्देशिका चुनें',
   lockUnlockActionLock: 'PDF लॉक करें',

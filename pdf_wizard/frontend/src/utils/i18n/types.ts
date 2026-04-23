@@ -139,9 +139,11 @@ export interface Translations {
   imagesPhonePageSessionClosedBody: string;
 
   // Lock / Unlock Tab
-  lockUnlockModeLock: string;
-  lockUnlockModeUnlock: string;
   lockUnlockSelectPDF: string;
+  /** Shown on selected file metadata when pdfcpu can open the PDF without a password. */
+  lockUnlockStatusUnlocked: string;
+  /** Shown on selected file metadata when opening requires a password (encrypt/protect). */
+  lockUnlockStatusLocked: string;
   lockUnlockPassword: string;
   lockUnlockSelectOutputDirectory: string;
   lockUnlockActionLock: string;

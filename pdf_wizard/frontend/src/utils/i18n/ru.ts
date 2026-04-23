@@ -120,9 +120,9 @@ export const ru: Translations = {
   imagesPhonePageSessionClosedTitle: 'Сеанс завершён',
   imagesPhonePageSessionClosedBody:
     'Повторная загрузка с этой страницы недоступна. Чтобы отправить ещё изображения, начните новый приём в PDF Wizard на компьютере и отсканируйте новый QR-код.',
-  lockUnlockModeLock: 'Заблокировать PDF',
-  lockUnlockModeUnlock: 'Разблокировать PDF',
   lockUnlockSelectPDF: 'Выбрать PDF файл',
+  lockUnlockStatusUnlocked: 'Без защиты',
+  lockUnlockStatusLocked: 'Защищён',
   lockUnlockPassword: 'Пароль',
   lockUnlockSelectOutputDirectory: 'Выбрать папку для сохранения',
   lockUnlockActionLock: 'Заблокировать PDF',

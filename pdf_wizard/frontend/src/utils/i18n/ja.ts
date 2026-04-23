@@ -120,9 +120,9 @@ export const ja: Translations = {
   imagesPhonePageSessionClosedTitle: 'このセッションは終了しました',
   imagesPhonePageSessionClosedBody:
     'このページから再度アップロードすることはできません。さらに送信するには、コンピューター上の PDF Wizard で受信をやり直し、新しい QR コードを読み取ってください。',
-  lockUnlockModeLock: 'PDF をロック',
-  lockUnlockModeUnlock: 'PDF のロック解除',
   lockUnlockSelectPDF: 'PDFファイルを選択',
+  lockUnlockStatusUnlocked: 'ロックなし',
+  lockUnlockStatusLocked: 'ロック済み',
   lockUnlockPassword: 'パスワード',
   lockUnlockSelectOutputDirectory: '出力先フォルダーを選択',
   lockUnlockActionLock: 'PDF をロック',

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Box, Button, Card, CardContent, CircularProgress, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, TextField, Typography } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import FolderIcon from '@mui/icons-material/Folder';
 import { SelectedPDF } from '../types';
@@ -14,6 +14,14 @@ interface LockUnlockTabProps {
 }
 
 type Mode = 'lock' | 'unlock';
+
+function parentDirectory(filePath: string): string {
+  const i = Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\'));
+  if (i <= 0) {
+    return '';
+  }
+  return filePath.slice(0, i);
+}
 
 export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
   const { t } = useI18n();
@@ -32,20 +40,45 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
     setOutputFilename(defaultFilename);
   }, [defaultFilename]);
 
-  const loadPDF = useCallback(
-    async (path: string, currentMode: Mode) => {
-      const metadata = currentMode === 'unlock' ? await GetFileMetadata(path) : await GetPDFMetadata(path);
+  const isPasswordProtectedReadError = (message: string) => {
+    const m = message.toLowerCase();
+    return m.includes('password') || m.includes('encrypt');
+  };
+
+  /** Try opening the PDF without a password: encrypted → unlock mode; readable → lock mode. */
+  const loadPDF = useCallback(async (path: string) => {
+    setPassword('');
+    try {
+      const metadata = await GetPDFMetadata(path);
+      setMode('lock');
       setSelectedPDF({
         path: metadata.path,
         name: metadata.name,
         size: metadata.size,
         lastModified: new Date(metadata.lastModified),
-        totalPages: metadata.totalPages || 0,
+        totalPages: metadata.totalPages,
       });
-      setError(null);
-    },
-    []
-  );
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (!isPasswordProtectedReadError(message)) {
+        throw err;
+      }
+      setMode('unlock');
+      const metadata = await GetFileMetadata(path);
+      setSelectedPDF({
+        path: metadata.path,
+        name: metadata.name,
+        size: metadata.size,
+        lastModified: new Date(metadata.lastModified),
+        totalPages: 0,
+      });
+    }
+    const outDir = parentDirectory(path);
+    if (outDir) {
+      setOutputDirectory(outDir);
+    }
+    setError(null);
+  }, []);
 
   const handleDroppedPDF = useCallback(
     async (paths: string[]) => {
@@ -59,13 +92,13 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
         return;
       }
       try {
-        await loadPDF(pdfPaths[0], mode);
+        await loadPDF(pdfPaths[0]);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
         setError(`${t('lockUnlockFailedToLoadPDF')} ${message}`);
       }
     },
-    [loadPDF, mode, t]
+    [loadPDF, t]
   );
 
   useEffect(() => {
@@ -83,7 +116,7 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
       if (!path) {
         return;
       }
-      await loadPDF(path, mode);
+      await loadPDF(path);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
       setError(`${t('lockUnlockFailedToSelectPDF')} ${message}`);
@@ -169,14 +202,35 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
       {selectedPDF ? (
         <Card sx={{ mb: 2, flexShrink: 0 }}>
           <CardContent>
-            <Typography variant="h6" sx={{ mb: 1 }}>
-              📄 {selectedPDF.name}
-            </Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 1,
+                mb: 1,
+                flexWrap: 'wrap',
+                textAlign: 'center',
+              }}
+            >
+              <Typography variant="subtitle1" component="span" sx={{ minWidth: 0, fontWeight: 600 }}>
+                📄 {selectedPDF.name}
+              </Typography>
+              <Chip
+                size="small"
+                label={mode === 'unlock' ? t('lockUnlockStatusLocked') : t('lockUnlockStatusUnlocked')}
+                color={mode === 'unlock' ? 'warning' : 'success'}
+                variant="filled"
+                sx={{ fontWeight: 600, flexShrink: 0 }}
+              />
+            </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
               {selectedPDF.path}
             </Typography>
             <Typography variant="body2">
-              {formatFileSize(selectedPDF.size)} • {selectedPDF.totalPages} {t('pages')} • {t('modified')} {formatDate(selectedPDF.lastModified)}
+              {formatFileSize(selectedPDF.size)}
+              {selectedPDF.totalPages > 0 ? ` • ${selectedPDF.totalPages} ${t('pages')}` : ''} • {t('modified')}{' '}
+              {formatDate(selectedPDF.lastModified)}
             </Typography>
           </CardContent>
         </Card>
@@ -185,22 +239,6 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
       )}
 
       <Box sx={{ mt: 'auto', pt: 2, pb: 2, flexShrink: 0 }}>
-        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, flexWrap: 'wrap' }}>
-          <Button
-            variant={mode === 'lock' ? 'contained' : 'outlined'}
-            onClick={() => setMode('lock')}
-            disabled={isProcessing}
-          >
-            {t('lockUnlockModeLock')}
-          </Button>
-          <Button
-            variant={mode === 'unlock' ? 'contained' : 'outlined'}
-            onClick={() => setMode('unlock')}
-            disabled={isProcessing}
-          >
-            {t('lockUnlockModeUnlock')}
-          </Button>
-        </Box>
         <TextField
           label={t('lockUnlockPassword')}
           type="password"
@@ -238,6 +276,11 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
           />
           <Typography variant="body2">.pdf</Typography>
         </Box>
+        {selectedPDF && !outputDirectory && (
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+            {t('lockUnlockSelectOutputDirectory')}
+          </Typography>
+        )}
         <Button
           variant="contained"
           onClick={handleSubmit}

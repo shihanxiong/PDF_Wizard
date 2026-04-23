@@ -11,11 +11,12 @@ The application features six main tab components for PDF manipulation:
 - **RotateTab** — rotates page ranges
 - **WatermarkTab** — text watermarks (see [SYSTEM_DESIGN.md — Watermark PDF Tab](../../../../SYSTEM_DESIGN.md#watermark-pdf-tab) for product-level requirements)
 - **ImagesToPdfTab** — ordered images to one PDF (see [SYSTEM_DESIGN.md — Images to PDF Tab](../../../../SYSTEM_DESIGN.md#images-to-pdf-tab)); uses **`useImageDrop`** in `hooks/useImageDrop.ts` for the same window-level drop pattern as PDF tabs
-- **LockUnlockTab** — lock PDFs with a password or unlock password-protected PDFs into a new file
+- **LockUnlockTab** — lock PDFs with a password or unlock password-protected PDFs into a new file; after PDF selection, **Lock vs Unlock is chosen automatically** (`GetPDFMetadata` succeeds → lock; password/encryption read errors → unlock), with no separate mode toggle; page count is omitted until an unencrypted read succeeds; metadata card shows a **filled `Chip`** (success = readable without password, warning = password required for open); **output directory defaults** to the selected PDF’s parent folder (user can still change via the directory button); submit stays disabled until password, output directory, and filename are all set
+- **PDF / file name as primary title** — MUI `Typography` **`variant="subtitle1"`** with **`fontWeight: 600`** in **`PDFInfoCard`**, **`WatermarkTab`**, **`LockUnlockTab`**, and merge/images **sortable list** rows (between `subtitle2` and `h6`, consistent across tabs); Split/Rotate use **`PDFInfoCard`** only
 
 Components use Material-UI. Strings use **`useI18n()`** from `utils/i18n` (see [utils/i18n/DESIGN.md](../utils/i18n/DESIGN.md)).
 
-When the UI language is English, **`App.tsx`** applies a slightly smaller `Tabs` label font so five tabs fit comfortably without crowding.
+When the UI language is English, **`App.tsx`** applies a slightly smaller `Tabs` label font so six tabs fit comfortably without crowding.
 
 `App.tsx` lazy-loads the six main tabs with **`React.lazy` + `Suspense`**. The shell (`AppBar`, tab strip, drag/drop wiring, settings dialog) renders immediately; each tab chunk is fetched on first activation and then stays mounted for local state continuity.
 

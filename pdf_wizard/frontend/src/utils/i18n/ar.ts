@@ -120,9 +120,9 @@ export const ar: Translations = {
   imagesPhonePageSessionClosedTitle: 'انتهت هذه الجلسة',
   imagesPhonePageSessionClosedBody:
     'لا يمكنك الرفع مرة أخرى من هذه الصفحة. لإرسال المزيد من الصور، ابدأ جلسة استقبال جديدة في PDF Wizard على الكمبيوتر وامسح رمز QR الجديد.',
-  lockUnlockModeLock: 'قفل PDF',
-  lockUnlockModeUnlock: 'فك قفل PDF',
   lockUnlockSelectPDF: 'اختر ملف PDF',
+  lockUnlockStatusUnlocked: 'غير مقفل',
+  lockUnlockStatusLocked: 'مقفل',
   lockUnlockPassword: 'كلمة المرور',
   lockUnlockSelectOutputDirectory: 'اختر مجلد الإخراج',
   lockUnlockActionLock: 'قفل PDF',

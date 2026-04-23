@@ -120,9 +120,9 @@ export const pt: Translations = {
   imagesPhonePageSessionClosedTitle: 'Esta sessão terminou',
   imagesPhonePageSessionClosedBody:
     'Não pode voltar a enviar a partir desta página. Para enviar mais imagens, inicie uma nova receção no PDF Wizard no computador e leia o novo código QR.',
-  lockUnlockModeLock: 'Bloquear PDF',
-  lockUnlockModeUnlock: 'Desbloquear PDF',
   lockUnlockSelectPDF: 'Selecionar arquivo PDF',
+  lockUnlockStatusUnlocked: 'Desbloqueado',
+  lockUnlockStatusLocked: 'Bloqueado',
   lockUnlockPassword: 'Senha',
   lockUnlockSelectOutputDirectory: 'Selecionar diretório de saída',
   lockUnlockActionLock: 'Bloquear PDF',
