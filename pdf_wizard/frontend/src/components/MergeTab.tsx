@@ -89,7 +89,7 @@ const SortableFileItem = ({ file, index, onRemove }: SortableFileItemProps) => {
         </Typography>
       </Box>
       <Box sx={{ flex: 1 }}>
-        <Typography variant="subtitle1" sx={{ mb: 0.5, fontWeight: 600 }}>
+        <Typography variant="subtitle1" sx={{ mb: 0.5 }}>
           {file.name}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>

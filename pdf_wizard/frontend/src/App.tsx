@@ -37,10 +37,10 @@ function TabPanel(props: TabPanelProps) {
       hidden={activeTabId !== panelId}
       id={`pdf-wizard-tabpanel-${panelId}`}
       aria-labelledby={`pdf-wizard-tab-${panelId}`}
-      style={{ height: '100%', display: activeTabId === panelId ? 'block' : 'none' }}
+      style={{ height: '100%', minHeight: 0, display: activeTabId === panelId ? 'block' : 'none' }}
       {...other}
     >
-      <Box sx={{ height: '100%' }}>{children}</Box>
+      <Box sx={{ height: '100%', minHeight: 0 }}>{children}</Box>
     </div>
   );
 }
@@ -49,15 +49,9 @@ interface TabComponentProps {
   onFileDrop: (handler: (paths: string[]) => void) => void;
 }
 
-const MergeTab = lazy(() =>
-  import('./components/MergeTab').then((module) => ({ default: module.MergeTab })),
-);
-const SplitTab = lazy(() =>
-  import('./components/SplitTab').then((module) => ({ default: module.SplitTab })),
-);
-const RotateTab = lazy(() =>
-  import('./components/RotateTab').then((module) => ({ default: module.RotateTab })),
-);
+const MergeTab = lazy(() => import('./components/MergeTab').then((module) => ({ default: module.MergeTab })));
+const SplitTab = lazy(() => import('./components/SplitTab').then((module) => ({ default: module.SplitTab })));
+const RotateTab = lazy(() => import('./components/RotateTab').then((module) => ({ default: module.RotateTab })));
 const WatermarkTab = lazy(() =>
   import('./components/WatermarkTab').then((module) => ({ default: module.WatermarkTab })),
 );
@@ -178,7 +172,9 @@ export const App = () => {
               </Box>
             }
           >
-            <TabComponent onFileDrop={(handler: (paths: string[]) => void) => (dropHandlersRef.current[panelId] = handler)} />
+            <TabComponent
+              onFileDrop={(handler: (paths: string[]) => void) => (dropHandlersRef.current[panelId] = handler)}
+            />
           </Suspense>
         ) : null}
       </TabPanel>
@@ -192,15 +188,15 @@ export const App = () => {
     >
       <AppBar position="static" sx={{ bgcolor: 'background.paper', color: 'text.primary', boxShadow: 1 }}>
         <Toolbar sx={{ px: 2, minHeight: '64px !important' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mr: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
             <img
               src={logo}
               alt="PDF Wizard Logo"
               draggable={false}
               onDragStart={(e) => e.preventDefault()}
-              style={{ height: '40px', width: '40px', marginRight: '12px', userSelect: 'none' }}
+              style={{ height: '40px', width: '40px', marginRight: '10px', userSelect: 'none' }}
             />
-            <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
+            <Typography variant="h6" component="div" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
               {t('appTitle')}
             </Typography>
           </Box>
@@ -211,11 +207,15 @@ export const App = () => {
               aria-label="PDF Wizard tabs"
               sx={{
                 minHeight: 'auto',
+                '& .MuiTab-root': {
+                  px: 1.25,
+                },
                 ...(language === 'en' && {
                   '& .MuiTab-root': {
                     fontSize: '0.8125rem',
                     minHeight: 40,
                     py: 0.75,
+                    px: 1,
                   },
                 }),
               }}
@@ -233,7 +233,7 @@ export const App = () => {
           </Box>
         </Toolbar>
       </AppBar>
-      <Box sx={{ flex: 1, overflow: 'hidden', backgroundColor: '#ffffff' }}>
+      <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', backgroundColor: '#ffffff' }}>
         {MAIN_TAB_IDS.map((id) => renderTabPanel(id))}
       </Box>
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />

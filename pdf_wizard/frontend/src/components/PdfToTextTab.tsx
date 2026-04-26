@@ -1,14 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, CircularProgress, Typography } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import SelectAllIcon from '@mui/icons-material/SelectAll';
@@ -165,7 +156,7 @@ export const PdfToTextTab = ({ onFileDrop }: PdfToTextTabProps) => {
       {selectedPDF ? (
         <Card sx={{ mb: 2, flexShrink: 0 }}>
           <CardContent>
-            <Typography variant="subtitle1" component="div" sx={{ mb: 1, fontWeight: 600, textAlign: 'center' }}>
+            <Typography variant="subtitle1" component="div" sx={{ mb: 1, textAlign: 'center' }}>
               📄 {selectedPDF.name}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -198,18 +189,44 @@ export const PdfToTextTab = ({ onFileDrop }: PdfToTextTabProps) => {
         </Button>
       </Box>
 
-      <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        <TextField
-          inputRef={textAreaRef}
-          label={t('pdfToTextOutputLabel')}
-          value={extractedText}
-          onChange={(e) => setExtractedText(e.target.value)}
-          multiline
-          fullWidth
-          minRows={12}
-          sx={{ flex: 1, '& .MuiInputBase-root': { alignItems: 'stretch', height: '100%' } }}
-          inputProps={{ 'aria-label': t('pdfToTextAriaLabel') }}
-        />
+      <Box sx={{ flex: 1, minHeight: 0, pb: 2, marginBottom: '20px' }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          {t('pdfToTextOutputLabel')}
+        </Typography>
+        <Box
+          sx={{
+            height: 'calc(100% - 28px)',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 1,
+            backgroundColor: 'background.paper',
+            p: 1.5,
+            boxSizing: 'border-box',
+            overflow: 'hidden',
+          }}
+        >
+          <Box
+            component="textarea"
+            ref={textAreaRef}
+            value={extractedText}
+            onChange={(e) => setExtractedText(e.target.value)}
+            aria-label={t('pdfToTextAriaLabel')}
+            sx={{
+              width: '100%',
+              height: '100%',
+              border: 0,
+              outline: 0,
+              resize: 'none',
+              overflow: 'auto',
+              backgroundColor: 'transparent',
+              color: 'text.primary',
+              font: 'inherit',
+              lineHeight: 1.5,
+              boxSizing: 'border-box',
+              pb: 1,
+            }}
+          />
+        </Box>
       </Box>
     </Box>
   );
