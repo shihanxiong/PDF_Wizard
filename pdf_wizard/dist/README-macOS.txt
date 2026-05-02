@@ -10,7 +10,7 @@ QUICK START (DMG):
 QUICK START (ZIP):
 1. Extract the ZIP file
 2. Right-click PDF Wizard.app → Open → Click "Open"
-3. Or run in Terminal: xattr -cr "PDF Wizard.app"
+3. Or run in Terminal: /usr/bin/xattr -cr "PDF Wizard.app"
 
 SYSTEM REQUIREMENTS:
 - macOS 10.13 or later
@@ -19,7 +19,7 @@ SYSTEM REQUIREMENTS:
 TROUBLESHOOTING:
 If you see "App is damaged and can't be opened":
 1. Right-click the app → Open → Click "Open"
-2. Or run: xattr -cr "PDF Wizard.app"
+2. Or run: /usr/bin/xattr -cr "PDF Wizard.app"
 
 If the app won't run:
 1. Check System Settings → Privacy & Security

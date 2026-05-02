@@ -77,14 +77,14 @@ Pre-built installers are available in the [`pdf_wizard/dist/`](https://github.co
 1. Download the ZIP file from the [dist folder](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist)
 2. Extract the ZIP file
 3. Right-click `PDF Wizard.app` → Open → Click "Open"
-4. Or run in Terminal: `xattr -cr "PDF Wizard.app"`
+4. Or run in Terminal: `/usr/bin/xattr -cr "PDF Wizard.app"`
 
 **macOS System Requirements:**
 
 - macOS 10.13 or later
 - Works on Intel and Apple Silicon Macs (universal binary)
 
-> **Note**: If you see "App is damaged and can't be opened", right-click the app → Open → Click "Open", or run `xattr -cr "PDF Wizard.app"` in Terminal.
+> **Note**: If you see "App is damaged and can't be opened", right-click the app → Open → Click "Open", or run `/usr/bin/xattr -cr "PDF Wizard.app"` in Terminal.
 
 ### Windows
 

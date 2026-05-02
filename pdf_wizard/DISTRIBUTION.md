@@ -31,7 +31,7 @@ The built app will be in `build/bin/PDF Wizard.app`. To make it portable:
 On the target machine, after copying the app, run:
 
 ```bash
-xattr -cr "/path/to/PDF Wizard.app"
+/usr/bin/xattr -cr "/path/to/PDF Wizard.app"
 ```
 
 Then open it normally.
@@ -95,7 +95,7 @@ The built executable will be in `build/bin/PDF Wizard.exe`. For distribution:
 
 1. Copy `build/bin/PDF Wizard.app` to the target machine
 2. Right-click the app → Open → Click "Open" to bypass security warning
-3. Or run: `xattr -cr "PDF Wizard.app"` then double-click
+3. Or run: `/usr/bin/xattr -cr "PDF Wizard.app"` then double-click
 
 #### Method 2: Create a Disk Image (.dmg)
 
@@ -214,7 +214,7 @@ This is a macOS security feature. Solutions:
 1. **Remove quarantine (quick fix):**
 
    ```bash
-   xattr -cr "PDF Wizard.app"
+   /usr/bin/xattr -cr "PDF Wizard.app"
    ```
 
 2. **Right-click → Open (first time only):**
