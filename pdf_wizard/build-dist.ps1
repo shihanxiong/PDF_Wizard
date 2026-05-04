@@ -7,6 +7,39 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $BuildDir = Join-Path $ScriptDir "build\bin"
 $OutputDir = Join-Path $ScriptDir "dist"
 
+# Wails shells out to "makensis"; Chocolatey/NSIS often install without updating the current user's PATH.
+function Ensure-MakensisOnPath {
+    if (Get-Command makensis -ErrorAction SilentlyContinue) {
+        return
+    }
+    $roots = @(
+        (Join-Path ${env:ProgramFiles(x86)} "NSIS"),
+        (Join-Path $env:ProgramFiles "NSIS")
+    )
+    if ($env:ChocolateyInstall) {
+        $roots += (Join-Path $env:ChocolateyInstall "lib\nsis")
+    }
+    foreach ($root in $roots) {
+        if (-not $root -or -not (Test-Path -LiteralPath $root)) {
+            continue
+        }
+        $direct = Join-Path $root "makensis.exe"
+        if (Test-Path -LiteralPath $direct) {
+            $env:Path = "$root;$env:Path"
+            Write-Host "NSIS: prepended to PATH for this session: $root" -ForegroundColor DarkCyan
+            return
+        }
+        $hit = Get-ChildItem -LiteralPath $root -Recurse -Filter makensis.exe -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+        if ($hit) {
+            $bin = $hit.DirectoryName
+            $env:Path = "$bin;$env:Path"
+            Write-Host "NSIS: prepended to PATH for this session: $bin" -ForegroundColor DarkCyan
+            return
+        }
+    }
+}
+
 Write-Host "🔨 Building PDF Wizard for Windows..." -ForegroundColor Cyan
 Set-Location $ScriptDir
 
@@ -16,9 +49,10 @@ if (Test-Path $BuildDir) {
     Remove-Item -Recurse -Force $BuildDir
 }
 
-# Build Windows executable
+# Build Windows executable (Wails only runs NSIS when -nsis is passed; see wails.io Windows installer guide)
+Ensure-MakensisOnPath
 Write-Host "Building Windows executable..." -ForegroundColor Cyan
-wails build
+wails build -nsis
 
 # Check for executable
 $ExeName = "PDF Wizard.exe"
@@ -39,24 +73,33 @@ Write-Host "Copying standalone executable to dist..." -ForegroundColor Cyan
 Copy-Item $ExePath (Join-Path $OutputDir "pdf_wizard-windows.exe")
 Write-Host "✅ Created: pdf_wizard-windows.exe" -ForegroundColor Green
 
-# Check if NSIS installer was created
-$NsisInstaller = Join-Path $BuildDir "PDF Wizard Installer.exe"
-if (Test-Path $NsisInstaller) {
-    Write-Host "NSIS installer found, copying to dist..." -ForegroundColor Cyan
-    Copy-Item $NsisInstaller (Join-Path $OutputDir "pdf_wizard-windows-installer.exe")
-    Write-Host "✅ Created: pdf_wizard-windows-installer.exe" -ForegroundColor Green
+# NSIS output is defined in build/windows/installer/project.nsi: e.g. pdf_wizard-amd64-installer.exe (not "PDF Wizard Installer.exe")
+$NsisInstallerPath = $null
+$LegacyInstaller = Join-Path $BuildDir "PDF Wizard Installer.exe"
+if (Test-Path $LegacyInstaller) {
+    $NsisInstallerPath = $LegacyInstaller
 } else {
-    Write-Host "⚠️  NSIS installer not found. Make sure NSIS is installed:" -ForegroundColor Yellow
-    Write-Host "   Download from: https://nsis.sourceforge.io/Download" -ForegroundColor Yellow
-    Write-Host "   Or install via: choco install nsis" -ForegroundColor Yellow
+    $found = @(Get-ChildItem -LiteralPath $BuildDir -Filter '*-installer.exe' -ErrorAction SilentlyContinue)
+    if ($found.Count -gt 0) {
+        $preferAmd64 = $found | Where-Object { $_.Name -match 'amd64' } | Select-Object -First 1
+        $NsisInstallerPath = if ($null -ne $preferAmd64) { $preferAmd64.FullName } else { $found[0].FullName }
+    }
 }
 
-# Create ZIP archive with executable
-Write-Host "Creating ZIP archive..." -ForegroundColor Cyan
-Set-Location $BuildDir
+if ($NsisInstallerPath) {
+    Write-Host "NSIS installer found, copying to dist..." -ForegroundColor Cyan
+    Copy-Item -LiteralPath $NsisInstallerPath (Join-Path $OutputDir "pdf_wizard-windows-installer.exe")
+    Write-Host "✅ Created: pdf_wizard-windows-installer.exe" -ForegroundColor Green
+} else {
+    Write-Host "⚠️  NSIS installer not found under build\bin (*-installer.exe). Wails skips NSIS if makensis is not on PATH (no error)." -ForegroundColor Yellow
+    Write-Host "   Check: Get-Command makensis   then re-open PowerShell after installing NSIS." -ForegroundColor Yellow
+    Write-Host "   https://nsis.sourceforge.io/Download  |  choco install nsis" -ForegroundColor Yellow
+}
 
+# Create ZIP archive with executable (use full paths so we never cd into build\bin)
+Write-Host "Creating ZIP archive..." -ForegroundColor Cyan
 $ZipPath = Join-Path $OutputDir "pdf_wizard-windows-portable.zip"
-Compress-Archive -Path $ExeName -DestinationPath $ZipPath -Force
+Compress-Archive -LiteralPath $ExePath -DestinationPath $ZipPath -Force
 Write-Host "✅ Created: pdf_wizard-windows-portable.zip" -ForegroundColor Green
 
 # Create README for Windows distribution
@@ -104,3 +147,4 @@ Get-ChildItem $OutputDir | Where-Object { $_.Extension -match "\.(exe|zip|txt)$"
 Write-Host ""
 Write-Host "✅ Ready for distribution!" -ForegroundColor Green
 
+Set-Location $ScriptDir

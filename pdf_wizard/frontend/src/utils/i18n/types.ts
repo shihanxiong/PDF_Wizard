@@ -11,6 +11,7 @@ export interface Translations {
   rotateTab: string;
   watermarkTab: string;
   imagesToPdfTab: string;
+  pdfToTextTab: string;
   lockUnlockTab: string;
 
   // Settings
@@ -137,6 +138,21 @@ export interface Translations {
   imagesPhonePageTooManyFiles: string;
   imagesPhonePageSessionClosedTitle: string;
   imagesPhonePageSessionClosedBody: string;
+
+  // PDF to Text tab
+  pdfToTextExtract: string;
+  pdfToTextExtracting: string;
+  pdfToTextCopy: string;
+  pdfToTextCopied: string;
+  pdfToTextCopyFailed: string;
+  pdfToTextSelectAll: string;
+  pdfToTextOutputLabel: string;
+  pdfToTextAriaLabel: string;
+  pdfToTextScannedHint: string;
+  pdfToTextFailedToLoadPDF: string;
+  pdfToTextFailedToSelectPDF: string;
+  pdfToTextExtractFailed: string;
+  pdfToTextEmptyResult: string;
 
   // Lock / Unlock Tab
   lockUnlockSelectPDF: string;

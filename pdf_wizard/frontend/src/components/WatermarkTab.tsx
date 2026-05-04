@@ -311,7 +311,7 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
       {selectedPDF && (
         <Card sx={{ mb: 3, flexShrink: 0 }}>
           <CardContent>
-            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
               📄 {selectedPDF.name}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>

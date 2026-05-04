@@ -15,7 +15,7 @@ export const PDFInfoCard = ({ pdf }: PDFInfoCardProps) => {
   return (
     <Card sx={{ mb: 3 }}>
       <CardContent>
-        <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+        <Typography variant="subtitle1" sx={{ mb: 1 }}>
           📄 {pdf.name}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>

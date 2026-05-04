@@ -127,6 +127,7 @@ PDFService handles all PDF processing operations:
 - Building one PDF from ordered images (`ImagesToPDF`)
 - Locking PDFs with password-based encryption (`LockPDF`)
 - Unlocking password-protected PDFs (`UnlockPDF`)
+- Extracting plain text for the PDF-to-Text tab (`ExtractPDFText` in `pdf_text_extract.go`; uses `github.com/ledongthuc/pdf`; **password-protected PDFs are not supported**)
 
 ### Structure
 
@@ -257,6 +258,26 @@ Creates one PDF with one page per image, preserving order.
 - `api.ImportImagesFile` with `pdfcpu.DefaultImportConfig()` and `model.NewDefaultConfiguration()`
 - Removes existing output file before write; verifies output exists after import
 
+### ExtractPDFText (PDF to Text tab)
+
+#### `ExtractPDFText(path string) (string, error)`
+
+Returns human-readable text from an existing PDF for the **PDF to Text** tab.
+
+**Validation:**
+
+- `validatePDFFile(path)`
+
+**Implementation:**
+
+- Opens the file with `github.com/ledongthuc/pdf` (`NewReader`). Encrypted PDFs are rejected by the reader; users should unlock the file first (**Lock / Unlock** tab).
+- Per-page extraction prefers **row-grouped** text (`GetTextByRow`) for rough reading order; falls back to `GetPlainText` when rows are empty or row grouping errors.
+
+**Limitations:**
+
+- Image-only or scanned pages typically yield little or no text (no OCR in this feature).
+- **No password support** for this feature.
+
 ## Validation (`validation.go`)
 
 Shared helpers used by services:
@@ -337,6 +358,8 @@ App-wide Go and npm dependencies are summarized in [SYSTEM_DESIGN.md § Technica
   - `ImportImagesFile()` — images→PDF (one page per image)
 
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu` - Page extraction (`ExtractPages` for split segments)
+
+- `github.com/ledongthuc/pdf` — text extraction for `ExtractPDFText` (`pdf_text_extract.go`)
 
 - `github.com/gen2brain/heic` — decode HEIC/HEIF for `heic_jpeg.go` (combined with standard library `image/jpeg` encode)
 

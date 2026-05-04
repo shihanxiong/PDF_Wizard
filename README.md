@@ -4,13 +4,15 @@
   <img src="./assets/img/app_logo_raw.png" width="350" height="350" />
 </p>
 
-A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backend performance with a React/TypeScript frontend. PDF Wizard provides five main features:
+A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backend performance with a React/TypeScript frontend. PDF Wizard provides seven main features:
 
 - **Merge PDFs**: Combine multiple PDF files into a single document
 - **Split PDFs**: Divide a PDF into multiple files based on page ranges
 - **Rotate PDFs**: Rotate specific page ranges in a PDF (90°, -90°, or 180°)
 - **Watermark PDFs**: Add text watermarks to PDFs with customizable font, size, color, opacity, rotation, and position. Features **language-specific fonts** that automatically adapt based on your selected language (Chinese, Japanese, Korean, Hindi, and standard fonts for other languages)
 - **Images to PDF**: Build one PDF from multiple images (JPEG, PNG, WebP, TIFF, GIF, BMP, HEIC/HEIF) with drag-and-drop reorder; **receive from phone** on the same Wi‑Fi via a LAN upload page and QR code (localized HTML, session limits, automatic stop after upload). HEIC/HEIF are converted to temporary JPEGs before import for reliable, faster processing
+- **PDF to Text**: Extract plain text from a PDF into an editable area, with copy and select-all; unencrypted PDFs only (unlock first if protected); image-only or scanned pages may return little or no text (no OCR)
+- **Lock / Unlock PDF**: Encrypt a PDF with a password or decrypt a protected PDF to a new file
 
 **Features:**
 
@@ -75,14 +77,14 @@ Pre-built installers are available in the [`pdf_wizard/dist/`](https://github.co
 1. Download the ZIP file from the [dist folder](https://github.com/shihanxiong/PDF_Wizard/tree/master/pdf_wizard/dist)
 2. Extract the ZIP file
 3. Right-click `PDF Wizard.app` → Open → Click "Open"
-4. Or run in Terminal: `xattr -cr "PDF Wizard.app"`
+4. Or run in Terminal: `/usr/bin/xattr -cr "PDF Wizard.app"`
 
 **macOS System Requirements:**
 
 - macOS 10.13 or later
 - Works on Intel and Apple Silicon Macs (universal binary)
 
-> **Note**: If you see "App is damaged and can't be opened", right-click the app → Open → Click "Open", or run `xattr -cr "PDF Wizard.app"` in Terminal.
+> **Note**: If you see "App is damaged and can't be opened", right-click the app → Open → Click "Open", or run `/usr/bin/xattr -cr "PDF Wizard.app"` in Terminal.
 
 ### Windows
 
@@ -200,6 +202,7 @@ Coverage reports, filtering tests by name, and Playwright/CI details: **[pdf_wiz
 
 - **Watermark PDFs** (language-aware fonts, positions, opacity): [SYSTEM_DESIGN.md — Watermark PDF Tab](SYSTEM_DESIGN.md#watermark-pdf-tab).
 - **Images to PDF — phone upload** (QR, LAN server, session rules): [SYSTEM_DESIGN.md — Images to PDF Tab](SYSTEM_DESIGN.md#images-to-pdf-tab) and [pdf_wizard/services/DESIGN.md — LAN phone image upload](pdf_wizard/services/DESIGN.md#lan-phone-image-upload).
+- **PDF to Text** (extraction, limitations): [SYSTEM_DESIGN.md — PDF to Text Tab](SYSTEM_DESIGN.md#pdf-to-text-tab) and [pdf_wizard/services/DESIGN.md — ExtractPDFText](pdf_wizard/services/DESIGN.md#extractpdftext-pdf-to-text-tab).
 - **Internationalization** (12 languages, `useI18n`, adding a locale): [pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md).
 
 ## Technology stack

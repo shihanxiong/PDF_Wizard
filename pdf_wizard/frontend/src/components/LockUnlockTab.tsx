@@ -213,7 +213,7 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
                 textAlign: 'center',
               }}
             >
-              <Typography variant="subtitle1" component="span" sx={{ minWidth: 0, fontWeight: 600 }}>
+              <Typography variant="subtitle1" component="span" sx={{ minWidth: 0 }}>
                 📄 {selectedPDF.name}
               </Typography>
               <Chip

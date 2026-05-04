@@ -31,7 +31,7 @@ The built app will be in `build/bin/PDF Wizard.app`. To make it portable:
 On the target machine, after copying the app, run:
 
 ```bash
-xattr -cr "/path/to/PDF Wizard.app"
+/usr/bin/xattr -cr "/path/to/PDF Wizard.app"
 ```
 
 Then open it normally.
@@ -68,23 +68,26 @@ Build for Windows:
 
 ```bash
 cd pdf_wizard
-wails build
+wails build -nsis
 ```
 
-This creates `build/bin/PDF Wizard.exe`.
+This creates `build/bin/PDF Wizard.exe`. With NSIS on your PATH (`makensis` available), Wails also writes an installer next to it, named like **`pdf_wizard-amd64-installer.exe`** (from `build/windows/installer/project.nsi`: `${INFO_PROJECTNAME}-${ARCH}-installer.exe`), not `PDF Wizard Installer.exe`.
 
-**Note**: To create an NSIS installer, you need NSIS installed:
+**Note**: NSIS is required for the installer artifact:
 
 - Download from: https://nsis.sourceforge.io/Download
 - Or install via Chocolatey: `choco install nsis`
-- After installing NSIS, rebuild to generate the installer
+- Ensure the NSIS `Bin` folder is on your PATH (open a **new** terminal after install), or `wails build -nsis` will not produce the installer
+- **`build-dist.ps1`** prepends PATH for the build only if it finds `makensis.exe` under typical locations (e.g. `Program Files (x86)\NSIS`, Chocolatey `lib\nsis`)
+
+Use `wails build` (without `-nsis`) if you only need the standalone `.exe` and not the installer.
 
 #### Step 2: Prepare for Distribution
 
 The built executable will be in `build/bin/PDF Wizard.exe`. For distribution:
 
 - **Standalone executable**: Copy `PDF Wizard.exe` directly
-- **NSIS installer**: If NSIS is installed, `PDF Wizard Installer.exe` will be created
+- **NSIS installer**: If you run `wails build -nsis` and `makensis` is on PATH, you get `build/bin/*-installer.exe` (e.g. `pdf_wizard-amd64-installer.exe`)
 - **Portable ZIP**: Create a ZIP archive containing the executable
 
 ## Distribution Methods
@@ -95,7 +98,7 @@ The built executable will be in `build/bin/PDF Wizard.exe`. For distribution:
 
 1. Copy `build/bin/PDF Wizard.app` to the target machine
 2. Right-click the app → Open → Click "Open" to bypass security warning
-3. Or run: `xattr -cr "PDF Wizard.app"` then double-click
+3. Or run: `/usr/bin/xattr -cr "PDF Wizard.app"` then double-click
 
 #### Method 2: Create a Disk Image (.dmg)
 
@@ -147,9 +150,9 @@ Users extract and run the app.
 
 #### Method 2: NSIS Installer (Recommended for Installation)
 
-If NSIS is installed during build, an installer will be created:
+If you build with `wails build -nsis` and NSIS is available on PATH, an installer will be created:
 
-1. The installer `PDF Wizard Installer.exe` will be in `build/bin/`
+1. The installer (e.g. `pdf_wizard-amd64-installer.exe`) will be in `build/bin/`
 2. Users can run the installer to install PDF Wizard
 3. Creates Start menu shortcuts and desktop icon
 
@@ -198,8 +201,9 @@ The script automatically:
 - Detects your operating system
 - Builds the application
 - Creates distribution packages:
-  - **macOS**: DMG installer and ZIP archive
-  - **Windows**: Standalone executable, NSIS installer (if NSIS installed), and portable ZIP
+  - **macOS** (`build-dist.sh`): DMG installer and ZIP archive
+  - **Windows** (`build-dist.ps1`): standalone executable, NSIS installer when NSIS is on PATH (`wails build -nsis`), and portable ZIP
+  - **Windows** (`build-dist.sh` from Git Bash/WSL): standalone executable and portable ZIP only (use `build-dist.ps1` for the NSIS installer)
 
 All distribution files are created in the `pdf_wizard/dist` directory.
 
@@ -214,7 +218,7 @@ This is a macOS security feature. Solutions:
 1. **Remove quarantine (quick fix):**
 
    ```bash
-   xattr -cr "PDF Wizard.app"
+   /usr/bin/xattr -cr "PDF Wizard.app"
    ```
 
 2. **Right-click → Open (first time only):**
@@ -262,12 +266,13 @@ This is a Windows security feature for unsigned applications. Solutions:
 
 #### "NSIS installer not created"
 
-The NSIS installer is only created if NSIS is installed:
+The NSIS installer is only created when you run **`wails build -nsis`** (as **`build-dist.ps1`** does) and **`makensis`** is on your PATH:
 
 1. Download NSIS from: https://nsis.sourceforge.io/Download
 2. Or install via Chocolatey (as Administrator): `choco install nsis`
-3. After installing NSIS, rebuild the project: `wails build`
-4. The installer will be created in `build/bin/PDF Wizard Installer.exe`
+3. Open a **new** terminal and confirm: `makensis /VERSION`
+4. Rebuild: `wails build -nsis`
+5. The installer will be created in `build/bin/` as `*-installer.exe` (e.g. `pdf_wizard-amd64-installer.exe`)
 
 ## Best Practices
 

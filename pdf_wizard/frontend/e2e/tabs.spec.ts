@@ -15,12 +15,14 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     await setupTestPage(page);
   });
 
-  test('should display all five tabs (Merge, Split, Rotate, Watermark, Images to PDF)', async ({ page }) => {
+  test('should display all main tabs including PDF to Text and Lock / Unlock', async ({ page }) => {
     await expect(page.getByRole('tab', { name: 'Merge PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Split PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Watermark PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Images to PDF' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'PDF to Text' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Lock / Unlock PDF' })).toBeVisible();
 
     // Verify Merge tab is selected by default (active)
     const mergeTab = page.getByRole('tab', { name: 'Merge PDF' });
@@ -164,6 +166,8 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     await expect(page.getByRole('tab', { name: 'Split PDF' })).toHaveAttribute('aria-selected', 'false');
     await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toHaveAttribute('aria-selected', 'false');
     await expect(page.getByRole('tab', { name: 'Images to PDF' })).toHaveAttribute('aria-selected', 'false');
+    await expect(page.getByRole('tab', { name: 'PDF to Text' })).toHaveAttribute('aria-selected', 'false');
+    await expect(page.getByRole('tab', { name: 'Lock / Unlock PDF' })).toHaveAttribute('aria-selected', 'false');
 
     // Get the active tab panel and wait for it to be visible
     const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-watermark');
@@ -202,6 +206,16 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     const createPdfButton = imagesTabPanel.locator('button').filter({ hasText: 'Create PDF' });
     await expect(createPdfButton).toBeVisible();
     await expect(createPdfButton).toBeDisabled();
+  });
+
+  test('should switch to PDF to Text tab when clicked', async ({ page }) => {
+    await page.getByRole('tab', { name: 'PDF to Text' }).click();
+    await expect(page.getByRole('tab', { name: 'PDF to Text' })).toHaveAttribute('aria-selected', 'true');
+    const panel = page.locator('#pdf-wizard-tabpanel-pdfToText');
+    await expect(panel).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'Select PDF File' })).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'Extract text' })).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'Extract text' })).toBeDisabled();
   });
 
   test('should display watermark configuration options', async ({ page }) => {

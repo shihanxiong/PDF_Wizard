@@ -6,6 +6,8 @@ export function ApplyWatermark(arg1:string,arg2:models.WatermarkDefinition,arg3:
 
 export function EmitSettingsEvent():Promise<void>;
 
+export function ExtractPDFText(arg1:string):Promise<string>;
+
 export function GetFileMetadata(arg1:string):Promise<models.PDFMetadata>;
 
 export function GetLanguage():Promise<string>;
