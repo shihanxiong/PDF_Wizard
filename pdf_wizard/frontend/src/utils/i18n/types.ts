@@ -13,7 +13,7 @@ export interface Translations {
   imagesToPdfTab: string;
   pdfToTextTab: string;
   lockUnlockTab: string;
-  formFillTab?: string;
+  formFillTab: string;
 
   // Settings
   settings: string;
@@ -176,18 +176,18 @@ export interface Translations {
   lockUnlockFailedToSelectOutputDirectory: string;
 
   // Form Fill Tab
-  formFillSelectPDF?: string;
-  formFillSelectOutputDirectory?: string;
-  formFillSubmit?: string;
-  formFillSubmitting?: string;
-  formFillLoadingFields?: string;
-  formFillNoFields?: string;
-  formFillFieldLocked?: string;
-  formFillSuccess?: string;
-  formFillLoadFailed?: string;
-  formFillSubmitFailed?: string;
-  formFillSelectPDFFailed?: string;
-  formFillSelectOutputDirectoryFailed?: string;
+  formFillSelectPDF: string;
+  formFillSelectOutputDirectory: string;
+  formFillSubmit: string;
+  formFillSubmitting: string;
+  formFillLoadingFields: string;
+  formFillNoFields: string;
+  formFillFieldLocked: string;
+  formFillSuccess: string;
+  formFillLoadFailed: string;
+  formFillSubmitFailed: string;
+  formFillSelectPDFFailed: string;
+  formFillSelectOutputDirectoryFailed: string;
 
   // Common
   modified: string;

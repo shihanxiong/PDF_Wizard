@@ -235,7 +235,7 @@ export const FormFillTab = ({ onFileDrop }: FormFillTabProps) => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 3, overflow: 'hidden' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 3, pb: 2, overflowY: 'auto' }}>
       <Box sx={{ mb: 2, flexShrink: 0 }}>
         <Button
           variant="contained"
@@ -289,7 +289,7 @@ export const FormFillTab = ({ onFileDrop }: FormFillTabProps) => {
         )}
       </Box>
 
-      <Box sx={{ mt: 2, flexShrink: 0 }}>
+      <Box sx={{ mt: 2, mb: 1, flexShrink: 0 }}>
         <Button
           variant="outlined"
           startIcon={<FolderIcon />}

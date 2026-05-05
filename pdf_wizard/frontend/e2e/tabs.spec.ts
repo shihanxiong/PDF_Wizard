@@ -15,7 +15,7 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     await setupTestPage(page);
   });
 
-  test('should display all main tabs including PDF to Text, Lock / Unlock, and Form Fill', async ({ page }) => {
+  test('should display all main tabs including PDF to Text, Lock / Unlock, and Edit PDF', async ({ page }) => {
     await expect(page.getByRole('tab', { name: 'Merge PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Split PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toBeVisible();
@@ -23,7 +23,7 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     await expect(page.getByRole('tab', { name: 'Images to PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'PDF to Text' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Lock / Unlock PDF' })).toBeVisible();
-    await expect(page.getByRole('tab', { name: 'Form Fill' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Edit PDF' })).toBeVisible();
 
     // Verify Merge tab is selected by default (active)
     const mergeTab = page.getByRole('tab', { name: 'Merge PDF' });
@@ -169,7 +169,7 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     await expect(page.getByRole('tab', { name: 'Images to PDF' })).toHaveAttribute('aria-selected', 'false');
     await expect(page.getByRole('tab', { name: 'PDF to Text' })).toHaveAttribute('aria-selected', 'false');
     await expect(page.getByRole('tab', { name: 'Lock / Unlock PDF' })).toHaveAttribute('aria-selected', 'false');
-    await expect(page.getByRole('tab', { name: 'Form Fill' })).toHaveAttribute('aria-selected', 'false');
+    await expect(page.getByRole('tab', { name: 'Edit PDF' })).toHaveAttribute('aria-selected', 'false');
 
     // Get the active tab panel and wait for it to be visible
     const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-watermark');
@@ -250,7 +250,7 @@ test.describe('PDF Wizard - Tab Navigation', () => {
   });
 
   test('should load form fields and submit filled form', async ({ page }) => {
-    await page.getByRole('tab', { name: 'Form Fill' }).click();
+    await page.getByRole('tab', { name: 'Edit PDF' }).click();
     const panel = page.locator('#pdf-wizard-tabpanel-formFill');
     await expect(panel).toBeVisible();
     await panel.getByRole('button', { name: 'Select PDF Form' }).click();

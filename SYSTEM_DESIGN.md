@@ -112,13 +112,13 @@ The application features a tabbed interface with eight main tabs:
 5. **Images to PDF Tab** - For building one PDF from multiple ordered images (including HEIC/HEIF)
 6. **PDF to Text Tab** - For extracting plain text from a PDF into an editable area (with copy); **unencrypted PDFs only**; scanned/image-only PDFs may return little or no text (no OCR in this release)
 7. **Lock / Unlock PDF Tab** - For encrypting PDFs with a password or decrypting password-protected PDFs
-8. **Form Fill Tab** - For loading AcroForm fields, editing supported values, and exporting a filled PDF
+8. **Edit PDF Tab** - For loading AcroForm fields, editing supported values, and exporting a filled PDF
 
 ### Tab Component Structure
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ [Merge PDF] [Split PDF] [Rotate PDF] [Watermark PDF] [Images to PDF] [PDF to Text] [Lock/Unlock] [Form Fill] │
+│ [Merge PDF] [Split PDF] [Rotate PDF] [Watermark PDF] [Images to PDF] [PDF to Text] [Lock/Unlock] [Edit PDF] │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  Tab Content Area                                                            │
@@ -158,7 +158,7 @@ The application consists of eight main tab components:
 5. **ImagesToPdfTab** - Builds one PDF from ordered images; composes `useImageDrop` for window-level drops (see [components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md))
 6. **PdfToTextTab** - Extracts text from one PDF via `ExtractPDFText`; copy/select-all on the result (unencrypted PDFs only)
 7. **LockUnlockTab** - Encrypts PDFs with passwords and decrypts protected PDFs to a new output file
-8. **FormFillTab** - Lists AcroForm fields and saves a filled output PDF via `FillPDFForm`
+8. **FormFillTab** - Lists AcroForm fields and saves a filled output PDF via `FillPDFForm` (shown in UI as **Edit PDF**)
 
 Each component handles its own state, file selection, validation, and processing.
 

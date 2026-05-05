@@ -67,7 +67,7 @@ export const en: Translations = {
   imagesToPdfTab: 'Images to PDF',
   pdfToTextTab: 'PDF to Text',
   lockUnlockTab: 'Lock / Unlock PDF',
-  formFillTab: 'Form Fill',
+  formFillTab: 'Edit PDF',
   selectPDFFileWatermark: 'Select PDF File',
   watermarkText: 'Watermark Text',
   fontSize: 'Font Size',
