@@ -48,6 +48,22 @@ type TextWatermarkConfig struct {
 	FontFamily string  `json:"fontFamily"`
 }
 
+// PDFFormField represents one editable AcroForm field exposed to the frontend.
+type PDFFormField struct {
+	ID      string   `json:"id"`
+	Name    string   `json:"name"`
+	Type    string   `json:"type"` // text, checkbox, radio, combo, list, date, unknown
+	Value   string   `json:"value"`
+	Locked  bool     `json:"locked"`
+	Options []string `json:"options,omitempty"` // for radio/combo/list fields
+}
+
+// PDFFormFieldValue is a frontend-submitted value for a specific form field.
+type PDFFormFieldValue struct {
+	ID    string `json:"id"`
+	Value string `json:"value"`
+}
+
 // PhoneUploadPageCopy is translated text for the LAN phone upload HTML pages.
 // The frontend fills this from useI18n so the phone browser matches the app language.
 type PhoneUploadPageCopy struct {

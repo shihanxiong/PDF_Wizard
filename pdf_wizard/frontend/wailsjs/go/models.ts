@@ -14,6 +14,42 @@ export namespace models {
 	        this.filterDisplayName = source["filterDisplayName"];
 	    }
 	}
+	export class PDFFormField {
+	    id: string;
+	    name: string;
+	    type: string;
+	    value: string;
+	    locked: boolean;
+	    options?: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new PDFFormField(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.name = source["name"];
+	        this.type = source["type"];
+	        this.value = source["value"];
+	        this.locked = source["locked"];
+	        this.options = source["options"];
+	    }
+	}
+	export class PDFFormFieldValue {
+	    id: string;
+	    value: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new PDFFormFieldValue(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.value = source["value"];
+	    }
+	}
 	export class PDFMetadata {
 	    path: string;
 	    name: string;

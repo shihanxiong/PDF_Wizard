@@ -14,6 +14,10 @@ export function ExtractPDFText(arg1) {
   return window['go']['main']['App']['ExtractPDFText'](arg1);
 }
 
+export function FillPDFForm(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['FillPDFForm'](arg1, arg2, arg3, arg4);
+}
+
 export function GetFileMetadata(arg1) {
   return window['go']['main']['App']['GetFileMetadata'](arg1);
 }
@@ -32,6 +36,10 @@ export function GetPDFPageCount(arg1) {
 
 export function ImagesToPDF(arg1, arg2, arg3) {
   return window['go']['main']['App']['ImagesToPDF'](arg1, arg2, arg3);
+}
+
+export function ListPDFFormFields(arg1) {
+  return window['go']['main']['App']['ListPDFFormFields'](arg1);
 }
 
 export function LockPDF(arg1, arg2, arg3, arg4) {
