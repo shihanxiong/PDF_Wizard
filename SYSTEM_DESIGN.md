@@ -158,7 +158,7 @@ The application consists of eight main tab components:
 5. **ImagesToPdfTab** - Builds one PDF from ordered images; composes `useImageDrop` for window-level drops (see [components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md))
 6. **PdfToTextTab** - Extracts text from one PDF via `ExtractPDFText`; copy/select-all on the result (unencrypted PDFs only)
 7. **LockUnlockTab** - Encrypts PDFs with passwords and decrypts protected PDFs to a new output file
-8. **FormFillTab** - Lists AcroForm fields and saves a filled output PDF via `FillPDFForm` (shown in UI as **Edit PDF**)
+8. **EditPdfTab** - Lists AcroForm fields and saves a filled output PDF via `FillPDFForm` (shown in UI as **Edit PDF**)
 
 Each component handles its own state, file selection, validation, and processing.
 

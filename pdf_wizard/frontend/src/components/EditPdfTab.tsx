@@ -26,7 +26,7 @@ import {
 import { useI18n } from '../utils/i18n';
 import { NoPDFSelected } from './NoPDFSelected';
 
-interface FormFillTabProps {
+interface EditPdfTabProps {
   onFileDrop: (handler: (paths: string[]) => void) => void;
 }
 
@@ -40,7 +40,7 @@ function parentDirectory(filePath: string): string {
   return filePath.slice(0, i);
 }
 
-export const FormFillTab = ({ onFileDrop }: FormFillTabProps) => {
+export const EditPdfTab = ({ onFileDrop }: EditPdfTabProps) => {
   const { t } = useI18n();
   const [selectedPDFPath, setSelectedPDFPath] = useState('');
   const [selectedPDFName, setSelectedPDFName] = useState('');

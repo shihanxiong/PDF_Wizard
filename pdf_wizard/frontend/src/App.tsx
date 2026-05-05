@@ -72,8 +72,8 @@ const LockUnlockTab = lazy(() =>
 const PdfToTextTab = lazy(() =>
   import('./components/PdfToTextTab').then((module) => ({ default: module.PdfToTextTab })),
 );
-const FormFillTab = lazy(() =>
-  import('./components/FormFillTab').then((module) => ({ default: module.FormFillTab })),
+const EditPdfTab = lazy(() =>
+  import('./components/EditPdfTab').then((module) => ({ default: module.EditPdfTab })),
 );
 
 const TAB_COMPONENT: Record<MainTabId, React.LazyExoticComponent<React.ComponentType<TabComponentProps>>> = {
@@ -84,7 +84,7 @@ const TAB_COMPONENT: Record<MainTabId, React.LazyExoticComponent<React.Component
   imagesToPdf: ImagesToPdfTab,
   pdfToText: PdfToTextTab,
   lockUnlock: LockUnlockTab,
-  formFill: FormFillTab,
+  formFill: EditPdfTab,
 };
 
 export const App = () => {
