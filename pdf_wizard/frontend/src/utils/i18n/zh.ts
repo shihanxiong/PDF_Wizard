@@ -150,7 +150,6 @@ export const zh: Translations = {
   lockUnlockFailedToLoadPDF: '加载 PDF 失败：',
   lockUnlockFailedToSelectPDF: '选择 PDF 失败：',
   lockUnlockFailedToSelectOutputDirectory: '选择输出目录失败：',
-  formFillSelectPDF: '选择 PDF 表单',
   formFillSelectOutputDirectory: '选择输出目录',
   formFillSubmit: '保存已填写 PDF',
   formFillSubmitting: '正在保存已填写 PDF...',

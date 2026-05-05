@@ -152,7 +152,6 @@ export const ar: Translations = {
   lockUnlockFailedToLoadPDF: 'فشل تحميل PDF:',
   lockUnlockFailedToSelectPDF: 'فشل اختيار PDF:',
   lockUnlockFailedToSelectOutputDirectory: 'فشل اختيار مجلد الإخراج:',
-  formFillSelectPDF: 'اختر نموذج PDF',
   formFillSelectOutputDirectory: 'اختر مجلد الإخراج',
   formFillSubmit: 'حفظ PDF المُعبأ',
   formFillSubmitting: 'جارٍ حفظ PDF المُعبأ...',

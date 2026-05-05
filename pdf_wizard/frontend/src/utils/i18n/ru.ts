@@ -153,7 +153,6 @@ export const ru: Translations = {
   lockUnlockFailedToLoadPDF: 'Не удалось загрузить PDF:',
   lockUnlockFailedToSelectPDF: 'Не удалось выбрать PDF:',
   lockUnlockFailedToSelectOutputDirectory: 'Не удалось выбрать папку:',
-  formFillSelectPDF: 'Выбрать PDF-форму',
   formFillSelectOutputDirectory: 'Выбрать папку вывода',
   formFillSubmit: 'Сохранить заполненный PDF',
   formFillSubmitting: 'Сохранение заполненного PDF...',

@@ -35,7 +35,7 @@ func main() {
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:     "PDF Wizard",
-		Width:     1024,
+		Width:     1140,
 		Height:    900,
 		MinWidth:  800,
 		MinHeight: 600,

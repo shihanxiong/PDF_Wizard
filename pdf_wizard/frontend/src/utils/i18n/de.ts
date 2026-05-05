@@ -153,7 +153,6 @@ export const de: Translations = {
   lockUnlockFailedToLoadPDF: 'PDF konnte nicht geladen werden:',
   lockUnlockFailedToSelectPDF: 'PDF konnte nicht ausgewählt werden:',
   lockUnlockFailedToSelectOutputDirectory: 'Ausgabeverzeichnis konnte nicht ausgewählt werden:',
-  formFillSelectPDF: 'PDF-Formular auswählen',
   formFillSelectOutputDirectory: 'Ausgabeverzeichnis auswählen',
   formFillSubmit: 'Ausgefülltes PDF speichern',
   formFillSubmitting: 'Ausgefülltes PDF wird gespeichert...',

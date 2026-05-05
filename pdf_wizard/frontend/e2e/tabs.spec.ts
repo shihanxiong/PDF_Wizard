@@ -253,7 +253,7 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     await page.getByRole('tab', { name: 'Edit PDF' }).click();
     const panel = page.locator('#pdf-wizard-tabpanel-formFill');
     await expect(panel).toBeVisible();
-    await panel.getByRole('button', { name: 'Select PDF Form' }).click();
+    await panel.getByRole('button', { name: 'Select PDF File' }).click();
     await expect(panel.getByLabel('First Name')).toBeVisible();
     await panel.getByLabel('First Name').fill('Alice');
     await panel.getByRole('button', { name: 'Select Output Directory' }).click();

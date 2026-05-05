@@ -152,7 +152,6 @@ export const ko: Translations = {
   lockUnlockFailedToLoadPDF: 'PDF 로드 실패:',
   lockUnlockFailedToSelectPDF: 'PDF 선택 실패:',
   lockUnlockFailedToSelectOutputDirectory: '출력 디렉토리 선택 실패:',
-  formFillSelectPDF: 'PDF 양식 선택',
   formFillSelectOutputDirectory: '출력 디렉토리 선택',
   formFillSubmit: '작성된 PDF 저장',
   formFillSubmitting: '작성된 PDF 저장 중...',

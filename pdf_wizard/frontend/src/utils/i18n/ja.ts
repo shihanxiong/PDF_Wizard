@@ -153,7 +153,6 @@ export const ja: Translations = {
   lockUnlockFailedToLoadPDF: 'PDF の読み込みに失敗しました:',
   lockUnlockFailedToSelectPDF: 'PDF の選択に失敗しました:',
   lockUnlockFailedToSelectOutputDirectory: '出力先フォルダーの選択に失敗しました:',
-  formFillSelectPDF: 'PDF フォームを選択',
   formFillSelectOutputDirectory: '出力先フォルダーを選択',
   formFillSubmit: '入力済み PDF を保存',
   formFillSubmitting: '入力済み PDF を保存中...',

@@ -85,7 +85,7 @@ export const EditPdfTab = ({ onFileDrop }: EditPdfTabProps) => {
     try {
       const path = await SelectPDFFile(
         new models.FileDialogLabels({
-          title: t('formFillSelectPDF'),
+          title: t('selectPDFFile'),
           filterDisplayName: t('fileDialogFilterPdfFiles'),
         }),
       );
@@ -241,11 +241,12 @@ export const EditPdfTab = ({ onFileDrop }: EditPdfTabProps) => {
           variant="contained"
           startIcon={<CloudUploadIcon />}
           onClick={handleSelectPDF}
+          sx={{ mb: 2 }}
           disabled={isLoadingFields || isProcessing}
         >
-          {t('formFillSelectPDF')}
+          {t('selectPDFFile')}
         </Button>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {t('dragDropPDFHint')}
         </Typography>
       </Box>

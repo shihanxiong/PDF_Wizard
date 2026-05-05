@@ -176,7 +176,6 @@ export interface Translations {
   lockUnlockFailedToSelectOutputDirectory: string;
 
   // Form Fill Tab
-  formFillSelectPDF: string;
   formFillSelectOutputDirectory: string;
   formFillSubmit: string;
   formFillSubmitting: string;

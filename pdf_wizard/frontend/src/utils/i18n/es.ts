@@ -153,7 +153,6 @@ export const es: Translations = {
   lockUnlockFailedToLoadPDF: 'Error al cargar PDF:',
   lockUnlockFailedToSelectPDF: 'Error al seleccionar PDF:',
   lockUnlockFailedToSelectOutputDirectory: 'Error al seleccionar directorio de salida:',
-  formFillSelectPDF: 'Seleccionar formulario PDF',
   formFillSelectOutputDirectory: 'Seleccionar directorio de salida',
   formFillSubmit: 'Guardar PDF rellenado',
   formFillSubmitting: 'Guardando PDF rellenado...',

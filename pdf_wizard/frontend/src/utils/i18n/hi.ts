@@ -153,7 +153,6 @@ export const hi: Translations = {
   lockUnlockFailedToLoadPDF: 'PDF लोड करने में विफल:',
   lockUnlockFailedToSelectPDF: 'PDF चुनने में विफल:',
   lockUnlockFailedToSelectOutputDirectory: 'आउटपुट निर्देशिका चुनने में विफल:',
-  formFillSelectPDF: 'PDF फ़ॉर्म चुनें',
   formFillSelectOutputDirectory: 'आउटपुट निर्देशिका चुनें',
   formFillSubmit: 'भरा हुआ PDF सहेजें',
   formFillSubmitting: 'भरा हुआ PDF सहेजा जा रहा है...',
