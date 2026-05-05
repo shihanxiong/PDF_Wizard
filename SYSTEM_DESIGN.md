@@ -253,6 +253,7 @@ For detailed application-level design, see [pdf_wizard/DESIGN.md](pdf_wizard/DES
 - Material-UI v7
 - TypeScript
 - Wails runtime bindings
+- `react-pdf` + `pdfjs-dist` - In-tab PDF rendering for the Edit PDF workspace
 - `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities` - For drag-and-drop file reordering (replaced deprecated react-beautiful-dnd)
 - `qrcode` - QR code generation for the LAN phone upload URL (Images to PDF tab)
 - Custom i18n system (`utils/i18n/`) - For internationalization (per-language modules, `catalog.ts` merge, React `I18nProvider` / `useI18n` for 12 languages)

@@ -15,6 +15,9 @@ import {
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import FolderIcon from '@mui/icons-material/Folder';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 import { models } from '../../wailsjs/go/models';
 import {
   FillPDFForm,
@@ -25,6 +28,8 @@ import {
 } from '../../wailsjs/go/main/App';
 import { useI18n } from '../utils/i18n';
 import { NoPDFSelected } from './NoPDFSelected';
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
 
 interface EditPdfTabProps {
   onFileDrop: (handler: (paths: string[]) => void) => void;
@@ -51,6 +56,8 @@ export const EditPdfTab = ({ onFileDrop }: EditPdfTabProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [viewerError, setViewerError] = useState<string | null>(null);
+  const [numPages, setNumPages] = useState<number>(0);
 
   const loadPDFForm = useCallback(
     async (path: string) => {
@@ -67,6 +74,7 @@ export const EditPdfTab = ({ onFileDrop }: EditPdfTabProps) => {
             currentValue: field.value ?? '',
           })),
         );
+        setViewerError(null);
         const outDir = parentDirectory(path);
         if (outDir) {
           setOutputDirectory(outDir);
@@ -270,6 +278,28 @@ export const EditPdfTab = ({ onFileDrop }: EditPdfTabProps) => {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             {selectedPDFPath}
           </Typography>
+          <Box sx={{ mb: 2, border: 1, borderColor: 'divider', borderRadius: 1, p: 1.5, maxHeight: 280, overflow: 'auto' }}>
+            <Document
+              file={selectedPDFPath}
+              onLoadSuccess={({ numPages: pageCount }) => {
+                setNumPages(pageCount);
+                setViewerError(null);
+              }}
+              onLoadError={(err) => {
+                setViewerError(String(err));
+              }}
+              loading={<Typography variant="body2">{t('formFillLoadingFields')}</Typography>}
+            >
+              {numPages > 0 ? (
+                <Page pageNumber={1} width={700} />
+              ) : null}
+            </Document>
+            {viewerError ? (
+              <Typography variant="caption" color="text.secondary">
+                {viewerError}
+              </Typography>
+            ) : null}
+          </Box>
         </>
       ) : (
         <NoPDFSelected />
