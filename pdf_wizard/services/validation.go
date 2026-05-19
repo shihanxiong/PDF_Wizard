@@ -94,3 +94,52 @@ func validateOutputDirectory(path string) error {
 	return nil
 }
 
+// sanitizeOutputBasename returns a single path segment safe for use as an output
+// filename (without extension). Rejects empty names, ".", "..", and separators.
+func sanitizeOutputBasename(name string) (string, error) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return "", fmt.Errorf("output filename cannot be empty")
+	}
+	if strings.ContainsAny(name, `/\`) {
+		return "", fmt.Errorf("output filename must not contain path separators")
+	}
+	base := filepath.Base(name)
+	if base == "." || base == ".." {
+		return "", fmt.Errorf("invalid output filename: %s", base)
+	}
+	if base != name {
+		return "", fmt.Errorf("invalid output filename: %s", name)
+	}
+	return base, nil
+}
+
+// resolveOutputPDFPath joins outputDirectory with a sanitized basename and PDFExtension,
+// ensuring the result does not escape outputDirectory (#109).
+func resolveOutputPDFPath(outputDirectory, outputFilename string) (string, error) {
+	base, err := sanitizeOutputBasename(outputFilename)
+	if err != nil {
+		return "", err
+	}
+
+	outPath := filepath.Join(outputDirectory, base+PDFExtension)
+
+	absDir, err := filepath.Abs(filepath.Clean(outputDirectory))
+	if err != nil {
+		return "", fmt.Errorf("invalid output directory: %w", err)
+	}
+	absOut, err := filepath.Abs(filepath.Clean(outPath))
+	if err != nil {
+		return "", fmt.Errorf("invalid output path: %w", err)
+	}
+
+	rel, err := filepath.Rel(absDir, absOut)
+	if err != nil {
+		return "", fmt.Errorf("output path is outside output directory")
+	}
+	if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("output path escapes output directory")
+	}
+
+	return outPath, nil
+}

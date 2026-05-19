@@ -72,6 +72,25 @@ func TestPDFService_MergePDFs(t *testing.T) {
 	}
 }
 
+func TestPDFService_MergePDFs_rejectsUnsafeOutputFilename(t *testing.T) {
+	testDir := t.TempDir()
+	pdf1 := filepath.Join(testDir, "a.pdf")
+	if err := createTestPDF(pdf1); err != nil {
+		t.Fatalf("createTestPDF: %v", err)
+	}
+
+	fileService := NewFileService(context.Background())
+	service := NewPDFService(fileService)
+
+	err := service.MergePDFs([]string{pdf1}, testDir, "../escape")
+	if err == nil {
+		t.Fatal("expected error for unsafe output filename")
+	}
+	if !strings.Contains(err.Error(), "path separators") && !strings.Contains(err.Error(), "invalid output filename") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestPDFService_MergePDFs_InvalidInputDiagnosed(t *testing.T) {
 	fileService := NewFileService(context.Background())
 	service := NewPDFService(fileService)
