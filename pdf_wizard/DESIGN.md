@@ -138,7 +138,7 @@ See [services/DESIGN.md](services/DESIGN.md#lan-phone-image-upload) and [SYSTEM_
 Returns the current language preference from the configuration file.
 
 - Reads from `<UserConfigDir>/PDF Wizard/pdf_wizard_config.json`
-- Returns the stored code when it matches `validLanguages` in `app.go` (same set as frontend `SUPPORTED_LANGUAGES` in `frontend/src/utils/i18n/constants.ts`)
+- Returns the stored code when it matches `validLanguages` in generated `languages_gen.go` (same set as frontend `SUPPORTED_LANGUAGES` from `i18n/supported-languages.json`)
 - Defaults to `"en"` if the file is missing, invalid, or the code is not supported
 - Creates the config directory if needed
 
@@ -160,7 +160,7 @@ Returns the current language preference from the configuration file.
 
 Saves the language preference to the configuration file.
 
-- Validates the code against `validLanguages` in `app.go`
+- Validates the code against `validLanguages` in `languages_gen.go` (generated from `i18n/supported-languages.json`)
 - Creates config directory if it doesn't exist
 - Writes JSON configuration file
 - Returns error if file operations fail

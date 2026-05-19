@@ -231,7 +231,7 @@ The config file is automatically created when you change the language. You can a
 }
 ```
 
-Valid `"language"` values are exactly the codes in **`pdf_wizard/frontend/src/utils/i18n/constants.ts`** (`SUPPORTED_LANGUAGES`), which must match **`validLanguages`** in **`pdf_wizard/app.go`**. See [pdf_wizard/DESIGN.md](pdf_wizard/DESIGN.md) for path resolution and error handling.
+Valid `"language"` values are exactly the codes in **`pdf_wizard/i18n/supported-languages.json`**, which generates frontend `SUPPORTED_LANGUAGES` and Go `validLanguages` via **`scripts/generate-supported-languages.sh`**. See [pdf_wizard/DESIGN.md](pdf_wizard/DESIGN.md) and [pdf_wizard/frontend/src/utils/i18n/DESIGN.md](pdf_wizard/frontend/src/utils/i18n/DESIGN.md).
 
 ## Troubleshooting
 

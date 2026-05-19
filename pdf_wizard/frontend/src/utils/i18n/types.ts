@@ -1,5 +1,7 @@
+import type { SupportedLanguageCode } from './languages.gen';
+
 // Translation keys and their translations
-export type Language = 'en' | 'zh' | 'zh-TW' | 'ar' | 'fr' | 'ja' | 'hi' | 'es' | 'pt' | 'ru' | 'ko' | 'de';
+export type Language = SupportedLanguageCode;
 
 export interface Translations {
   // App

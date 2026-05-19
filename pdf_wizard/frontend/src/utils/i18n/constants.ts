@@ -1,23 +1,7 @@
-import { Language } from './types';
+import type { Language } from './types';
+import { SUPPORTED_LANGUAGES } from './languages.gen';
 
-/**
- * List of all supported languages in the application.
- * This is the single source of truth for language validation.
- */
-export const SUPPORTED_LANGUAGES: readonly Language[] = [
-  'en',
-  'zh',
-  'zh-TW',
-  'ar',
-  'fr',
-  'ja',
-  'hi',
-  'es',
-  'pt',
-  'ru',
-  'ko',
-  'de',
-] as const;
+export { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from './languages.gen';
 
 /**
  * Checks if a language code is valid/supported
@@ -25,4 +9,3 @@ export const SUPPORTED_LANGUAGES: readonly Language[] = [
 export function isValidLanguage(lang: string): lang is Language {
   return (SUPPORTED_LANGUAGES as readonly string[]).includes(lang);
 }
-

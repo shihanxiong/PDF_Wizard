@@ -9,8 +9,9 @@ frontend/src/utils/i18n/
 ├── index.ts           # Barrel: useI18n, I18nProvider, getNativeLanguageName, types
 ├── I18nProvider.tsx   # React context: language state, t(), setLanguage()
 ├── catalog.ts         # Record<Language, Translations> + lookupTranslation / getTranslationsFor
-├── constants.ts       # SUPPORTED_LANGUAGES, isValidLanguage()
-├── types.ts           # Language union, Translations interface
+├── constants.ts       # Re-exports SUPPORTED_LANGUAGES; isValidLanguage()
+├── languages.gen.ts   # Generated from pdf_wizard/i18n/supported-languages.json
+├── types.ts           # Language (= SupportedLanguageCode), Translations interface
 ├── en.ts … de.ts      # One module per locale (exports Translations)
 └── DESIGN.md          # This file
 ```
@@ -19,7 +20,14 @@ frontend/src/utils/i18n/
 
 ## Supported languages
 
-Codes and UI order are defined in **`constants.ts`** as `SUPPORTED_LANGUAGES`. The backend mirrors the same set in **`pdf_wizard/app.go`** (`validLanguages`). Keep those three places in sync when adding a locale: `catalog.ts`, `constants.ts`, and `app.go`.
+Locale codes and UI order are defined in **`pdf_wizard/i18n/supported-languages.json`** (single source of truth). Regenerate bindings with:
+
+```bash
+bash scripts/generate-supported-languages.sh
+# or: cd pdf_wizard && go generate .
+```
+
+That writes **`languages.gen.ts`** (frontend) and **`pdf_wizard/languages_gen.go`** (`validLanguages` / `SupportedLanguageCodes` for the Go app). Do not edit the generated files by hand.
 
 Current codes: `en`, `zh`, `zh-TW`, `ar`, `fr`, `ja`, `hi`, `es`, `pt`, `ru`, `ko`, `de`.
 
@@ -42,14 +50,13 @@ On startup, `App.tsx` calls `GetLanguage()` from the Go binding, validates with 
 
 ## Adding a new language
 
-1. Add **`types.ts`**: extend the `Language` type with the new code.
-2. Create **`xx.ts`**: export a complete `Translations` object (copy `en.ts` as a template).
-3. **`catalog.ts`**: import the module and add it to the `translations` record.
-4. **`index.ts`**: add the code to `getNativeLanguageName`.
-5. **`constants.ts`**: append the code to `SUPPORTED_LANGUAGES`.
-6. **`pdf_wizard/app.go`**: add the code to `validLanguages`.
+1. Append the code to **`pdf_wizard/i18n/supported-languages.json`** (`languages` array, in UI order).
+2. Run **`bash scripts/generate-supported-languages.sh`** (updates `languages.gen.ts` and `languages_gen.go`).
+3. Create **`xx.ts`**: export a complete `Translations` object (copy `en.ts` as a template).
+4. **`catalog.ts`**: import the module and add it to the `translations` record.
+5. **`index.ts`**: add the code to `getNativeLanguageName`.
 
-The Settings dialog reads `SUPPORTED_LANGUAGES`; no separate hardcoded list is required there.
+The Settings dialog reads `SUPPORTED_LANGUAGES` from the generated file; no separate hardcoded list is required there.
 
 ## Phone upload page copy (`imagesPhonePage*`)
 

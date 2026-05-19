@@ -30,22 +30,6 @@ const (
 	defaultLanguage = "en"
 )
 
-// validLanguages is the single source of truth for supported languages
-var validLanguages = map[string]bool{
-	"en":    true,
-	"zh":    true,
-	"zh-TW": true,
-	"ar":    true,
-	"fr":    true,
-	"ja":    true,
-	"hi":    true,
-	"es":    true,
-	"pt":    true,
-	"ru":    true,
-	"ko":    true,
-	"de":    true,
-}
-
 // NewApp creates a new App application struct
 func NewApp() *App {
 	return &App{}
