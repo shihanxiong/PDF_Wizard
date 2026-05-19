@@ -80,7 +80,7 @@ pdf_wizard/
 │   │           ├── index.ts           # Barrel exports (useI18n, types, getNativeLanguageName)
 │   │           ├── I18nProvider.tsx   # React context; current language and t()
 │   │           ├── catalog.ts        # Merged translation map and lookup helpers
-│   │           ├── constants.ts      # SUPPORTED_LANGUAGES, isValidLanguage
+│   │           ├── constants.ts      # SUPPORTED_LANGUAGES from i18n/supported-languages.json
 │   │           ├── types.ts
 │   │           ├── en.ts       # English translations
 │   │           ├── zh.ts       # Chinese Simplified translations

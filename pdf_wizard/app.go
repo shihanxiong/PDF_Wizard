@@ -25,26 +25,7 @@ type App struct {
 	phoneStop func() error
 }
 
-const (
-	configFileName  = "pdf_wizard_config.json"
-	defaultLanguage = "en"
-)
-
-// validLanguages is the single source of truth for supported languages
-var validLanguages = map[string]bool{
-	"en":    true,
-	"zh":    true,
-	"zh-TW": true,
-	"ar":    true,
-	"fr":    true,
-	"ja":    true,
-	"hi":    true,
-	"es":    true,
-	"pt":    true,
-	"ru":    true,
-	"ko":    true,
-	"de":    true,
-}
+const configFileName = "pdf_wizard_config.json"
 
 // NewApp creates a new App application struct
 func NewApp() *App {

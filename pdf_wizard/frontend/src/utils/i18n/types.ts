@@ -1,6 +1,3 @@
-// Translation keys and their translations
-export type Language = 'en' | 'zh' | 'zh-TW' | 'ar' | 'fr' | 'ja' | 'hi' | 'es' | 'pt' | 'ru' | 'ko' | 'de';
-
 export interface Translations {
   // App
   appTitle: string;
@@ -182,3 +179,5 @@ export interface Translations {
   cancel: string;
   save: string;
 }
+
+export type { Language } from './catalog';
