@@ -1,0 +1,42 @@
+name: PDF Wizard i18n Key Check
+
+on:
+  push:
+    branches: ['master', 'main']
+    paths:
+      - 'pdf_wizard/frontend/src/utils/i18n/**'
+      - 'pdf_wizard/frontend/scripts/check-i18n-keys.ts'
+      - '.github/workflows/pdf_wizard_i18n_check.yml'
+  pull_request:
+    branches: ['master', 'main']
+    paths:
+      - 'pdf_wizard/frontend/src/utils/i18n/**'
+      - 'pdf_wizard/frontend/scripts/check-i18n-keys.ts'
+      - '.github/workflows/pdf_wizard_i18n_check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  check-i18n:
+    name: i18n locale keys match en.ts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.21.1'
+          cache: 'npm'
+          cache-dependency-path: pdf_wizard/frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: pdf_wizard/frontend
+        run: npm ci
+
+      - name: Check i18n keys
+        working-directory: pdf_wizard/frontend
+        run: npm run check:i18n
