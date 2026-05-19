@@ -285,6 +285,7 @@ Shared helpers used by services:
 - **`validatePDFFile` / `isPDFFile`** — PDF inputs
 - **`validateImageFile` / `isImageFile`** — Raster inputs for `ImagesToPDF` (including `.heic` / `.heif`)
 - **`validateOutputDirectory`** — Output directory exists and is writable
+- **`sanitizeOutputBasename` / `resolveOutputPDFPath`** — Output basenames must be a single safe segment (no `/`, `\`, `.`, `..`); joined paths are checked so writes cannot escape the chosen output directory (#109)
 
 ## Data Models
 

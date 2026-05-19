@@ -51,9 +51,10 @@ func (s *PDFService) MergePDFs(inputPaths []string, outputDirectory string, outp
 		return err
 	}
 
-	// outputFilename from frontend does not include .pdf extension
-	// Always append .pdf extension
-	outputPath := filepath.Join(outputDirectory, outputFilename+PDFExtension)
+	outputPath, err := resolveOutputPDFPath(outputDirectory, outputFilename)
+	if err != nil {
+		return err
+	}
 
 	// Remove existing output file if it exists (pdfcpu may have issues overwriting)
 	if err := removeIfExists(outputPath); err != nil {
@@ -63,7 +64,7 @@ func (s *PDFService) MergePDFs(inputPaths []string, outputDirectory string, outp
 	// Merge first: MergeCreateFile reads every input once. A separate ReadContextFile
 	// pass per input would double I/O and parse work on success paths (#53).
 	config := model.NewDefaultConfiguration()
-	err := api.MergeCreateFile(inputPaths, outputPath, false, config)
+	err = api.MergeCreateFile(inputPaths, outputPath, false, config)
 	if err != nil {
 		// If merge failed, try per-input read to pinpoint a broken file (same UX as before).
 		if diagErr := mergeDiagnoseInputs(inputPaths); diagErr != nil {
@@ -99,11 +100,10 @@ func (s *PDFService) ImagesToPDF(imagePaths []string, outputDirectory string, ou
 	if err := validateOutputDirectory(outputDirectory); err != nil {
 		return err
 	}
-	if strings.TrimSpace(outputFilename) == "" {
-		return fmt.Errorf("output filename cannot be empty")
+	outputPath, err := resolveOutputPDFPath(outputDirectory, outputFilename)
+	if err != nil {
+		return err
 	}
-
-	outputPath := filepath.Join(outputDirectory, strings.TrimSpace(outputFilename)+PDFExtension)
 	if err := removeIfExists(outputPath); err != nil {
 		return err
 	}
@@ -138,11 +138,10 @@ func (s *PDFService) LockPDF(inputPath string, password string, outputDirectory 
 	if err := validateOutputDirectory(outputDirectory); err != nil {
 		return err
 	}
-	if strings.TrimSpace(outputFilename) == "" {
-		return fmt.Errorf("output filename cannot be empty")
+	outputPath, err := resolveOutputPDFPath(outputDirectory, outputFilename)
+	if err != nil {
+		return err
 	}
-
-	outputPath := filepath.Join(outputDirectory, strings.TrimSpace(outputFilename)+PDFExtension)
 	if err := removeIfExists(outputPath); err != nil {
 		return err
 	}
@@ -169,11 +168,10 @@ func (s *PDFService) UnlockPDF(inputPath string, password string, outputDirector
 	if err := validateOutputDirectory(outputDirectory); err != nil {
 		return err
 	}
-	if strings.TrimSpace(outputFilename) == "" {
-		return fmt.Errorf("output filename cannot be empty")
+	outputPath, err := resolveOutputPDFPath(outputDirectory, outputFilename)
+	if err != nil {
+		return err
 	}
-
-	outputPath := filepath.Join(outputDirectory, strings.TrimSpace(outputFilename)+PDFExtension)
 	if err := removeIfExists(outputPath); err != nil {
 		return err
 	}
@@ -227,15 +225,19 @@ func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition,
 		if split.EndPage < split.StartPage || split.EndPage > totalPages {
 			return fmt.Errorf("split %d: end page %d is invalid (must be >= start page and <= %d)", i+1, split.EndPage, totalPages)
 		}
-		if strings.TrimSpace(split.Filename) == "" {
-			return fmt.Errorf("split %d: filename cannot be empty", i+1)
+		if _, err := sanitizeOutputBasename(split.Filename); err != nil {
+			return fmt.Errorf("split %d: %w", i+1, err)
 		}
 	}
 
-	// Check for duplicate filenames
+	// Check for duplicate filenames (after sanitization)
 	filenameMap := make(map[string]bool)
-	for _, split := range splits {
-		filename := strings.TrimSpace(split.Filename) + PDFExtension
+	for i, split := range splits {
+		safeName, err := sanitizeOutputBasename(split.Filename)
+		if err != nil {
+			return fmt.Errorf("split %d: %w", i+1, err)
+		}
+		filename := safeName + PDFExtension
 		if filenameMap[filename] {
 			return fmt.Errorf("duplicate filename: %s", filename)
 		}
@@ -244,7 +246,10 @@ func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition,
 
 	// Process each split: extract from the shared in-memory context (same as api.Trim).
 	for i, split := range splits {
-		outputPath := filepath.Join(outputDirectory, strings.TrimSpace(split.Filename)+PDFExtension)
+		outputPath, err := resolveOutputPDFPath(outputDirectory, split.Filename)
+		if err != nil {
+			return fmt.Errorf("split %d: %w", i+1, err)
+		}
 
 		if err := removeIfExists(outputPath); err != nil {
 			return err
@@ -308,11 +313,6 @@ func (s *PDFService) RotatePDF(inputPath string, rotations []models.RotateDefini
 		return err
 	}
 
-	// Validate output filename
-	if strings.TrimSpace(outputFilename) == "" {
-		return fmt.Errorf("output filename cannot be empty")
-	}
-
 	// Get PDF page count for validation
 	totalPages, err := s.fileService.GetPDFPageCount(inputPath)
 	if err != nil {
@@ -333,9 +333,10 @@ func (s *PDFService) RotatePDF(inputPath string, rotations []models.RotateDefini
 		}
 	}
 
-	// outputFilename from frontend does not include .pdf extension
-	// Always append .pdf extension
-	outputPath := filepath.Join(outputDirectory, outputFilename+PDFExtension)
+	outputPath, err := resolveOutputPDFPath(outputDirectory, outputFilename)
+	if err != nil {
+		return err
+	}
 
 	// Create a temporary copy of the input file for rotation operations
 	// pdfcpu RotatePages modifies the file in place, so we need to work with a copy
@@ -391,11 +392,6 @@ func (s *PDFService) ApplyWatermark(inputPath string, watermark models.Watermark
 		return err
 	}
 
-	// Validate output filename
-	if strings.TrimSpace(outputFilename) == "" {
-		return fmt.Errorf("output filename cannot be empty")
-	}
-
 	// Validate text watermark configuration
 	if strings.TrimSpace(watermark.TextConfig.Text) == "" {
 		return fmt.Errorf("watermark text cannot be empty")
@@ -426,9 +422,10 @@ func (s *PDFService) ApplyWatermark(inputPath string, watermark models.Watermark
 		}
 	}
 
-	// outputFilename from frontend does not include .pdf extension
-	// Always append .pdf extension
-	outputPath := filepath.Join(outputDirectory, outputFilename+PDFExtension)
+	outputPath, err := resolveOutputPDFPath(outputDirectory, outputFilename)
+	if err != nil {
+		return err
+	}
 
 	// Create a temporary copy of the input file for watermark operations
 	tempPath := outputPath + ".tmp"
