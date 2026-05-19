@@ -2,7 +2,7 @@
 
 # PDF Wizard Installation Script
 # This script installs all necessary dependencies for PDF Wizard development
-# Includes: Go, Node.js 22.21.1 (via asdf), Wails2 CLI, and frontend dependencies
+# Includes: Go, Node.js 22.21.1 (via asdf), Wails2 CLI, frontend dependencies, and Playwright browsers
 
 set -e  # Exit on error
 
@@ -393,6 +393,11 @@ install_frontend_deps() {
         info "Running npm install..."
         npm install
         success "Frontend dependencies installed"
+
+        info "Installing Playwright browsers (for e2e tests)..."
+        npx playwright install
+        success "Playwright browsers installed"
+
         cd ../..
         return 0
     else
@@ -521,7 +526,7 @@ main() {
         install_frontend_deps
     else
         info "Skipping frontend dependency installation"
-        info "Install manually with: cd pdf_wizard/frontend && npm install"
+        info "Install manually with: cd pdf_wizard/frontend && npm install && npx playwright install"
     fi
     
     # Summary

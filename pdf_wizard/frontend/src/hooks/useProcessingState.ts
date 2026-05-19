@@ -1,16 +1,22 @@
 import { useState, useCallback } from 'react';
 import { getErrorMessage } from '../utils/errors';
 
+export type ProcessingSetError = (error: string | null) => void;
+
 /**
- * Hook for managing processing state (loading, error, success) consistently
+ * Manages loading and success state for async PDF operations.
+ * Errors are reported via the provided setError (typically from useErrorHandler).
  */
-export function useProcessingState() {
+export function useProcessingState(setError: ProcessingSetError) {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   const execute = useCallback(
-    async (operation: () => Promise<void>, successMessage: string) => {
+    async (
+      operation: () => Promise<void>,
+      successMessage: string,
+      formatError?: (err: unknown) => string,
+    ) => {
       setIsProcessing(true);
       setError(null);
       setSuccess(null);
@@ -18,22 +24,19 @@ export function useProcessingState() {
         await operation();
         setSuccess(successMessage);
       } catch (err: unknown) {
-        setError(getErrorMessage(err));
-        throw err; // Re-throw for component-specific handling
+        setError(formatError ? formatError(err) : getErrorMessage(err));
+        throw err;
       } finally {
         setIsProcessing(false);
       }
     },
-    []
+    [setError],
   );
 
   return {
     isProcessing,
-    error,
     success,
-    setError,
     setSuccess,
     execute,
   };
 }
-

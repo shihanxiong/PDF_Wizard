@@ -13,7 +13,7 @@ Living document for performance and maintainability work in PDF Wizard. **Last u
 | Frontend limits / PDF extension constants | **Done** — `frontend/src/utils/constants.ts` |
 | Merge: avoid double-read on success path | **Done** — `MergePDFs` merges first, `mergeDiagnoseInputs` on failure (#53) |
 | TypeScript `any` in catch / strictness | **Partial** — e.g. `WatermarkTab` uses `unknown`; several tabs/hooks still use bare `catch (err)` |
-| Shared tab UI logic | **Partial** — `usePDFDrop`, `useImageDrop`, `useOutputDirectory`, `useProcessingState`, `useErrorHandler` exist; Split/Rotate still overlap |
+| Shared tab UI logic | **Partial** — `useProcessingState` + `useErrorHandler` adopted on all operation tabs (#111); optional `PdfOperationTabShell` still open |
 | `GetPDFMetadata` / redundant `Stat` | **Open** — see backlog |
 | Split: single read + per-segment extract | **Done** — `SplitPDF` (#57) |
 | LAN phone image upload (HTTP server, QR flow) | **Shipped** — `services/phone_upload.go`; product doc: [SYSTEM_DESIGN.md](../SYSTEM_DESIGN.md#images-to-pdf-tab) |
@@ -32,7 +32,7 @@ Living document for performance and maintainability work in PDF Wizard. **Last u
 
 - **`frontend/src/utils/constants.ts`** — `MAX_SPLITS`, `MAX_ROTATIONS`, `PDF_EXTENSION`.
 - **`frontend/src/utils/formatters.ts`** — `convertToSelectedFile` uses generated `models.PDFMetadata` (not `any`).
-- **Hooks** — Shared behavior extracted into `usePDFDrop`, `useOutputDirectory`, `useProcessingState`, `useErrorHandler` (tabs compose these; further consolidation is optional).
+- **Hooks** — Shared behavior in `usePDFDrop`, `useImageDrop`, `useOutputDirectory`, `useErrorHandler`, and `useProcessingState` (all operation tabs use the latter two for submit flows; #111).
 
 ---
 

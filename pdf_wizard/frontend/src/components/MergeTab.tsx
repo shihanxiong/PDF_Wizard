@@ -28,6 +28,7 @@ import { useI18n } from '../utils/i18n';
 import { usePDFDrop } from '../hooks/usePDFDrop';
 import { useOutputDirectory } from '../hooks/useOutputDirectory';
 import { useErrorHandler } from '../hooks/useErrorHandler';
+import { useProcessingState } from '../hooks/useProcessingState';
 import { getErrorMessage } from '../utils/errors';
 import { FilenameInput } from './FilenameInput';
 import { OutputDirectorySelector } from './OutputDirectorySelector';
@@ -120,12 +121,10 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
   const { t } = useI18n();
   const [files, setFiles] = useState<SelectedFile[]>([]);
   const [outputFilename, setOutputFilename] = useState<string>('merged');
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [success, setSuccess] = useState<string | null>(null);
-
   const { handlePDFDrop } = usePDFDrop();
   const { outputDirectory, selectDirectory } = useOutputDirectory('failedToSelectOutputDirectory', 'selectOutputDirectory');
   const { error, setError, handleError } = useErrorHandler();
+  const { isProcessing, success, setSuccess, execute } = useProcessingState(setError);
 
   // Register drag and drop handler with App component
   useEffect(() => {
@@ -190,21 +189,19 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
   const handleMerge = async () => {
     if (files.length === 0 || !outputDirectory || !outputFilename.trim()) return;
 
-    setIsProcessing(true);
-    setError(null);
-    setSuccess(null);
-
     try {
-      const filePaths = files.map((f) => f.path);
-      await MergePDFs(filePaths, outputDirectory, outputFilename.trim());
-      setSuccess(`${t('pdfsMergedSuccessfully')} ${outputDirectory}/${outputFilename}.pdf`);
-      // Clear files after successful merge
-      setFiles([]);
-      setOutputFilename('merged');
-    } catch (err: unknown) {
-      setError(`${t('mergeFailed')} ${getErrorMessage(err)}`);
-    } finally {
-      setIsProcessing(false);
+      await execute(
+        async () => {
+          const filePaths = files.map((f) => f.path);
+          await MergePDFs(filePaths, outputDirectory, outputFilename.trim());
+          setFiles([]);
+          setOutputFilename('merged');
+        },
+        `${t('pdfsMergedSuccessfully')} ${outputDirectory}/${outputFilename}.pdf`,
+        (err) => `${t('mergeFailed')} ${getErrorMessage(err)}`,
+      );
+    } catch {
+      // Error state set by execute
     }
   };
 

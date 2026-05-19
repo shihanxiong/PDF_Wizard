@@ -159,6 +159,7 @@ This script will:
 - Install Wails CLI
 - Verify Node.js and npm are available
 - Install frontend dependencies
+- Install Playwright browsers (`npx playwright install`) for e2e tests
 
 ### Manual Installation
 

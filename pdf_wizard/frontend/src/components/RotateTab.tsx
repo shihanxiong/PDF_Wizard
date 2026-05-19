@@ -26,6 +26,7 @@ import { MAX_ROTATIONS } from '../utils/constants';
 import { usePDFDrop } from '../hooks/usePDFDrop';
 import { useOutputDirectory } from '../hooks/useOutputDirectory';
 import { useErrorHandler } from '../hooks/useErrorHandler';
+import { useProcessingState } from '../hooks/useProcessingState';
 import { getErrorMessage } from '../utils/errors';
 import { PDFInfoCard } from './PDFInfoCard';
 import { FilenameInput } from './FilenameInput';
@@ -41,15 +42,13 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
   const [selectedPDF, setSelectedPDF] = useState<SelectedPDF | null>(null);
   const [rotations, setRotations] = useState<RotateDefinition[]>([]);
   const [outputFilename, setOutputFilename] = useState<string>('rotated');
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [success, setSuccess] = useState<string | null>(null);
-
   const { handlePDFDrop } = usePDFDrop();
   const { outputDirectory, selectDirectory } = useOutputDirectory(
     'failedToSelectOutputDirectoryRotate',
     'selectOutputDirectoryRotate',
   );
   const { error, setError, handleError } = useErrorHandler();
+  const { isProcessing, success, setSuccess, execute } = useProcessingState(setError);
 
   // Register drag and drop handler with App component
   useEffect(() => {
@@ -140,27 +139,24 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
       return;
     }
 
-    setIsProcessing(true);
-    setError(null);
-    setSuccess(null);
-
     try {
-      const rotateDefinitions: models.RotateDefinition[] = rotations.map((rotation) => ({
-        startPage: rotation.startPage,
-        endPage: rotation.endPage,
-        rotation: rotation.rotation,
-      }));
-
-      await RotatePDF(selectedPDF.path, rotateDefinitions, outputDirectory, outputFilename.trim());
-      setSuccess(`${t('pdfRotatedSuccessfully')} ${outputDirectory}/${outputFilename.trim()}.pdf`);
-      // Clear selected PDF, rotations, and reset filename after successful rotation
-      setSelectedPDF(null);
-      setRotations([]);
-      setOutputFilename('rotated');
-    } catch (err: unknown) {
-      setError(`${t('rotateFailed')} ${getErrorMessage(err)}`);
-    } finally {
-      setIsProcessing(false);
+      await execute(
+        async () => {
+          const rotateDefinitions: models.RotateDefinition[] = rotations.map((rotation) => ({
+            startPage: rotation.startPage,
+            endPage: rotation.endPage,
+            rotation: rotation.rotation,
+          }));
+          await RotatePDF(selectedPDF.path, rotateDefinitions, outputDirectory, outputFilename.trim());
+          setSelectedPDF(null);
+          setRotations([]);
+          setOutputFilename('rotated');
+        },
+        `${t('pdfRotatedSuccessfully')} ${outputDirectory}/${outputFilename.trim()}.pdf`,
+        (err) => `${t('rotateFailed')} ${getErrorMessage(err)}`,
+      );
+    } catch {
+      // Error state set by execute
     }
   };
 

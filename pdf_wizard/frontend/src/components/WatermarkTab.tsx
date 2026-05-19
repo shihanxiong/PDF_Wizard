@@ -27,6 +27,9 @@ import { SelectedPDF } from '../types';
 import { formatFileSize, formatDate } from '../utils/formatters';
 import { models } from '../../wailsjs/go/models';
 import { useI18n } from '../utils/i18n';
+import { useErrorHandler } from '../hooks/useErrorHandler';
+import { useProcessingState } from '../hooks/useProcessingState';
+import { getErrorMessage } from '../utils/errors';
 
 interface WatermarkTabProps {
   onFileDrop: (handler: (paths: string[]) => void) => void;
@@ -48,9 +51,8 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
   const [pageRange, setPageRange] = useState<string>('');
   const [outputDirectory, setOutputDirectory] = useState<string>('');
   const [outputFilename, setOutputFilename] = useState<string>('watermarked');
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const { error, setError, handleError } = useErrorHandler();
+  const { isProcessing, success, setSuccess, execute } = useProcessingState(setError);
 
   const handleDroppedPDF = useCallback(
     async (paths: string[]) => {
@@ -76,12 +78,10 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
         });
         setError(null);
       } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error occurred';
-        setError(`${t('failedToLoadPDFWatermark')} ${errorMessage}`);
+        handleError(err, 'failedToLoadPDFWatermark');
       }
     },
-    [t]
+    [t, handleError]
   );
 
   // Register drag and drop handler with App component
@@ -109,9 +109,7 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
         setError(null);
       }
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error occurred';
-      setError(`${t('failedToSelectPDFWatermark')} ${errorMessage}`);
+      handleError(err, 'failedToSelectPDFWatermark');
     }
   };
 
@@ -125,9 +123,7 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
         setError(null);
       }
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error occurred';
-      setError(`${t('failedToSelectOutputDirectoryWatermark')} ${errorMessage}`);
+      handleError(err, 'failedToSelectOutputDirectoryWatermark');
     }
   };
 
@@ -139,35 +135,30 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
       return;
     }
 
-    setIsProcessing(true);
-    setError(null);
-    setSuccess(null);
-
     try {
-      const watermark = models.WatermarkDefinition.createFrom({
-        textConfig: {
-          text: watermarkText.trim(),
-          fontSize: fontSize,
-          fontColor: fontColor,
-          opacity: opacity,
-          rotation: rotation,
-          position: position,
-          fontFamily: fontFamily,
+      await execute(
+        async () => {
+          const watermark = models.WatermarkDefinition.createFrom({
+            textConfig: {
+              text: watermarkText.trim(),
+              fontSize: fontSize,
+              fontColor: fontColor,
+              opacity: opacity,
+              rotation: rotation,
+              position: position,
+              fontFamily: fontFamily,
+            },
+            pageRange: pageRangeType === 'all' ? 'all' : pageRange.trim(),
+          });
+          await ApplyWatermark(selectedPDF.path, watermark, outputDirectory, outputFilename.trim());
+          setSelectedPDF(null);
+          setOutputFilename('watermarked');
         },
-        pageRange: pageRangeType === 'all' ? 'all' : pageRange.trim(),
-      });
-
-      await ApplyWatermark(selectedPDF.path, watermark, outputDirectory, outputFilename.trim());
-      setSuccess(`${t('watermarkAppliedSuccessfully')} ${outputDirectory}/${outputFilename.trim()}.pdf`);
-      // Clear selected PDF and reset filename after successful watermark
-      setSelectedPDF(null);
-      setOutputFilename('watermarked');
-    } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : typeof err === 'string' ? err : String(err) || 'Unknown error occurred';
-      setError(`${t('watermarkFailed')} ${errorMessage}`);
-    } finally {
-      setIsProcessing(false);
+        `${t('watermarkAppliedSuccessfully')} ${outputDirectory}/${outputFilename.trim()}.pdf`,
+        (err) => `${t('watermarkFailed')} ${getErrorMessage(err)}`,
+      );
+    } catch {
+      // Error state set by execute
     }
   };
 

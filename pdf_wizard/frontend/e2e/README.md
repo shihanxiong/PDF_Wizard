@@ -8,6 +8,16 @@ These tests run against the Vite development server and test the full UI flow of
 
 **Scope:** Flows that need a second device or a real LAN HTTP server (e.g. **Receive from phone** on the Images to PDF tab) are not covered here; see **[SYSTEM_DESIGN.md](../../../../SYSTEM_DESIGN.md#images-to-pdf-tab)** for that feature.
 
+## Prerequisites
+
+From the repo root, `./install.sh` runs `npm install` and `npx playwright install` under `pdf_wizard/frontend`. If you set up manually:
+
+```bash
+cd pdf_wizard/frontend
+npm ci
+npx playwright install
+```
+
 ## Running Tests
 
 ### Basic Test Run
