@@ -1,4 +1,4 @@
-import { Language, Translations } from './types';
+import type { Translations } from './types';
 import { en } from './en';
 import { zh } from './zh';
 import { zhTW } from './zh-TW';
@@ -12,7 +12,7 @@ import { ru } from './ru';
 import { ko } from './ko';
 import { de } from './de';
 
-const translations: Record<Language, Translations> = {
+const translations = {
   en,
   zh,
   'zh-TW': zhTW,
@@ -25,7 +25,14 @@ const translations: Record<Language, Translations> = {
   ru,
   ko,
   de,
-};
+} satisfies Record<string, Translations>;
+
+export type Language = keyof typeof translations;
+
+/** Locale codes that have a translations module in catalog.ts */
+export function listCatalogLanguages(): Language[] {
+  return Object.keys(translations) as Language[];
+}
 
 export function lookupTranslation(lang: Language, key: keyof Translations): string {
   return translations[lang]?.[key] || translations.en[key] || key;

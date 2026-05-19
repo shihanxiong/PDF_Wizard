@@ -25,10 +25,7 @@ type App struct {
 	phoneStop func() error
 }
 
-const (
-	configFileName  = "pdf_wizard_config.json"
-	defaultLanguage = "en"
-)
+const configFileName = "pdf_wizard_config.json"
 
 // NewApp creates a new App application struct
 func NewApp() *App {

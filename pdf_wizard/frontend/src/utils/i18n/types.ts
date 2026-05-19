@@ -1,8 +1,3 @@
-import type { SupportedLanguageCode } from './languages.gen';
-
-// Translation keys and their translations
-export type Language = SupportedLanguageCode;
-
 export interface Translations {
   // App
   appTitle: string;
@@ -184,3 +179,5 @@ export interface Translations {
   cancel: string;
   save: string;
 }
+
+export type { Language } from './catalog';

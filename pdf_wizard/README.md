@@ -37,4 +37,4 @@ cd frontend && npm run test:e2e
 
 Playwright layout and CI: **[frontend/e2e/README.md](frontend/e2e/README.md)**. Go coverage and `-run` filters: **[SYSTEM_DESIGN.md § Testing](../SYSTEM_DESIGN.md#testing)**.
 
-After editing supported locales, run from the repo root: **`bash scripts/generate-supported-languages.sh`** (see **[frontend/src/utils/i18n/DESIGN.md](frontend/src/utils/i18n/DESIGN.md)**).
+After adding a locale, update **`i18n/supported-languages.json`** and the translation modules — see **[frontend/src/utils/i18n/DESIGN.md](frontend/src/utils/i18n/DESIGN.md)**.
