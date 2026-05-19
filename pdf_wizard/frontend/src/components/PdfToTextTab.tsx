@@ -9,6 +9,9 @@ import { useI18n } from '../utils/i18n';
 import { models } from '../../wailsjs/go/models';
 import { ExtractPDFText, GetPDFMetadata, SelectPDFFile } from '../../wailsjs/go/main/App';
 import { NoPDFSelected } from './NoPDFSelected';
+import { useErrorHandler } from '../hooks/useErrorHandler';
+import { useProcessingState } from '../hooks/useProcessingState';
+import { getErrorMessage } from '../utils/errors';
 
 interface PdfToTextTabProps {
   onFileDrop: (handler: (paths: string[]) => void) => void;
@@ -18,9 +21,9 @@ export const PdfToTextTab = ({ onFileDrop }: PdfToTextTabProps) => {
   const { t } = useI18n();
   const [selectedPDF, setSelectedPDF] = useState<SelectedPDF | null>(null);
   const [extractedText, setExtractedText] = useState('');
-  const [isExtracting, setIsExtracting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const { error, setError, handleError } = useErrorHandler();
+  const { isProcessing: isExtracting, execute } = useProcessingState(setError);
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const loadPDF = useCallback(async (path: string) => {
@@ -51,11 +54,10 @@ export const PdfToTextTab = ({ onFileDrop }: PdfToTextTabProps) => {
       try {
         await loadPDF(pdfPaths[0]);
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
-        setError(`${t('pdfToTextFailedToLoadPDF')} ${message}`);
+        handleError(err, 'pdfToTextFailedToLoadPDF');
       }
     },
-    [loadPDF, t],
+    [loadPDF, handleError],
   );
 
   useEffect(() => {
@@ -75,8 +77,7 @@ export const PdfToTextTab = ({ onFileDrop }: PdfToTextTabProps) => {
       }
       await loadPDF(path);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
-      setError(`${t('pdfToTextFailedToSelectPDF')} ${message}`);
+      handleError(err, 'pdfToTextFailedToSelectPDF');
     }
   };
 
@@ -84,20 +85,21 @@ export const PdfToTextTab = ({ onFileDrop }: PdfToTextTabProps) => {
     if (!selectedPDF) {
       return;
     }
-    setIsExtracting(true);
-    setError(null);
     setInfo(null);
     try {
-      const text = await ExtractPDFText(selectedPDF.path);
-      setExtractedText(text);
-      if (!text.trim()) {
-        setInfo(t('pdfToTextEmptyResult'));
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
-      setError(`${t('pdfToTextExtractFailed')} ${message}`);
-    } finally {
-      setIsExtracting(false);
+      await execute(
+        async () => {
+          const text = await ExtractPDFText(selectedPDF.path);
+          setExtractedText(text);
+          if (!text.trim()) {
+            setInfo(t('pdfToTextEmptyResult'));
+          }
+        },
+        '',
+        (err) => `${t('pdfToTextExtractFailed')} ${getErrorMessage(err)}`,
+      );
+    } catch {
+      // Error state set by execute
     }
   };
 

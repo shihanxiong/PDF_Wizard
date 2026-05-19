@@ -21,6 +21,15 @@ When the UI language is English, **`App.tsx`** applies a slightly smaller `Tabs`
 
 `App.tsx` lazy-loads the seven main tabs with **`React.lazy` + `Suspense`**. The shell (`AppBar`, tab strip, drag/drop wiring, settings dialog) renders immediately; each tab chunk is fetched on first activation and then stays mounted for local state continuity. The tab content container chain (`App` content box, `TabPanel` wrapper, inner panel `Box`) keeps **`minHeight: 0`** so nested tab layouts can shrink correctly without clipping/overflow at the window bottom.
 
+### Shared hooks (processing and errors)
+
+Tabs that run async PDF work compose two hooks from `frontend/src/hooks/`:
+
+- **`useErrorHandler()`** — `error`, `setError`, and `handleError(err, translationKey)` for file/directory selection and drop failures (i18n-prefixed messages).
+- **`useProcessingState(setError)`** — `isProcessing`, `success`, `setSuccess`, and **`execute(operation, successMessage, formatError?)`** for the primary action (merge, split, rotate, watermark, images→PDF, lock/unlock, PDF-to-text extract). `execute` clears errors, toggles loading, sets success on completion, and reports failures through the same `setError` passed from `useErrorHandler`.
+
+`PdfToTextTab` aliases `isProcessing` as `isExtracting` and uses a separate `info` state for empty-result and copy feedback.
+
 ## Images to PDF Tab
 
 ### Functional requirements

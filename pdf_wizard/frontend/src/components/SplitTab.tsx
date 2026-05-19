@@ -22,6 +22,7 @@ import { MAX_SPLITS } from '../utils/constants';
 import { usePDFDrop } from '../hooks/usePDFDrop';
 import { useOutputDirectory } from '../hooks/useOutputDirectory';
 import { useErrorHandler } from '../hooks/useErrorHandler';
+import { useProcessingState } from '../hooks/useProcessingState';
 import { getErrorMessage } from '../utils/errors';
 import { PDFInfoCard } from './PDFInfoCard';
 import { OutputDirectorySelector } from './OutputDirectorySelector';
@@ -35,15 +36,13 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
   const { t } = useI18n();
   const [selectedPDF, setSelectedPDF] = useState<SelectedPDF | null>(null);
   const [splits, setSplits] = useState<SplitDefinition[]>([]);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [success, setSuccess] = useState<string | null>(null);
-
   const { handlePDFDrop } = usePDFDrop();
   const { outputDirectory, selectDirectory } = useOutputDirectory(
     'failedToSelectOutputDirectorySplit',
     'selectOutputDirectorySplit',
   );
   const { error, setError, handleError } = useErrorHandler();
+  const { isProcessing, success, setSuccess, execute } = useProcessingState(setError);
 
   // Register drag and drop handler with App component
   useEffect(() => {
@@ -134,26 +133,23 @@ export const SplitTab = ({ onFileDrop }: SplitTabProps) => {
       return;
     }
 
-    setIsProcessing(true);
-    setError(null);
-    setSuccess(null);
-
     try {
-      const splitDefinitions: models.SplitDefinition[] = splits.map((split) => ({
-        startPage: split.startPage,
-        endPage: split.endPage,
-        filename: split.filename.trim(),
-      }));
-
-      await SplitPDF(selectedPDF.path, splitDefinitions, outputDirectory);
       const outputFiles = splits.map((s) => `${s.filename.trim()}.pdf`).join(', ');
-      setSuccess(`${t('pdfSplitSuccessfully')} ${splits.length} ${t('createdFiles')} ${outputFiles}`);
-      // Clear splits after successful split
-      setSplits([]);
-    } catch (err: unknown) {
-      setError(`${t('splitFailed')} ${getErrorMessage(err)}`);
-    } finally {
-      setIsProcessing(false);
+      await execute(
+        async () => {
+          const splitDefinitions: models.SplitDefinition[] = splits.map((split) => ({
+            startPage: split.startPage,
+            endPage: split.endPage,
+            filename: split.filename.trim(),
+          }));
+          await SplitPDF(selectedPDF.path, splitDefinitions, outputDirectory);
+          setSplits([]);
+        },
+        `${t('pdfSplitSuccessfully')} ${splits.length} ${t('createdFiles')} ${outputFiles}`,
+        (err) => `${t('splitFailed')} ${getErrorMessage(err)}`,
+      );
+    } catch {
+      // Error state set by execute
     }
   };
 

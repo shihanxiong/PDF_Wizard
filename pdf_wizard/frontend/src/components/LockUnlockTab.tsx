@@ -8,6 +8,9 @@ import { useI18n } from '../utils/i18n';
 import { models } from '../../wailsjs/go/models';
 import { GetFileMetadata, GetPDFMetadata, LockPDF, SelectOutputDirectory, SelectPDFFile, UnlockPDF } from '../../wailsjs/go/main/App';
 import { NoPDFSelected } from './NoPDFSelected';
+import { useErrorHandler } from '../hooks/useErrorHandler';
+import { useProcessingState } from '../hooks/useProcessingState';
+import { getErrorMessage } from '../utils/errors';
 
 interface LockUnlockTabProps {
   onFileDrop: (handler: (paths: string[]) => void) => void;
@@ -30,9 +33,8 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
   const [password, setPassword] = useState('');
   const [outputDirectory, setOutputDirectory] = useState('');
   const [outputFilename, setOutputFilename] = useState('locked');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const { error, setError } = useErrorHandler();
+  const { isProcessing, success, setSuccess, execute } = useProcessingState(setError);
 
   const defaultFilename = mode === 'lock' ? 'locked' : 'unlocked';
 
@@ -143,24 +145,25 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
     if (!selectedPDF || !outputDirectory || !outputFilename.trim() || !password.trim()) {
       return;
     }
-    setIsProcessing(true);
-    setError(null);
-    setSuccess(null);
+    const successKey = mode === 'lock' ? 'lockUnlockSuccessLocked' : 'lockUnlockSuccessUnlocked';
+    const failKey = mode === 'lock' ? 'lockUnlockLockFailed' : 'lockUnlockUnlockFailed';
     try {
-      if (mode === 'lock') {
-        await LockPDF(selectedPDF.path, password, outputDirectory, outputFilename.trim());
-      } else {
-        await UnlockPDF(selectedPDF.path, password, outputDirectory, outputFilename.trim());
-      }
-      setSuccess(`${t(mode === 'lock' ? 'lockUnlockSuccessLocked' : 'lockUnlockSuccessUnlocked')} ${outputDirectory}/${outputFilename.trim()}.pdf`);
-      setSelectedPDF(null);
-      setPassword('');
-      setOutputFilename(defaultFilename);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
-      setError(`${t(mode === 'lock' ? 'lockUnlockLockFailed' : 'lockUnlockUnlockFailed')} ${message}`);
-    } finally {
-      setIsProcessing(false);
+      await execute(
+        async () => {
+          if (mode === 'lock') {
+            await LockPDF(selectedPDF.path, password, outputDirectory, outputFilename.trim());
+          } else {
+            await UnlockPDF(selectedPDF.path, password, outputDirectory, outputFilename.trim());
+          }
+          setSelectedPDF(null);
+          setPassword('');
+          setOutputFilename(defaultFilename);
+        },
+        `${t(successKey)} ${outputDirectory}/${outputFilename.trim()}.pdf`,
+        (err) => `${t(failKey)} ${getErrorMessage(err)}`,
+      );
+    } catch {
+      // Error state set by execute
     }
   };
 

@@ -40,6 +40,8 @@ const PHONE_UPLOAD_MAX_FILES = 25;
 import { useImageDrop } from '../hooks/useImageDrop';
 import { useOutputDirectory } from '../hooks/useOutputDirectory';
 import { useErrorHandler } from '../hooks/useErrorHandler';
+import { useProcessingState } from '../hooks/useProcessingState';
+import { getErrorMessage } from '../utils/errors';
 import { FilenameInput } from './FilenameInput';
 import { OutputDirectorySelector } from './OutputDirectorySelector';
 import { NoPDFSelected } from './NoPDFSelected';
@@ -133,14 +135,13 @@ export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
   const { t, language } = useI18n();
   const [files, setFiles] = useState<SelectedFile[]>([]);
   const [outputFilename, setOutputFilename] = useState<string>('from_images');
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [success, setSuccess] = useState<string | null>(null);
   const [phoneUploadURL, setPhoneUploadURL] = useState<string | null>(null);
   const [qrDataURL, setQrDataURL] = useState<string | null>(null);
 
   const { handleImageDrop } = useImageDrop();
   const { outputDirectory, selectDirectory } = useOutputDirectory('failedToSelectOutputDirectory', 'selectOutputDirectory');
   const { error, setError, handleError } = useErrorHandler();
+  const { isProcessing, success, setSuccess, execute } = useProcessingState(setError);
 
   useEffect(() => {
     const handleDroppedFiles = (paths: string[]) => {
@@ -283,22 +284,19 @@ export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
   const handleCreatePdf = async () => {
     if (files.length === 0 || !outputDirectory || !outputFilename.trim()) return;
 
-    setIsProcessing(true);
-    setError(null);
-    setSuccess(null);
-
     try {
-      const paths = files.map((f) => f.path);
-      await ImagesToPDF(paths, outputDirectory, outputFilename.trim());
-      setSuccess(`${t('imagesToPdfSuccessfully')} ${outputDirectory}/${outputFilename.trim()}.pdf`);
-      setFiles([]);
-      setOutputFilename('from_images');
-    } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : typeof err === 'string' ? err : String(err) || 'Unknown error occurred';
-      setError(`${t('imagesToPdfFailed')} ${errorMessage}`);
-    } finally {
-      setIsProcessing(false);
+      await execute(
+        async () => {
+          const paths = files.map((f) => f.path);
+          await ImagesToPDF(paths, outputDirectory, outputFilename.trim());
+          setFiles([]);
+          setOutputFilename('from_images');
+        },
+        `${t('imagesToPdfSuccessfully')} ${outputDirectory}/${outputFilename.trim()}.pdf`,
+        (err) => `${t('imagesToPdfFailed')} ${getErrorMessage(err)}`,
+      );
+    } catch {
+      // Error state set by execute
     }
   };
 
