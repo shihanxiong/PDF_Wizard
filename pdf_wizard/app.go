@@ -23,6 +23,9 @@ type App struct {
 
 	phoneMu   sync.Mutex
 	phoneStop func() error
+
+	opMu     sync.Mutex
+	opCancel context.CancelFunc
 }
 
 const (
@@ -72,6 +75,48 @@ func (a *App) startup(ctx context.Context) {
 // shutdown stops background work before the app exits.
 func (a *App) shutdown(_ context.Context) {
 	_ = a.StopImagesPhoneUpload()
+}
+
+// beginOperation cancels any previous operation and returns functional options
+// for the PDF service (WithContext + WithProgress) plus the cancel function.
+func (a *App) beginOperation() ([]func(*services.OperationOptions), context.CancelFunc) {
+	a.opMu.Lock()
+	if a.opCancel != nil {
+		a.opCancel()
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	a.opCancel = cancel
+	a.opMu.Unlock()
+
+	progress := func(operation string, current, totalItems int) {
+		if a.ctx == nil {
+			return
+		}
+		var percent float64
+		if totalItems > 0 {
+			percent = float64(current) / float64(totalItems) * 100
+		}
+		runtime.EventsEmit(a.ctx, "pdf-progress", map[string]interface{}{
+			"operation": operation,
+			"current":   current,
+			"total":     totalItems,
+			"percent":   percent,
+		})
+	}
+
+	return []func(*services.OperationOptions){
+		services.WithContext(ctx),
+		services.WithProgress(progress),
+	}, cancel
+}
+
+// CancelCurrentOperation cancels the currently running PDF operation.
+func (a *App) CancelCurrentOperation() {
+	a.opMu.Lock()
+	defer a.opMu.Unlock()
+	if a.opCancel != nil {
+		a.opCancel()
+	}
 }
 
 // EmitSettingsEvent emits an event to show the settings dialog
@@ -187,7 +232,9 @@ func (a *App) GetPDFMetadata(path string) (models.PDFMetadata, error) {
 
 // MergePDFs merges the given PDF files in order and saves to output directory
 func (a *App) MergePDFs(inputPaths []string, outputDirectory string, outputFilename string) error {
-	return a.pdfService.MergePDFs(inputPaths, outputDirectory, outputFilename)
+	opts, cancel := a.beginOperation()
+	defer cancel()
+	return a.pdfService.MergePDFs(inputPaths, outputDirectory, outputFilename, opts...)
 }
 
 // SelectImageFiles opens a dialog to select multiple image files.
@@ -197,17 +244,23 @@ func (a *App) SelectImageFiles(labels models.FileDialogLabels) ([]string, error)
 
 // ImagesToPDF writes a PDF with one page per image in the given order.
 func (a *App) ImagesToPDF(imagePaths []string, outputDirectory string, outputFilename string) error {
-	return a.pdfService.ImagesToPDF(imagePaths, outputDirectory, outputFilename)
+	opts, cancel := a.beginOperation()
+	defer cancel()
+	return a.pdfService.ImagesToPDF(imagePaths, outputDirectory, outputFilename, opts...)
 }
 
 // LockPDF encrypts a PDF with the provided password.
 func (a *App) LockPDF(inputPath string, password string, outputDirectory string, outputFilename string) error {
-	return a.pdfService.LockPDF(inputPath, password, outputDirectory, outputFilename)
+	opts, cancel := a.beginOperation()
+	defer cancel()
+	return a.pdfService.LockPDF(inputPath, password, outputDirectory, outputFilename, opts...)
 }
 
 // UnlockPDF decrypts a PDF using the provided password.
 func (a *App) UnlockPDF(inputPath string, password string, outputDirectory string, outputFilename string) error {
-	return a.pdfService.UnlockPDF(inputPath, password, outputDirectory, outputFilename)
+	opts, cancel := a.beginOperation()
+	defer cancel()
+	return a.pdfService.UnlockPDF(inputPath, password, outputDirectory, outputFilename, opts...)
 }
 
 // ExtractPDFText returns plain text extracted from the PDF. Encrypted PDFs are not supported.
@@ -264,15 +317,21 @@ func (a *App) StopImagesPhoneUpload() error {
 
 // SplitPDF splits the given PDF according to split definitions
 func (a *App) SplitPDF(inputPath string, splits []models.SplitDefinition, outputDirectory string) error {
-	return a.pdfService.SplitPDF(inputPath, splits, outputDirectory)
+	opts, cancel := a.beginOperation()
+	defer cancel()
+	return a.pdfService.SplitPDF(inputPath, splits, outputDirectory, opts...)
 }
 
 // RotatePDF rotates specified page ranges in a PDF file
 func (a *App) RotatePDF(inputPath string, rotations []models.RotateDefinition, outputDirectory string, outputFilename string) error {
-	return a.pdfService.RotatePDF(inputPath, rotations, outputDirectory, outputFilename)
+	opts, cancel := a.beginOperation()
+	defer cancel()
+	return a.pdfService.RotatePDF(inputPath, rotations, outputDirectory, outputFilename, opts...)
 }
 
 // ApplyWatermark applies a text watermark to the specified PDF file
 func (a *App) ApplyWatermark(inputPath string, watermark models.WatermarkDefinition, outputDirectory string, outputFilename string) error {
-	return a.pdfService.ApplyWatermark(inputPath, watermark, outputDirectory, outputFilename)
+	opts, cancel := a.beginOperation()
+	defer cancel()
+	return a.pdfService.ApplyWatermark(inputPath, watermark, outputDirectory, outputFilename, opts...)
 }

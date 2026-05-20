@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -19,6 +20,39 @@ import (
 	"pdf_wizard/models"
 )
 
+// ProgressFunc is called by PDF operations to report progress.
+type ProgressFunc func(operation string, current, total int)
+
+// OperationOptions holds optional context and progress for PDF operations.
+type OperationOptions struct {
+	ctx      context.Context
+	progress ProgressFunc
+}
+
+// WithContext returns a functional option that attaches a cancellable context.
+func WithContext(ctx context.Context) func(*OperationOptions) {
+	return func(o *OperationOptions) {
+		if ctx != nil {
+			o.ctx = ctx
+		}
+	}
+}
+
+// WithProgress returns a functional option that attaches a progress callback.
+func WithProgress(fn ProgressFunc) func(*OperationOptions) {
+	return func(o *OperationOptions) {
+		o.progress = fn
+	}
+}
+
+func resolveOptions(opts []func(*OperationOptions)) OperationOptions {
+	o := OperationOptions{ctx: context.Background()}
+	for _, fn := range opts {
+		fn(&o)
+	}
+	return o
+}
+
 // PDFService handles PDF operations (merge, split)
 type PDFService struct {
 	fileService *FileService
@@ -30,7 +64,9 @@ func NewPDFService(fileService *FileService) *PDFService {
 }
 
 // MergePDFs merges the given PDF files in order and saves to output directory
-func (s *PDFService) MergePDFs(inputPaths []string, outputDirectory string, outputFilename string) error {
+func (s *PDFService) MergePDFs(inputPaths []string, outputDirectory string, outputFilename string, opts ...func(*OperationOptions)) error {
+	o := resolveOptions(opts)
+
 	// Validate input files
 	if len(inputPaths) == 0 {
 		return fmt.Errorf("no input files provided")
@@ -44,11 +80,18 @@ func (s *PDFService) MergePDFs(inputPaths []string, outputDirectory string, outp
 		if err := validatePDFFile(path); err != nil {
 			return fmt.Errorf("input file %d: %w", i+1, err)
 		}
+		if err := o.ctx.Err(); err != nil {
+			return fmt.Errorf("operation cancelled")
+		}
 	}
 
 	// Validate output directory exists and is writable
 	if err := validateOutputDirectory(outputDirectory); err != nil {
 		return err
+	}
+
+	if err := o.ctx.Err(); err != nil {
+		return fmt.Errorf("operation cancelled")
 	}
 
 	// outputFilename from frontend does not include .pdf extension
@@ -69,10 +112,11 @@ func (s *PDFService) MergePDFs(inputPaths []string, outputDirectory string, outp
 		if diagErr := mergeDiagnoseInputs(inputPaths); diagErr != nil {
 			return diagErr
 		}
-		if strings.Contains(err.Error(), "validateFontEncoding") || strings.Contains(err.Error(), "Encoding") {
-			return fmt.Errorf("failed to merge PDFs due to font encoding issues: %w. One or more PDFs may have invalid font encoding (e.g., NULL encoding). Please try repairing the problematic PDF(s) before merging", err)
-		}
-		return fmt.Errorf("failed to merge PDFs: %w", err)
+		return classifyMergeError(err)
+	}
+
+	if o.progress != nil {
+		o.progress("merge", len(inputPaths), len(inputPaths))
 	}
 
 	// Validate the merged file was created
@@ -84,7 +128,9 @@ func (s *PDFService) MergePDFs(inputPaths []string, outputDirectory string, outp
 }
 
 // ImagesToPDF creates one PDF with one page per image, in the given order.
-func (s *PDFService) ImagesToPDF(imagePaths []string, outputDirectory string, outputFilename string) error {
+func (s *PDFService) ImagesToPDF(imagePaths []string, outputDirectory string, outputFilename string, opts ...func(*OperationOptions)) error {
+	o := resolveOptions(opts)
+
 	if len(imagePaths) == 0 {
 		return fmt.Errorf("no input images provided")
 	}
@@ -94,6 +140,9 @@ func (s *PDFService) ImagesToPDF(imagePaths []string, outputDirectory string, ou
 		}
 		if err := validateImageFile(path); err != nil {
 			return fmt.Errorf("input image %d: %w", i+1, err)
+		}
+		if err := o.ctx.Err(); err != nil {
+			return fmt.Errorf("operation cancelled")
 		}
 	}
 	if err := validateOutputDirectory(outputDirectory); err != nil {
@@ -116,11 +165,20 @@ func (s *PDFService) ImagesToPDF(imagePaths []string, outputDirectory string, ou
 	}
 	defer cleanup()
 
+	if err := o.ctx.Err(); err != nil {
+		return fmt.Errorf("operation cancelled")
+	}
+
 	config := model.NewDefaultConfiguration()
 	imp := pdfcpu.DefaultImportConfig()
 	if err := api.ImportImagesFile(pathsForImport, outputPath, imp, config); err != nil {
 		return fmt.Errorf("failed to create PDF from images: %w", err)
 	}
+
+	if o.progress != nil {
+		o.progress("images-to-pdf", len(imagePaths), len(imagePaths))
+	}
+
 	if _, err := os.Stat(outputPath); os.IsNotExist(err) {
 		return fmt.Errorf("output file was not created at: %s", outputPath)
 	}
@@ -128,7 +186,9 @@ func (s *PDFService) ImagesToPDF(imagePaths []string, outputDirectory string, ou
 }
 
 // LockPDF encrypts a PDF with a password.
-func (s *PDFService) LockPDF(inputPath string, password string, outputDirectory string, outputFilename string) error {
+func (s *PDFService) LockPDF(inputPath string, password string, outputDirectory string, outputFilename string, opts ...func(*OperationOptions)) error {
+	o := resolveOptions(opts)
+
 	if err := validatePDFFile(inputPath); err != nil {
 		return fmt.Errorf("input file: %w", err)
 	}
@@ -140,6 +200,10 @@ func (s *PDFService) LockPDF(inputPath string, password string, outputDirectory 
 	}
 	if strings.TrimSpace(outputFilename) == "" {
 		return fmt.Errorf("output filename cannot be empty")
+	}
+
+	if err := o.ctx.Err(); err != nil {
+		return fmt.Errorf("operation cancelled")
 	}
 
 	outputPath := filepath.Join(outputDirectory, strings.TrimSpace(outputFilename)+PDFExtension)
@@ -150,7 +214,7 @@ func (s *PDFService) LockPDF(inputPath string, password string, outputDirectory 
 	conf := model.NewAESConfiguration(password, password, 256)
 	conf.Permissions = model.PermissionsNone
 	if err := api.EncryptFile(inputPath, outputPath, conf); err != nil {
-		return fmt.Errorf("failed to lock PDF: %w", err)
+		return classifyLockUnlockError(err, "lock")
 	}
 	if _, err := os.Stat(outputPath); os.IsNotExist(err) {
 		return fmt.Errorf("locked file was not created at: %s", outputPath)
@@ -159,7 +223,9 @@ func (s *PDFService) LockPDF(inputPath string, password string, outputDirectory 
 }
 
 // UnlockPDF decrypts a password-protected PDF.
-func (s *PDFService) UnlockPDF(inputPath string, password string, outputDirectory string, outputFilename string) error {
+func (s *PDFService) UnlockPDF(inputPath string, password string, outputDirectory string, outputFilename string, opts ...func(*OperationOptions)) error {
+	o := resolveOptions(opts)
+
 	if err := validatePDFFile(inputPath); err != nil {
 		return fmt.Errorf("input file: %w", err)
 	}
@@ -171,6 +237,10 @@ func (s *PDFService) UnlockPDF(inputPath string, password string, outputDirector
 	}
 	if strings.TrimSpace(outputFilename) == "" {
 		return fmt.Errorf("output filename cannot be empty")
+	}
+
+	if err := o.ctx.Err(); err != nil {
+		return fmt.Errorf("operation cancelled")
 	}
 
 	outputPath := filepath.Join(outputDirectory, strings.TrimSpace(outputFilename)+PDFExtension)
@@ -182,7 +252,7 @@ func (s *PDFService) UnlockPDF(inputPath string, password string, outputDirector
 	conf.UserPW = password
 	conf.OwnerPW = password
 	if err := api.DecryptFile(inputPath, outputPath, conf); err != nil {
-		return fmt.Errorf("failed to unlock PDF: %w", err)
+		return classifyLockUnlockError(err, "unlock")
 	}
 	if _, err := os.Stat(outputPath); os.IsNotExist(err) {
 		return fmt.Errorf("unlocked file was not created at: %s", outputPath)
@@ -191,7 +261,9 @@ func (s *PDFService) UnlockPDF(inputPath string, password string, outputDirector
 }
 
 // SplitPDF splits the given PDF according to split definitions
-func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition, outputDirectory string) error {
+func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition, outputDirectory string, opts ...func(*OperationOptions)) error {
+	o := resolveOptions(opts)
+
 	// Validate input file exists and is a PDF
 	if err := validatePDFFile(inputPath); err != nil {
 		return fmt.Errorf("input file: %w", err)
@@ -213,11 +285,11 @@ func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition,
 	}
 	defer f.Close()
 
-	ctx, err := api.ReadValidateAndOptimize(f, config)
+	pdfCtx, err := api.ReadValidateAndOptimize(f, config)
 	if err != nil {
 		return fmt.Errorf("failed to read PDF for split: %w", err)
 	}
-	totalPages := ctx.PageCount
+	totalPages := pdfCtx.PageCount
 
 	// Validate all splits
 	for i, split := range splits {
@@ -244,6 +316,10 @@ func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition,
 
 	// Process each split: extract from the shared in-memory context (same as api.Trim).
 	for i, split := range splits {
+		if err := o.ctx.Err(); err != nil {
+			return fmt.Errorf("operation cancelled")
+		}
+
 		outputPath := filepath.Join(outputDirectory, strings.TrimSpace(split.Filename)+PDFExtension)
 
 		if err := removeIfExists(outputPath); err != nil {
@@ -251,7 +327,7 @@ func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition,
 		}
 
 		pageRange := fmt.Sprintf("%d-%d", split.StartPage, split.EndPage)
-		pages, err := api.PagesForPageSelection(ctx.PageCount, []string{pageRange}, false, true)
+		pages, err := api.PagesForPageSelection(pdfCtx.PageCount, []string{pageRange}, false, true)
 		if err != nil {
 			return fmt.Errorf("failed to trim pages for split %d (pages %d-%d): %w", i+1, split.StartPage, split.EndPage, err)
 		}
@@ -261,7 +337,7 @@ func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition,
 			return fmt.Errorf("split %d: no pages selected for range %s", i+1, pageRange)
 		}
 
-		ctxDest, err := pdfcpu.ExtractPages(ctx, pageNrs, false)
+		ctxDest, err := pdfcpu.ExtractPages(pdfCtx, pageNrs, false)
 		if err != nil {
 			return fmt.Errorf("failed to trim pages for split %d (pages %d-%d): %w", i+1, split.StartPage, split.EndPage, err)
 		}
@@ -278,6 +354,10 @@ func (s *PDFService) SplitPDF(inputPath string, splits []models.SplitDefinition,
 
 		if _, err := os.Stat(outputPath); os.IsNotExist(err) {
 			return fmt.Errorf("split file was not created at: %s", outputPath)
+		}
+
+		if o.progress != nil {
+			o.progress("split", i+1, len(splits))
 		}
 	}
 
@@ -297,7 +377,9 @@ func intSetToSortedPages(pages types.IntSet) []int {
 }
 
 // RotatePDF rotates specified page ranges in a PDF file
-func (s *PDFService) RotatePDF(inputPath string, rotations []models.RotateDefinition, outputDirectory string, outputFilename string) error {
+func (s *PDFService) RotatePDF(inputPath string, rotations []models.RotateDefinition, outputDirectory string, outputFilename string, opts ...func(*OperationOptions)) error {
+	o := resolveOptions(opts)
+
 	// Validate input file exists and is a PDF
 	if err := validatePDFFile(inputPath); err != nil {
 		return fmt.Errorf("input file: %w", err)
@@ -350,14 +432,19 @@ func (s *PDFService) RotatePDF(inputPath string, rotations []models.RotateDefini
 
 	// Process each rotation
 	for i, rotation := range rotations {
-		// Build page selection string (e.g., "1-5" for pages 1 to 5)
+		if err := o.ctx.Err(); err != nil {
+			return fmt.Errorf("operation cancelled")
+		}
+
 		pageSelection := fmt.Sprintf("%d-%d", rotation.StartPage, rotation.EndPage)
 
-		// Rotate the pages
-		// pdfcpu uses degrees, and RotateFile rotates the selected pages
 		err := api.RotateFile(tempPath, "", rotation.Rotation, []string{pageSelection}, config)
 		if err != nil {
 			return fmt.Errorf("failed to rotate pages for rotation %d (pages %d-%d, angle %d): %w", i+1, rotation.StartPage, rotation.EndPage, rotation.Rotation, err)
+		}
+
+		if o.progress != nil {
+			o.progress("rotate", i+1, len(rotations))
 		}
 	}
 
@@ -380,7 +467,9 @@ func (s *PDFService) RotatePDF(inputPath string, rotations []models.RotateDefini
 }
 
 // ApplyWatermark applies a text watermark to the specified PDF file
-func (s *PDFService) ApplyWatermark(inputPath string, watermark models.WatermarkDefinition, outputDirectory string, outputFilename string) error {
+func (s *PDFService) ApplyWatermark(inputPath string, watermark models.WatermarkDefinition, outputDirectory string, outputFilename string, opts ...func(*OperationOptions)) error {
+	o := resolveOptions(opts)
+
 	// Validate input file exists and is a PDF
 	if err := validatePDFFile(inputPath); err != nil {
 		return fmt.Errorf("input file: %w", err)
@@ -436,6 +525,10 @@ func (s *PDFService) ApplyWatermark(inputPath string, watermark models.Watermark
 		return fmt.Errorf("failed to create temporary copy: %w", err)
 	}
 	defer os.Remove(tempPath) // Clean up temp file
+
+	if err := o.ctx.Err(); err != nil {
+		return fmt.Errorf("operation cancelled")
+	}
 
 	// Use pdfcpu to add watermark
 	config := model.NewDefaultConfiguration()
@@ -638,12 +731,40 @@ func parseColor(hexColor string) (color.SimpleColor, error) {
 // mergeDiagnoseInputs runs ReadContextFile on each merge input to find the first
 // file that fails to parse. Used only after MergeCreateFile fails so the common
 // success path does not pay for a second full read of every input.
+func classifyMergeError(err error) *models.PDFError {
+	msg := err.Error()
+	if strings.Contains(msg, "validateFontEncoding") || strings.Contains(msg, "Encoding") {
+		return models.NewPDFError(
+			models.ErrCodeFontEncoding,
+			"failed to merge PDFs due to font encoding issues. One or more PDFs may have invalid font encoding (e.g., NULL encoding). Please try repairing the problematic PDF(s) before merging",
+			err,
+		)
+	}
+	return models.NewPDFError(models.ErrCodeUnknown, fmt.Sprintf("failed to merge PDFs: %v", err), err)
+}
+
+func classifyLockUnlockError(err error, op string) *models.PDFError {
+	lower := strings.ToLower(err.Error())
+	if strings.Contains(lower, "password") || strings.Contains(lower, "encrypt") || strings.Contains(lower, "decrypt") {
+		return models.NewPDFError(
+			models.ErrCodePasswordRequired,
+			fmt.Sprintf("failed to %s PDF: %v", op, err),
+			err,
+		)
+	}
+	return models.NewPDFError(models.ErrCodeUnknown, fmt.Sprintf("failed to %s PDF: %v", op, err), err)
+}
+
 func mergeDiagnoseInputs(inputPaths []string) error {
 	for i, path := range inputPaths {
 		_, err := api.ReadContextFile(path)
 		if err != nil {
 			filename := filepath.Base(path)
-			return fmt.Errorf("PDF file %d (%s) has issues and cannot be processed: %w. This file may have invalid font encoding or be corrupted. Please try repairing the PDF or use a different file", i+1, filename, err)
+			return models.NewPDFError(
+				models.ErrCodeFileCorrupted,
+				fmt.Sprintf("PDF file %d (%s) has issues and cannot be processed. This file may have invalid font encoding or be corrupted. Please try repairing the PDF or use a different file", i+1, filename),
+				err,
+			)
 		}
 	}
 	return nil

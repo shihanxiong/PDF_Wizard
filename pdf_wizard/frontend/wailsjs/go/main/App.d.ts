@@ -4,6 +4,8 @@ import {models} from '../models';
 
 export function ApplyWatermark(arg1:string,arg2:models.WatermarkDefinition,arg3:string,arg4:string):Promise<void>;
 
+export function CancelCurrentOperation():Promise<void>;
+
 export function EmitSettingsEvent():Promise<void>;
 
 export function ExtractPDFText(arg1:string):Promise<string>;

@@ -6,6 +6,10 @@ export function ApplyWatermark(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['ApplyWatermark'](arg1, arg2, arg3, arg4);
 }
 
+export function CancelCurrentOperation() {
+  return window['go']['main']['App']['CancelCurrentOperation']();
+}
+
 export function EmitSettingsEvent() {
   return window['go']['main']['App']['EmitSettingsEvent']();
 }
