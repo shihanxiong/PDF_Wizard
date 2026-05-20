@@ -184,7 +184,7 @@ The backend uses a service-based architecture with clear separation of concerns:
 #### MergePDFs
 
 - **Merge-first, then diagnose**: Attempts `api.MergeCreateFile()` first (pdfcpu reads inputs as part of the merge). If merge fails, `mergeDiagnoseInputs()` runs `api.ReadContextFile()` on each input in order to report which file fails and why (e.g., font encoding / NULL encoding), suggesting PDF repair where applicable
-- **Font encoding handling**: Diagnosis path surfaces encoding-related read errors with filename and index
+- **Font encoding handling**: Diagnosis path surfaces encoding-related read errors with filename and index, returning `PDFError` with code `FILE_CORRUPTED`; undiagnosed encoding errors return `FONT_ENCODING`
 - **Output file handling**: Removes existing output file before creating new one to avoid pdfcpu overwrite issues
 - **Error messages**: Includes filename and file index in error messages for better debugging
 
@@ -257,9 +257,10 @@ For detailed application-level design, see [pdf_wizard/DESIGN.md](pdf_wizard/DES
 
 ### Error Handling
 
+- **Stable error codes (Go → UI)**: The `models.PDFError` type (`models/errors.go`) serializes as `{"code":"...","message":"..."}` via its `Error()` method. Wails surfaces Go errors as the `Error()` string, so the frontend can JSON-parse it to branch on machine-readable codes instead of substring matching. Defined codes: `FONT_ENCODING`, `PASSWORD_REQUIRED`, `FILE_CORRUPTED`, `INVALID_INPUT`, `IO_ERROR`, `UNKNOWN`. Frontend utility: `frontend/src/utils/pdfErrors.ts` (`parsePDFError`, `isPDFError`)
 - Validate PDF files before processing (file existence, PDF format, readability)
 - Handle file access errors gracefully with descriptive messages
-- **Font encoding / read errors on merge**: After a failed merge, per-input `ReadContextFile` diagnosis yields specific messages (e.g., NULL encoding) tied to filename and index
+- **Font encoding / read errors on merge**: After a failed merge, per-input `ReadContextFile` diagnosis yields specific messages (e.g., NULL encoding) tied to filename and index; returns `PDFError` with code `FILE_CORRUPTED` or `FONT_ENCODING`
 - **Page range validation**: All operations validate page ranges against PDF page count
 - **Output file handling**: Existing output files are removed before creating new ones to avoid pdfcpu overwrite issues
 - **Temporary file management**: Rotate and watermark operations use temporary files to avoid in-place modification issues, with automatic cleanup; HEIC/HEIF→JPEG conversion for images→PDF uses temp files under `heic_jpeg.go` with deferred removal
