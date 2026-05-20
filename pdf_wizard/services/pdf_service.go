@@ -69,10 +69,7 @@ func (s *PDFService) MergePDFs(inputPaths []string, outputDirectory string, outp
 		if diagErr := mergeDiagnoseInputs(inputPaths); diagErr != nil {
 			return diagErr
 		}
-		if strings.Contains(err.Error(), "validateFontEncoding") || strings.Contains(err.Error(), "Encoding") {
-			return fmt.Errorf("failed to merge PDFs due to font encoding issues: %w. One or more PDFs may have invalid font encoding (e.g., NULL encoding). Please try repairing the problematic PDF(s) before merging", err)
-		}
-		return fmt.Errorf("failed to merge PDFs: %w", err)
+		return classifyMergeError(err)
 	}
 
 	// Validate the merged file was created
@@ -150,7 +147,7 @@ func (s *PDFService) LockPDF(inputPath string, password string, outputDirectory 
 	conf := model.NewAESConfiguration(password, password, 256)
 	conf.Permissions = model.PermissionsNone
 	if err := api.EncryptFile(inputPath, outputPath, conf); err != nil {
-		return fmt.Errorf("failed to lock PDF: %w", err)
+		return classifyLockUnlockError(err, "lock")
 	}
 	if _, err := os.Stat(outputPath); os.IsNotExist(err) {
 		return fmt.Errorf("locked file was not created at: %s", outputPath)
@@ -182,7 +179,7 @@ func (s *PDFService) UnlockPDF(inputPath string, password string, outputDirector
 	conf.UserPW = password
 	conf.OwnerPW = password
 	if err := api.DecryptFile(inputPath, outputPath, conf); err != nil {
-		return fmt.Errorf("failed to unlock PDF: %w", err)
+		return classifyLockUnlockError(err, "unlock")
 	}
 	if _, err := os.Stat(outputPath); os.IsNotExist(err) {
 		return fmt.Errorf("unlocked file was not created at: %s", outputPath)
@@ -643,10 +640,40 @@ func mergeDiagnoseInputs(inputPaths []string) error {
 		_, err := api.ReadContextFile(path)
 		if err != nil {
 			filename := filepath.Base(path)
-			return fmt.Errorf("PDF file %d (%s) has issues and cannot be processed: %w. This file may have invalid font encoding or be corrupted. Please try repairing the PDF or use a different file", i+1, filename, err)
+			return models.NewPDFError(
+				models.ErrCodeFileCorrupted,
+				fmt.Sprintf("PDF file %d (%s) has issues and cannot be processed. This file may have invalid font encoding or be corrupted. Please try repairing the PDF or use a different file", i+1, filename),
+				err,
+			)
 		}
 	}
 	return nil
+}
+
+// classifyMergeError maps a pdfcpu merge failure to an appropriate PDFError code.
+func classifyMergeError(err error) *models.PDFError {
+	msg := err.Error()
+	if strings.Contains(msg, "validateFontEncoding") || strings.Contains(msg, "Encoding") {
+		return models.NewPDFError(
+			models.ErrCodeFontEncoding,
+			"failed to merge PDFs due to font encoding issues. One or more PDFs may have invalid font encoding (e.g., NULL encoding). Please try repairing the problematic PDF(s) before merging",
+			err,
+		)
+	}
+	return models.NewPDFError(models.ErrCodeUnknown, fmt.Sprintf("failed to merge PDFs: %v", err), err)
+}
+
+// classifyLockUnlockError maps a pdfcpu encrypt/decrypt failure to an appropriate PDFError code.
+func classifyLockUnlockError(err error, op string) *models.PDFError {
+	lower := strings.ToLower(err.Error())
+	if strings.Contains(lower, "password") || strings.Contains(lower, "encrypt") || strings.Contains(lower, "decrypt") {
+		return models.NewPDFError(
+			models.ErrCodePasswordRequired,
+			fmt.Sprintf("failed to %s PDF: %v", op, err),
+			err,
+		)
+	}
+	return models.NewPDFError(models.ErrCodeUnknown, fmt.Sprintf("failed to %s PDF: %v", op, err), err)
 }
 
 // removeIfExists removes a file if it exists, returning an error only if removal fails

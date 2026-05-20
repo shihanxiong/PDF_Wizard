@@ -5,6 +5,7 @@ import FolderIcon from '@mui/icons-material/Folder';
 import { SelectedPDF } from '../types';
 import { formatDate, formatFileSize } from '../utils/formatters';
 import { useI18n } from '../utils/i18n';
+import { isPDFError, PDFErrorCode } from '../utils/pdfErrors';
 import { models } from '../../wailsjs/go/models';
 import { GetFileMetadata, GetPDFMetadata, LockPDF, SelectOutputDirectory, SelectPDFFile, UnlockPDF } from '../../wailsjs/go/main/App';
 import { NoPDFSelected } from './NoPDFSelected';
@@ -40,11 +41,6 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
     setOutputFilename(defaultFilename);
   }, [defaultFilename]);
 
-  const isPasswordProtectedReadError = (message: string) => {
-    const m = message.toLowerCase();
-    return m.includes('password') || m.includes('encrypt');
-  };
-
   /** Try opening the PDF without a password: encrypted → unlock mode; readable → lock mode. */
   const loadPDF = useCallback(async (path: string) => {
     setPassword('');
@@ -59,9 +55,13 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
         totalPages: metadata.totalPages,
       });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (!isPasswordProtectedReadError(message)) {
-        throw err;
+      if (!isPDFError(err, PDFErrorCode.PASSWORD_REQUIRED)) {
+        // Legacy fallback: if the error is not a structured PDFError,
+        // check for password/encrypt substrings for backward compatibility.
+        const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
+        if (!msg.includes('password') && !msg.includes('encrypt')) {
+          throw err;
+        }
       }
       setMode('unlock');
       const metadata = await GetFileMetadata(path);

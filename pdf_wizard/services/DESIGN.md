@@ -385,9 +385,10 @@ All service methods follow consistent error handling patterns:
 
 1. **Validation First**: Validate all inputs before processing
 2. **Descriptive Errors**: Return clear, actionable error messages
-3. **Context Wrapping**: Wrap underlying errors with context using `fmt.Errorf()` and `%w` verb
-4. **Error Propagation**: Return errors immediately when validation fails
-5. **Resource Cleanup**: Use `defer` for cleanup operations (e.g., temporary file removal)
+3. **Structured Error Codes**: pdfcpu failures are classified into `models.PDFError` with stable codes (`FONT_ENCODING`, `PASSWORD_REQUIRED`, `FILE_CORRUPTED`, `UNKNOWN`) via `classifyMergeError`, `classifyLockUnlockError`, and `classifyReadError` helpers. The `PDFError.Error()` returns JSON so the frontend can branch on codes instead of parsing messages
+4. **Context Wrapping**: Wrap underlying errors with context using `fmt.Errorf()` and `%w` verb (for non-classified errors)
+5. **Error Propagation**: Return errors immediately when validation fails
+6. **Resource Cleanup**: Use `defer` for cleanup operations (e.g., temporary file removal)
 
 ## Service Initialization
 

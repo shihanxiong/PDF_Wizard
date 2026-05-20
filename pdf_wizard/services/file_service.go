@@ -133,9 +133,18 @@ func (s *FileService) GetPDFPageCount(path string) (int, error) {
 func (s *FileService) getPDFPageCountForPath(path string) (int, error) {
 	ctx, err := api.ReadContextFile(path)
 	if err != nil {
-		return 0, fmt.Errorf("failed to read PDF: %w", err)
+		return 0, classifyReadError(err)
 	}
 	return ctx.PageCount, nil
+}
+
+// classifyReadError maps a pdfcpu read failure to an appropriate PDFError code.
+func classifyReadError(err error) *models.PDFError {
+	lower := strings.ToLower(err.Error())
+	if strings.Contains(lower, "password") || strings.Contains(lower, "encrypt") {
+		return models.NewPDFError(models.ErrCodePasswordRequired, fmt.Sprintf("failed to read PDF: %v", err), err)
+	}
+	return models.NewPDFError(models.ErrCodeFileCorrupted, fmt.Sprintf("failed to read PDF: %v", err), err)
 }
 
 // GetPDFMetadata retrieves PDF file metadata including page count
