@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -541,5 +542,97 @@ func TestPDFService_UnlockPDF_WrongPassword(t *testing.T) {
 	err := service.UnlockPDF(lockedPath, "wrong-password", testDir, "should_fail")
 	if err == nil {
 		t.Fatal("expected UnlockPDF to fail with wrong password")
+	}
+}
+
+func TestPDFService_ListAndFillPDFForm(t *testing.T) {
+	fileService := NewFileService(context.Background())
+	service := NewPDFService(fileService)
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	input := filepath.Join(testDir, "form_input.pdf")
+	createSampleFormPDF(t, input)
+
+	fields, err := service.ListPDFFormFields(input)
+	if err != nil {
+		t.Fatalf("ListPDFFormFields failed: %v", err)
+	}
+	if len(fields) == 0 {
+		t.Fatal("expected at least one form field")
+	}
+
+	var targetID string
+	for _, field := range fields {
+		if !field.Locked && field.Type == "text" {
+			targetID = field.ID
+			break
+		}
+	}
+	if targetID == "" {
+		t.Fatal("expected at least one editable text field")
+	}
+
+	if err := service.FillPDFForm(input, []models.PDFFormFieldValue{{ID: targetID, Value: "Updated By Test"}}, testDir, "filled"); err != nil {
+		t.Fatalf("FillPDFForm failed: %v", err)
+	}
+
+	out := filepath.Join(testDir, "filled.pdf")
+	if _, err := os.Stat(out); err != nil {
+		t.Fatalf("expected filled output file: %v", err)
+	}
+
+	updatedFields, err := service.ListPDFFormFields(out)
+	if err != nil {
+		t.Fatalf("ListPDFFormFields output failed: %v", err)
+	}
+	foundUpdated := false
+	for _, field := range updatedFields {
+		if field.ID == targetID && field.Value == "Updated By Test" {
+			foundUpdated = true
+			break
+		}
+	}
+	if !foundUpdated {
+		t.Fatalf("expected field %s to be updated", targetID)
+	}
+}
+
+func TestPDFService_FillPDFForm_Validation(t *testing.T) {
+	fileService := NewFileService(context.Background())
+	service := NewPDFService(fileService)
+
+	testDir := setupTestDir(t)
+	defer cleanupTestDir(t, testDir)
+
+	plain := filepath.Join(testDir, "plain.pdf")
+	if err := createTestPDF(plain); err != nil {
+		t.Fatalf("create plain PDF: %v", err)
+	}
+
+	if _, err := service.ListPDFFormFields(plain); err == nil {
+		t.Fatal("expected ListPDFFormFields to fail for non-form PDF")
+	}
+
+	err := service.FillPDFForm(plain, nil, testDir, "no_values")
+	if err == nil {
+		t.Fatal("expected FillPDFForm to fail with no values")
+	}
+}
+
+func createSampleFormPDF(t *testing.T, outPath string) {
+	t.Helper()
+
+	cmd := exec.Command("go", "list", "-m", "-f", "{{.Dir}}", "github.com/pdfcpu/pdfcpu")
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("resolve pdfcpu module dir: %v", err)
+	}
+	moduleDir := strings.TrimSpace(string(out))
+	inJSON := filepath.Join(moduleDir, "pkg", "testdata", "json", "form", "textfieldGroupSingle.json")
+
+	if err := api.CreateFile("", inJSON, outPath, model.NewDefaultConfiguration()); err != nil {
+		t.Fatalf("create sample form PDF: %v", err)
 	}
 }

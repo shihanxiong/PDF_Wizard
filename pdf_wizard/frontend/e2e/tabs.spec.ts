@@ -15,7 +15,7 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     await setupTestPage(page);
   });
 
-  test('should display all main tabs including PDF to Text and Lock / Unlock', async ({ page }) => {
+  test('should display all main tabs including PDF to Text, Lock / Unlock, and Edit PDF', async ({ page }) => {
     await expect(page.getByRole('tab', { name: 'Merge PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Split PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Rotate PDF' })).toBeVisible();
@@ -23,6 +23,7 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     await expect(page.getByRole('tab', { name: 'Images to PDF' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'PDF to Text' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Lock / Unlock PDF' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Edit PDF' })).toBeVisible();
 
     // Verify Merge tab is selected by default (active)
     const mergeTab = page.getByRole('tab', { name: 'Merge PDF' });
@@ -168,6 +169,7 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     await expect(page.getByRole('tab', { name: 'Images to PDF' })).toHaveAttribute('aria-selected', 'false');
     await expect(page.getByRole('tab', { name: 'PDF to Text' })).toHaveAttribute('aria-selected', 'false');
     await expect(page.getByRole('tab', { name: 'Lock / Unlock PDF' })).toHaveAttribute('aria-selected', 'false');
+    await expect(page.getByRole('tab', { name: 'Edit PDF' })).toHaveAttribute('aria-selected', 'false');
 
     // Get the active tab panel and wait for it to be visible
     const watermarkTabPanel = page.locator('#pdf-wizard-tabpanel-watermark');
@@ -245,5 +247,17 @@ test.describe('PDF Wizard - Tab Navigation', () => {
     await expect(watermarkTabPanel.getByText('Font Family').first()).toBeVisible();
     await expect(watermarkTabPanel.getByText('All Pages').first()).toBeVisible();
     await expect(watermarkTabPanel.getByText('Specific Pages').first()).toBeVisible();
+  });
+
+  test('should load form fields and submit filled form', async ({ page }) => {
+    await page.getByRole('tab', { name: 'Edit PDF' }).click();
+    const panel = page.locator('#pdf-wizard-tabpanel-formFill');
+    await expect(panel).toBeVisible();
+    await panel.getByRole('button', { name: 'Select PDF File' }).click();
+    await expect(panel.getByLabel('First Name')).toBeVisible();
+    await panel.getByLabel('First Name').fill('Alice');
+    await panel.getByRole('button', { name: 'Select Output Directory' }).click();
+    await panel.getByRole('button', { name: 'Save Filled PDF' }).click();
+    await expect(panel.getByText('Form saved successfully! Output:')).toBeVisible();
   });
 });

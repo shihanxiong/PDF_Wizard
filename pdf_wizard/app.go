@@ -215,6 +215,16 @@ func (a *App) ExtractPDFText(path string) (string, error) {
 	return a.pdfService.ExtractPDFText(path)
 }
 
+// ListPDFFormFields returns editable AcroForm fields from a PDF.
+func (a *App) ListPDFFormFields(path string) ([]models.PDFFormField, error) {
+	return a.pdfService.ListPDFFormFields(path)
+}
+
+// FillPDFForm applies field values to a PDF form and writes a new output file.
+func (a *App) FillPDFForm(inputPath string, fieldValues []models.PDFFormFieldValue, outputDirectory string, outputFilename string) error {
+	return a.pdfService.FillPDFForm(inputPath, fieldValues, outputDirectory, outputFilename)
+}
+
 // StartImagesPhoneUpload starts an HTTP server on the LAN and returns the upload page URL for QR codes.
 // pageCopy must match the current UI language (typically from useI18n on the Images to PDF tab).
 // Uploaded images are emitted to the frontend as event "images-phone-upload" with a JSON array of file paths.

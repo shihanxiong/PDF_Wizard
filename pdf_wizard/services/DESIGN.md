@@ -7,7 +7,7 @@ This document describes the backend service layer architecture and implementatio
 The backend uses a service-based architecture with clear separation of concerns:
 
 - **FileService** (`file_service.go`): Handles file selection, directory selection, and file metadata operations
-- **PDFService** (`pdf_service.go`): Handles all PDF processing operations (merge, split, rotate, watermark, images→PDF, lock, unlock)
+- **PDFService** (`pdf_service.go`, `pdf_form_fill.go`): Handles all PDF processing operations (merge, split, rotate, watermark, images→PDF, lock, unlock, form listing/filling)
 - **HEIC helpers** (`heic_jpeg.go`): Decode HEIC/HEIF to temporary JPEG for `api.ImportImagesFile`
 - **LAN phone upload** (`phone_upload.go`, `phone_upload_logo.go`): Optional HTTP server for sending images from a phone on the same LAN (see [§ LAN phone image upload](#lan-phone-image-upload))
 
@@ -127,6 +127,8 @@ PDFService handles all PDF processing operations:
 - Building one PDF from ordered images (`ImagesToPDF`)
 - Locking PDFs with password-based encryption (`LockPDF`)
 - Unlocking password-protected PDFs (`UnlockPDF`)
+- Listing AcroForm fields (`ListPDFFormFields`)
+- Filling AcroForm values into a new output PDF (`FillPDFForm`)
 - Extracting plain text for the PDF-to-Text tab (`ExtractPDFText` in `pdf_text_extract.go`; uses `github.com/ledongthuc/pdf`; **password-protected PDFs are not supported**)
 
 ### Structure
@@ -258,6 +260,24 @@ Creates one PDF with one page per image, preserving order.
 - `api.ImportImagesFile` with `pdfcpu.DefaultImportConfig()` and `model.NewDefaultConfiguration()`
 - Removes existing output file before write; verifies output exists after import
 
+#### `ListPDFFormFields(inputPath string) ([]models.PDFFormField, error)`
+
+Returns editable AcroForm fields for a PDF.
+
+- Validates the PDF path, reads fields via `api.FormFields`
+- Maps pdfcpu field types to frontend-friendly types (`text`, `checkbox`, `radio`, `combo`, `list`, `date`)
+- Returns field id/name/current value/lock state/options
+
+#### `FillPDFForm(inputPath string, fieldValues []models.PDFFormFieldValue, outputDirectory string, outputFilename string) error`
+
+Fills AcroForm values and writes a new output PDF.
+
+- Validates input/output and non-empty field values
+- Exports the form payload via `api.ExportForm`
+- Applies submitted values by field id for supported field types
+- Writes a temporary JSON payload and calls `api.FillFormFile`
+- Produces `outputDirectory/outputFilename.pdf` (remove-existing semantics match other operations)
+
 ### ExtractPDFText (PDF to Text tab)
 
 #### `ExtractPDFText(path string) (string, error)`
@@ -356,6 +376,7 @@ App-wide Go and npm dependencies are summarized in [SYSTEM_DESIGN.md § Technica
   - `MergeCreateFile()` - Merge multiple PDFs
   - `ReadValidateAndOptimize()`, `PagesForPageSelection()`, `WriteContextFile()`, `ValidateContext()` — split uses one optimized read then per-output writes (#57)
   - `ImportImagesFile()` — images→PDF (one page per image)
+  - `FormFields()`, `ExportForm()`, `FillFormFile()` — form listing/filling
 
 - `github.com/pdfcpu/pdfcpu/pkg/pdfcpu` - Page extraction (`ExtractPages` for split segments)
 

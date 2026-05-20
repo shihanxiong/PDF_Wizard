@@ -22,9 +22,11 @@
     "@mui/icons-material": "^7.3.4",
     "@mui/material": "^7.3.4",
     "@mui/styled-engine-sc": "^7.3.3",
+    "pdfjs-dist": "^5.4.296",
     "qrcode": "^1.5.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-pdf": "^10.4.1",
     "styled-components": "^6.1.19"
   },
   "devDependencies": {

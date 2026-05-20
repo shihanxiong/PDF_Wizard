@@ -11,7 +11,14 @@ import { MAIN_TAB_IDS, type MainTabId } from './utils/constants';
 
 const TAB_LABEL_KEY: Record<
   MainTabId,
-  'mergeTab' | 'splitTab' | 'rotateTab' | 'watermarkTab' | 'imagesToPdfTab' | 'pdfToTextTab' | 'lockUnlockTab'
+  | 'mergeTab'
+  | 'splitTab'
+  | 'rotateTab'
+  | 'watermarkTab'
+  | 'imagesToPdfTab'
+  | 'pdfToTextTab'
+  | 'lockUnlockTab'
+  | 'formFillTab'
 > = {
   merge: 'mergeTab',
   split: 'splitTab',
@@ -20,6 +27,7 @@ const TAB_LABEL_KEY: Record<
   imagesToPdf: 'imagesToPdfTab',
   pdfToText: 'pdfToTextTab',
   lockUnlock: 'lockUnlockTab',
+  formFill: 'formFillTab',
 };
 
 interface TabPanelProps {
@@ -64,6 +72,9 @@ const LockUnlockTab = lazy(() =>
 const PdfToTextTab = lazy(() =>
   import('./components/PdfToTextTab').then((module) => ({ default: module.PdfToTextTab })),
 );
+const EditPdfTab = lazy(() =>
+  import('./components/EditPdfTab').then((module) => ({ default: module.EditPdfTab })),
+);
 
 const TAB_COMPONENT: Record<MainTabId, React.LazyExoticComponent<React.ComponentType<TabComponentProps>>> = {
   merge: MergeTab,
@@ -73,6 +84,7 @@ const TAB_COMPONENT: Record<MainTabId, React.LazyExoticComponent<React.Component
   imagesToPdf: ImagesToPdfTab,
   pdfToText: PdfToTextTab,
   lockUnlock: LockUnlockTab,
+  formFill: EditPdfTab,
 };
 
 export const App = () => {

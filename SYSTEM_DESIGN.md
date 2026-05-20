@@ -103,7 +103,7 @@ pdf_wizard/
 
 ### Tab-Based Layout
 
-The application features a tabbed interface with seven main tabs:
+The application features a tabbed interface with eight main tabs:
 
 1. **Merge PDF Tab** - For combining multiple PDF files
 2. **Split PDF Tab** - For dividing a PDF into multiple files
@@ -112,12 +112,13 @@ The application features a tabbed interface with seven main tabs:
 5. **Images to PDF Tab** - For building one PDF from multiple ordered images (including HEIC/HEIF)
 6. **PDF to Text Tab** - For extracting plain text from a PDF into an editable area (with copy); **unencrypted PDFs only**; scanned/image-only PDFs may return little or no text (no OCR in this release)
 7. **Lock / Unlock PDF Tab** - For encrypting PDFs with a password or decrypting password-protected PDFs
+8. **Edit PDF Tab** - For loading AcroForm fields, editing supported values, and exporting a filled PDF
 
 ### Tab Component Structure
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ [Merge PDF] [Split PDF] [Rotate PDF] [Watermark PDF] [Images to PDF] [PDF to Text] [Lock/Unlock] │
+│ [Merge PDF] [Split PDF] [Rotate PDF] [Watermark PDF] [Images to PDF] [PDF to Text] [Lock/Unlock] [Edit PDF] │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  Tab Content Area                                                            │
@@ -130,7 +131,7 @@ The application features a tabbed interface with seven main tabs:
 Drag and drop file handling is implemented at the App level to work anywhere on the window:
 
 - A single `OnFileDrop` handler is registered at the App component level with `useDropTarget=false` to work anywhere on the window
-- The handler routes dropped files using **stable tab ids** (`merge`, `split`, `rotate`, `watermark`, `imagesToPdf`, `pdfToText`, `lockUnlock`) defined by `MAIN_TAB_IDS` in `utils/constants.ts`. `activeTabIdRef` holds the current tab id; each tab registers a handler in `dropHandlersRef`, a `Partial<Record<MainTabId, ...>>` keyed by that id (not by numeric tab index)
+- The handler routes dropped files using **stable tab ids** (`merge`, `split`, `rotate`, `watermark`, `imagesToPdf`, `pdfToText`, `lockUnlock`, `formFill`) defined by `MAIN_TAB_IDS` in `utils/constants.ts`. `activeTabIdRef` holds the current tab id; each tab registers a handler in `dropHandlersRef`, a `Partial<Record<MainTabId, ...>>` keyed by that id (not by numeric tab index)
 - Each tab component registers its own drop handler via a callback prop
 - Cross-platform compatibility:
   - **Windows**: `DisableWebViewDrop: true` in Wails config prevents WebView2 from intercepting drag-and-drop events
@@ -148,7 +149,7 @@ Menu construction, Wails `options.App`, the JSON config path, and `GetLanguage` 
 
 ## Component Design
 
-The application consists of seven main tab components:
+The application consists of eight main tab components:
 
 1. **MergeTab** - Combines multiple PDF files into one
 2. **SplitTab** - Divides a PDF into multiple files
@@ -157,6 +158,7 @@ The application consists of seven main tab components:
 5. **ImagesToPdfTab** - Builds one PDF from ordered images; composes `useImageDrop` for window-level drops (see [components/DESIGN.md](pdf_wizard/frontend/src/components/DESIGN.md))
 6. **PdfToTextTab** - Extracts text from one PDF via `ExtractPDFText`; copy/select-all on the result (unencrypted PDFs only)
 7. **LockUnlockTab** - Encrypts PDFs with passwords and decrypts protected PDFs to a new output file
+8. **EditPdfTab** - Lists AcroForm fields and saves a filled output PDF via `FillPDFForm` (shown in UI as **Edit PDF**)
 
 Each component handles its own state, file selection, validation, and processing.
 
@@ -167,7 +169,7 @@ For detailed component design and implementation, see [pdf_wizard/frontend/src/c
 The backend uses a service-based architecture with clear separation of concerns:
 
 - **FileService** - Handles file selection, directory selection, and file metadata operations (including `SelectImageFiles` for the images tab)
-- **PDFService** - Handles all PDF processing operations (merge, split, rotate, watermark, images→PDF via `ImagesToPDF`, plain-text extraction via `ExtractPDFText`, plus `LockPDF` and `UnlockPDF`)
+- **PDFService** - Handles all PDF processing operations (merge, split, rotate, watermark, images→PDF via `ImagesToPDF`, plain-text extraction via `ExtractPDFText`, plus `LockPDF`, `UnlockPDF`, `ListPDFFormFields`, and `FillPDFForm`)
 - **LAN phone upload** (`services/phone_upload.go`) - Optional HTTP server on the LAN for the Images to PDF tab: token-scoped URL `/u/{token}/`, multipart uploads, `PrimaryLANIPv4` for the QR base URL; not a separate service struct, but documented in [pdf_wizard/services/DESIGN.md](pdf_wizard/services/DESIGN.md)
 - **Validation utilities** (`validation.go`) - File and directory validation functions
   - `validatePDFFile()` - Validates file exists, is readable, and has PDF extension
@@ -251,6 +253,7 @@ For detailed application-level design, see [pdf_wizard/DESIGN.md](pdf_wizard/DES
 - Material-UI v7
 - TypeScript
 - Wails runtime bindings
+- `react-pdf` + `pdfjs-dist` - In-tab PDF rendering for the Edit PDF workspace
 - `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities` - For drag-and-drop file reordering (replaced deprecated react-beautiful-dnd)
 - `qrcode` - QR code generation for the LAN phone upload URL (Images to PDF tab)
 - Custom i18n system (`utils/i18n/`) - For internationalization (per-language modules, `catalog.ts` merge, React `I18nProvider` / `useI18n` for 12 languages)

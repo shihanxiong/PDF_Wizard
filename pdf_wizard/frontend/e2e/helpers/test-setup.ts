@@ -133,6 +133,20 @@ export function setupWailsMocks() {
         SplitPDF: async () => {},
         RotatePDF: async () => {},
         ApplyWatermark: async () => {},
+        ListPDFFormFields: async (_path: string) => {
+          return [
+            { id: 'firstName', name: 'First Name', type: 'text', value: 'Jane', locked: false, options: [] },
+            { id: 'newsletter', name: 'Subscribe', type: 'checkbox', value: 'false', locked: false, options: [] },
+          ];
+        },
+        FillPDFForm: async (path: string, fieldValues: Array<{ id: string; value: string }>, outputDirectory: string, outputFilename: string) => {
+          (window as any).__formFillLastCall = {
+            path,
+            fieldValues,
+            outputDirectory,
+            outputFilename,
+          };
+        },
         ImagesToPDF: async (paths: string[], outputDirectory: string, outputFilename: string) => {
           (window as any).__imagesToPdfLastCall = {
             paths: [...paths],

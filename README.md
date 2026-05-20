@@ -4,7 +4,7 @@
   <img src="./assets/img/app_logo_raw.png" width="350" height="350" />
 </p>
 
-A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backend performance with a React/TypeScript frontend. PDF Wizard provides seven main features:
+A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backend performance with a React/TypeScript frontend. PDF Wizard provides eight main features:
 
 - **Merge PDFs**: Combine multiple PDF files into a single document
 - **Split PDFs**: Divide a PDF into multiple files based on page ranges
@@ -13,6 +13,7 @@ A modern PDF toolkit built with [Wails v2](https://wails.io), combining Go backe
 - **Images to PDF**: Build one PDF from multiple images (JPEG, PNG, WebP, TIFF, GIF, BMP, HEIC/HEIF) with drag-and-drop reorder; **receive from phone** on the same Wi‑Fi via a LAN upload page and QR code (localized HTML, session limits, automatic stop after upload). HEIC/HEIF are converted to temporary JPEGs before import for reliable, faster processing
 - **PDF to Text**: Extract plain text from a PDF into an editable area, with copy and select-all; unencrypted PDFs only (unlock first if protected); image-only or scanned pages may return little or no text (no OCR)
 - **Lock / Unlock PDF**: Encrypt a PDF with a password or decrypt a protected PDF to a new file
+- **Edit PDF**: Load AcroForm fields from a PDF, edit supported values, and export a filled output PDF
 
 **Features:**
 

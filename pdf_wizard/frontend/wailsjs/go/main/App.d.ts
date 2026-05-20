@@ -8,6 +8,8 @@ export function EmitSettingsEvent():Promise<void>;
 
 export function ExtractPDFText(arg1:string):Promise<string>;
 
+export function FillPDFForm(arg1:string,arg2:Array<models.PDFFormFieldValue>,arg3:string,arg4:string):Promise<void>;
+
 export function GetFileMetadata(arg1:string):Promise<models.PDFMetadata>;
 
 export function GetLanguage():Promise<string>;
@@ -17,6 +19,8 @@ export function GetPDFMetadata(arg1:string):Promise<models.PDFMetadata>;
 export function GetPDFPageCount(arg1:string):Promise<number>;
 
 export function ImagesToPDF(arg1:Array<string>,arg2:string,arg3:string):Promise<void>;
+
+export function ListPDFFormFields(arg1:string):Promise<Array<models.PDFFormField>>;
 
 export function LockPDF(arg1:string,arg2:string,arg3:string,arg4:string):Promise<void>;
 
