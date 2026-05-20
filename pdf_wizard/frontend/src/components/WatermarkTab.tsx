@@ -8,20 +8,13 @@ import {
   CardContent,
   Alert,
   CircularProgress,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  InputAdornment,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormLabel,
-  Paper,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import FolderIcon from '@mui/icons-material/Folder';
 import { NoPDFSelected } from './NoPDFSelected';
+import { WatermarkTextConfig } from './watermark/WatermarkTextConfig';
+import { WatermarkLayoutConfig } from './watermark/WatermarkLayoutConfig';
+import { WatermarkPageRange, validatePageRange } from './watermark/WatermarkPageRange';
 import { SelectPDFFile, GetPDFMetadata, SelectOutputDirectory, ApplyWatermark } from '../../wailsjs/go/main/App';
 import { SelectedPDF } from '../types';
 import { formatFileSize, formatDate } from '../utils/formatters';
@@ -84,7 +77,6 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
     [t]
   );
 
-  // Register drag and drop handler with App component
   useEffect(() => {
     onFileDrop(handleDroppedPDF);
   }, [onFileDrop, handleDroppedPDF]);
@@ -159,7 +151,6 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
 
       await ApplyWatermark(selectedPDF.path, watermark, outputDirectory, outputFilename.trim());
       setSuccess(`${t('watermarkAppliedSuccessfully')} ${outputDirectory}/${outputFilename.trim()}.pdf`);
-      // Clear selected PDF and reset filename after successful watermark
       setSelectedPDF(null);
       setOutputFilename('watermarked');
     } catch (err: unknown) {
@@ -168,6 +159,36 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
       setError(`${t('watermarkFailed')} ${errorMessage}`);
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleFontSizeInputChange = (value: string) => {
+    setFontSizeInput(value);
+    const numValue = parseInt(value);
+    if (!isNaN(numValue) && numValue >= 12 && numValue <= 72) {
+      setFontSize(numValue);
+    }
+  };
+
+  const handleFontSizeBlur = () => {
+    const numValue = parseInt(fontSizeInput);
+    if (isNaN(numValue) || numValue < 12 || numValue > 72) {
+      setFontSizeInput(fontSize.toString());
+    }
+  };
+
+  const handleOpacityInputChange = (value: string) => {
+    setOpacityInput(value);
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
+      setOpacity(numValue / 100);
+    }
+  };
+
+  const handleOpacityBlur = () => {
+    const numValue = parseFloat(opacityInput);
+    if (isNaN(numValue) || numValue < 0 || numValue > 100) {
+      setOpacityInput(Math.round(opacity * 100).toString());
     }
   };
 
@@ -180,60 +201,6 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
     const numValue = parseFloat(opacityInput);
     return !isNaN(numValue) && numValue >= 0 && numValue <= 100;
   })();
-
-  // Validate page range format and page numbers
-  const validatePageRange = (range: string, totalPages: number): { isValid: boolean; error: string } => {
-    if (range.trim() === '') {
-      return { isValid: false, error: 'Page range cannot be empty' };
-    }
-
-    const parts = range.split(',');
-    for (const part of parts) {
-      const trimmed = part.trim();
-      if (trimmed === '') {
-        continue;
-      }
-
-      // Check if it's a range (contains "-")
-      if (trimmed.includes('-')) {
-        const rangeParts = trimmed.split('-');
-        if (rangeParts.length !== 2) {
-          return { isValid: false, error: `Invalid page range format: ${trimmed}` };
-        }
-
-        const startStr = rangeParts[0].trim();
-        const endStr = rangeParts[1].trim();
-
-        if (startStr === '') {
-          return { isValid: false, error: 'Start page cannot be empty' };
-        }
-
-        const start = parseInt(startStr, 10);
-        if (isNaN(start) || start < 1 || start > totalPages) {
-          return { isValid: false, error: `Start page ${startStr} is out of range (1-${totalPages})` };
-        }
-
-        if (endStr !== '') {
-          const end = parseInt(endStr, 10);
-          if (isNaN(end) || end < 1 || end > totalPages) {
-            return { isValid: false, error: `End page ${endStr} is out of range (1-${totalPages})` };
-          }
-          if (start > end) {
-            return { isValid: false, error: `Start page (${start}) must be less than or equal to end page (${end})` };
-          }
-        }
-        // If endStr is empty, it's an open-ended range (e.g., "5-"), which is valid
-      } else {
-        // Single page number
-        const page = parseInt(trimmed, 10);
-        if (isNaN(page) || page < 1 || page > totalPages) {
-          return { isValid: false, error: `Page ${trimmed} is out of range (1-${totalPages})` };
-        }
-      }
-    }
-
-    return { isValid: true, error: '' };
-  };
 
   const pageRangeValidation =
     selectedPDF && pageRangeType === 'specific'
@@ -251,31 +218,6 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
     outputFilename.trim().length > 0 &&
     isPageRangeValid &&
     !isProcessing;
-
-  const positionOptions = [
-    { value: 'center', label: t('positionCenter') },
-    { value: 'top-left', label: t('positionTopLeft') },
-    { value: 'top-center', label: t('positionTopCenter') },
-    { value: 'top-right', label: t('positionTopRight') },
-    { value: 'middle-left', label: t('positionMiddleLeft') },
-    { value: 'middle-right', label: t('positionMiddleRight') },
-    { value: 'bottom-left', label: t('positionBottomLeft') },
-    { value: 'bottom-center', label: t('positionBottomCenter') },
-    { value: 'bottom-right', label: t('positionBottomRight') },
-  ];
-
-  const fontFamilyOptions = [
-    'Helvetica',
-    'Helvetica-Bold',
-    'Helvetica-Oblique',
-    'Times-Roman',
-    'Times-Bold',
-    'Times-Italic',
-    'Courier',
-    'Courier-Bold',
-    'Courier-Oblique',
-    'Symbol',
-  ];
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 3, overflow: 'hidden' }}>
@@ -331,264 +273,39 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {/* Text Input */}
-                <TextField
-                  label={t('watermarkText')}
-                  value={watermarkText}
-                  onChange={(e) => setWatermarkText(e.target.value)}
-                  fullWidth
-                  size="small"
-                  disabled={isProcessing}
+                <WatermarkTextConfig
+                  watermarkText={watermarkText}
+                  onWatermarkTextChange={setWatermarkText}
+                  fontSizeInput={fontSizeInput}
+                  onFontSizeInputChange={handleFontSizeInputChange}
+                  fontSize={fontSize}
+                  onFontSizeBlur={handleFontSizeBlur}
+                  fontColor={fontColor}
+                  onFontColorChange={setFontColor}
+                  opacityInput={opacityInput}
+                  onOpacityInputChange={handleOpacityInputChange}
+                  onOpacityBlur={handleOpacityBlur}
+                  isProcessing={isProcessing}
                 />
 
-                {/* Font Size, Font Color, and Opacity in a row */}
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                  {/* Font Size */}
-                  <TextField
-                    label={t('fontSize')}
-                    type="number"
-                    value={fontSizeInput}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setFontSizeInput(value);
-                      const numValue = parseInt(value);
-                      if (!isNaN(numValue) && numValue >= 12 && numValue <= 72) {
-                        setFontSize(numValue);
-                      }
-                    }}
-                    onBlur={(e) => {
-                      const numValue = parseInt(e.target.value);
-                      if (isNaN(numValue) || numValue < 12 || numValue > 72) {
-                        // Reset to last valid value if invalid
-                        setFontSizeInput(fontSize.toString());
-                      }
-                    }}
-                    slotProps={{ htmlInput: { min: 12, max: 72 } }}
-                    size="small"
-                    sx={{ flex: 1, minWidth: 150 }}
-                    disabled={isProcessing}
-                    error={(() => {
-                      const numValue = parseInt(fontSizeInput);
-                      return fontSizeInput !== '' && (isNaN(numValue) || numValue < 12 || numValue > 72);
-                    })()}
-                    helperText={(() => {
-                      const numValue = parseInt(fontSizeInput);
-                      if (fontSizeInput === '') return '12-72 pt';
-                      if (isNaN(numValue)) return 'Please enter a valid number';
-                      if (numValue < 12) return 'Font size must be at least 12 pt';
-                      if (numValue > 72) return 'Font size must be at most 72 pt';
-                      return '12-72 pt';
-                    })()}
-                  />
+                <WatermarkLayoutConfig
+                  rotation={rotation}
+                  onRotationChange={setRotation}
+                  position={position}
+                  onPositionChange={setPosition}
+                  fontFamily={fontFamily}
+                  onFontFamilyChange={setFontFamily}
+                  isProcessing={isProcessing}
+                />
 
-                  {/* Font Color */}
-                  <Box sx={{ flex: 1, minWidth: 200, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography sx={{ minWidth: 80, fontSize: '0.875rem' }}>{t('fontColor')}:</Typography>
-                    <input
-                      type="color"
-                      value={fontColor}
-                      onChange={(e) => setFontColor(e.target.value)}
-                      disabled={isProcessing}
-                      style={{ width: '50px', height: '40px', cursor: isProcessing ? 'not-allowed' : 'pointer' }}
-                    />
-                    <TextField
-                      value={fontColor}
-                      onChange={(e) => setFontColor(e.target.value)}
-                      size="small"
-                      sx={{ flex: 1, minWidth: 100 }}
-                      disabled={isProcessing}
-                      placeholder="#808080"
-                    />
-                  </Box>
-
-                  {/* Opacity */}
-                  <TextField
-                    label={t('opacity')}
-                    type="number"
-                    value={opacityInput}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setOpacityInput(value);
-                      const numValue = parseFloat(value);
-                      if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
-                        setOpacity(numValue / 100);
-                      }
-                    }}
-                    onBlur={(e) => {
-                      const numValue = parseFloat(e.target.value);
-                      if (isNaN(numValue) || numValue < 0 || numValue > 100) {
-                        // Reset to last valid value if invalid
-                        setOpacityInput(Math.round(opacity * 100).toString());
-                      }
-                    }}
-                    slotProps={{
-                      htmlInput: { min: 0, max: 100, step: 1 },
-                      input: {
-                        endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                      },
-                    }}
-                    size="small"
-                    sx={{ flex: 1, minWidth: 150 }}
-                    disabled={isProcessing}
-                    error={(() => {
-                      const numValue = parseFloat(opacityInput);
-                      return opacityInput !== '' && (isNaN(numValue) || numValue < 0 || numValue > 100);
-                    })()}
-                    helperText={(() => {
-                      const numValue = parseFloat(opacityInput);
-                      if (opacityInput === '') return '0-100%';
-                      if (isNaN(numValue)) return 'Please enter a valid number';
-                      if (numValue < 0) return 'Opacity must be at least 0%';
-                      if (numValue > 100) return 'Opacity must be at most 100%';
-                      return '0-100%';
-                    })()}
-                  />
-                </Box>
-
-                {/* Rotation, Position, and Font Family in a row */}
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                  {/* Rotation */}
-                  <FormControl size="small" sx={{ flex: 1, minWidth: 150 }}>
-                    <InputLabel>{t('rotation')}</InputLabel>
-                    <Select
-                      value={rotation}
-                      label={t('rotation')}
-                      onChange={(e) => setRotation(Number(e.target.value))}
-                      disabled={isProcessing}
-                    >
-                      <MenuItem value={0}>0°</MenuItem>
-                      <MenuItem value={45}>45°</MenuItem>
-                      <MenuItem value={90}>90°</MenuItem>
-                      <MenuItem value={-45}>-45°</MenuItem>
-                      <MenuItem value={-90}>-90°</MenuItem>
-                      <MenuItem value={180}>180°</MenuItem>
-                    </Select>
-                  </FormControl>
-
-                  {/* Position */}
-                  <FormControl size="small" sx={{ flex: 1, minWidth: 150 }}>
-                    <InputLabel>{t('position')}</InputLabel>
-                    <Select
-                      value={position}
-                      label={t('position')}
-                      onChange={(e) => setPosition(e.target.value)}
-                      disabled={isProcessing}
-                    >
-                      {positionOptions.map((option) => (
-                        <MenuItem key={option.value} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
-                  {/* Font Family */}
-                  <FormControl size="small" sx={{ flex: 1, minWidth: 150 }}>
-                    <InputLabel>{t('fontFamily')}</InputLabel>
-                    <Select
-                      value={fontFamily}
-                      label={t('fontFamily')}
-                      onChange={(e) => setFontFamily(e.target.value)}
-                      disabled={isProcessing}
-                    >
-                      {fontFamilyOptions.map((font) => {
-                        // Map PDF font names to CSS font families and styles
-                        const getFontStyle = (fontName: string) => {
-                          if (fontName === 'Helvetica' || fontName === 'Times-Roman' || fontName === 'Courier') {
-                            return {
-                              fontFamily:
-                                fontName === 'Helvetica'
-                                  ? 'Helvetica, Arial, sans-serif'
-                                  : fontName === 'Times-Roman'
-                                  ? 'Times, "Times New Roman", serif'
-                                  : 'Courier, "Courier New", monospace',
-                            };
-                          } else if (fontName.includes('Bold') && fontName.includes('Oblique')) {
-                            return {
-                              fontFamily: fontName.startsWith('Helvetica')
-                                ? 'Helvetica, Arial, sans-serif'
-                                : fontName.startsWith('Times')
-                                ? 'Times, "Times New Roman", serif'
-                                : 'Courier, "Courier New", monospace',
-                              fontWeight: 'bold',
-                              fontStyle: 'italic',
-                            };
-                          } else if (fontName.includes('Bold')) {
-                            return {
-                              fontFamily: fontName.startsWith('Helvetica')
-                                ? 'Helvetica, Arial, sans-serif'
-                                : fontName.startsWith('Times')
-                                ? 'Times, "Times New Roman", serif'
-                                : 'Courier, "Courier New", monospace',
-                              fontWeight: 'bold',
-                            };
-                          } else if (fontName.includes('Oblique') || fontName.includes('Italic')) {
-                            return {
-                              fontFamily: fontName.startsWith('Helvetica')
-                                ? 'Helvetica, Arial, sans-serif'
-                                : fontName.startsWith('Times')
-                                ? 'Times, "Times New Roman", serif'
-                                : 'Courier, "Courier New", monospace',
-                              fontStyle: 'italic',
-                            };
-                          } else if (fontName === 'Symbol') {
-                            return {
-                              fontFamily: 'Symbol, serif',
-                            };
-                          }
-                          return {};
-                        };
-
-                        return (
-                          <MenuItem key={font} value={font} sx={getFontStyle(font)}>
-                            {font}
-                          </MenuItem>
-                        );
-                      })}
-                    </Select>
-                  </FormControl>
-                </Box>
-
-                {/* Page Range Selection */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'nowrap' }}>
-                  <Typography variant="body2" sx={{ flexShrink: 0 }}>
-                    {t('pageRange')}
-                  </Typography>
-
-                  <FormControl component="fieldset" sx={{ flexShrink: 0 }}>
-                    <RadioGroup
-                      row
-                      value={pageRangeType}
-                      onChange={(e) => setPageRangeType(e.target.value as 'all' | 'specific')}
-                    >
-                      <FormControlLabel value="all" control={<Radio />} label={t('allPages')} disabled={isProcessing} />
-                      <FormControlLabel
-                        value="specific"
-                        control={<Radio />}
-                        label={t('specificPages')}
-                        disabled={isProcessing}
-                      />
-                    </RadioGroup>
-                  </FormControl>
-
-                  <Box sx={{ flex: 1, minWidth: 200, visibility: pageRangeType === 'specific' ? 'visible' : 'hidden' }}>
-                    <TextField
-                      label={t('pages')}
-                      value={pageRange}
-                      onChange={(e) => setPageRange(e.target.value)}
-                      placeholder="1,3,5-10"
-                      size="small"
-                      fullWidth
-                      disabled={isProcessing}
-                      error={!pageRangeValidation.isValid}
-                      helperText={
-                        !pageRangeValidation.isValid
-                          ? pageRangeValidation.error
-                          : `e.g., "1,3,5-10" (1-${selectedPDF?.totalPages || '?'})`
-                      }
-                    />
-                  </Box>
-                </Box>
+                <WatermarkPageRange
+                  pageRangeType={pageRangeType}
+                  onPageRangeTypeChange={setPageRangeType}
+                  pageRange={pageRange}
+                  onPageRangeChange={setPageRange}
+                  totalPages={selectedPDF.totalPages}
+                  isProcessing={isProcessing}
+                />
               </Box>
             </CardContent>
           </Card>
