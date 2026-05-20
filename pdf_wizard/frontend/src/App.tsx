@@ -4,9 +4,8 @@ import { Box, Tabs, Tab, AppBar, Toolbar, Typography, CircularProgress } from '@
 import { SettingsDialog } from './components/SettingsDialog';
 import logo from './assets/img/app_logo.png';
 import { OnFileDrop, OnFileDropOff, EventsOn } from '../wailsjs/runtime/runtime';
-import { GetLanguage } from '../wailsjs/go/main/App';
-import { useI18n, type Language } from './utils/i18n';
-import { isValidLanguage } from './utils/i18n/constants';
+import { useI18n } from './utils/i18n';
+import { usePersistedLanguage } from './hooks/usePersistedLanguage';
 import { MAIN_TAB_IDS, type MainTabId } from './utils/constants';
 
 const TAB_LABEL_KEY: Record<
@@ -76,27 +75,13 @@ const TAB_COMPONENT: Record<MainTabId, React.LazyExoticComponent<React.Component
 };
 
 export const App = () => {
-  const { t, setLanguage, language } = useI18n();
+  const { t } = useI18n();
+  const { language } = usePersistedLanguage();
   const [tabId, setTabId] = useState<MainTabId>('merge');
   const [visitedTabs, setVisitedTabs] = useState<Set<MainTabId>>(() => new Set<MainTabId>(['merge']));
   const [settingsOpen, setSettingsOpen] = useState(false);
   const activeTabIdRef = useRef<MainTabId>('merge');
   const dropHandlersRef = useRef<Partial<Record<MainTabId, (paths: string[]) => void>>>({});
-
-  // Load language on startup
-  useEffect(() => {
-    const loadLanguage = async () => {
-      try {
-        const lang = await GetLanguage();
-        // Validate language code and default to 'en' if invalid
-        const language = (isValidLanguage(lang) ? lang : 'en') as Language;
-        setLanguage(language);
-      } catch (err) {
-        console.error('Failed to load language:', err);
-      }
-    };
-    loadLanguage();
-  }, []);
 
   // Listen for settings event from menu
   useEffect(() => {
