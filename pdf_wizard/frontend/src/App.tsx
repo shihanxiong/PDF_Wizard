@@ -6,6 +6,7 @@ import logo from './assets/img/app_logo.png';
 import { OnFileDrop, OnFileDropOff, EventsOn } from '../wailsjs/runtime/runtime';
 import { GetLanguage } from '../wailsjs/go/main/App';
 import { useI18n, type Language } from './utils/i18n';
+import { getErrorMessage } from './utils/errors';
 import { isValidLanguage } from './utils/i18n/constants';
 import { MAIN_TAB_IDS, type MainTabId } from './utils/constants';
 
@@ -91,8 +92,8 @@ export const App = () => {
         // Validate language code and default to 'en' if invalid
         const language = (isValidLanguage(lang) ? lang : 'en') as Language;
         setLanguage(language);
-      } catch (err) {
-        console.error('Failed to load language:', err);
+      } catch (err: unknown) {
+        console.error('Failed to load language:', getErrorMessage(err));
       }
     };
     loadLanguage();
@@ -141,8 +142,8 @@ export const App = () => {
 
     try {
       OnFileDrop(handleFileDrop, false);
-    } catch (error) {
-      console.error('Failed to register OnFileDrop:', error);
+    } catch (err: unknown) {
+      console.error('Failed to register OnFileDrop:', getErrorMessage(err));
     }
 
     return () => {

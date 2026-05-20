@@ -8,6 +8,7 @@ import { formatDate, formatFileSize } from '../utils/formatters';
 import { useI18n } from '../utils/i18n';
 import { models } from '../../wailsjs/go/models';
 import { ExtractPDFText, GetPDFMetadata, SelectPDFFile } from '../../wailsjs/go/main/App';
+import { getErrorMessage } from '../utils/errors';
 import { NoPDFSelected } from './NoPDFSelected';
 
 interface PdfToTextTabProps {
@@ -51,8 +52,7 @@ export const PdfToTextTab = ({ onFileDrop }: PdfToTextTabProps) => {
       try {
         await loadPDF(pdfPaths[0]);
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
-        setError(`${t('pdfToTextFailedToLoadPDF')} ${message}`);
+        setError(`${t('pdfToTextFailedToLoadPDF')} ${getErrorMessage(err)}`);
       }
     },
     [loadPDF, t],
@@ -75,8 +75,7 @@ export const PdfToTextTab = ({ onFileDrop }: PdfToTextTabProps) => {
       }
       await loadPDF(path);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
-      setError(`${t('pdfToTextFailedToSelectPDF')} ${message}`);
+      setError(`${t('pdfToTextFailedToSelectPDF')} ${getErrorMessage(err)}`);
     }
   };
 
@@ -94,8 +93,7 @@ export const PdfToTextTab = ({ onFileDrop }: PdfToTextTabProps) => {
         setInfo(t('pdfToTextEmptyResult'));
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
-      setError(`${t('pdfToTextExtractFailed')} ${message}`);
+      setError(`${t('pdfToTextExtractFailed')} ${getErrorMessage(err)}`);
     } finally {
       setIsExtracting(false);
     }

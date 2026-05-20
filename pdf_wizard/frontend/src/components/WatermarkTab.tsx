@@ -25,6 +25,7 @@ import { NoPDFSelected } from './NoPDFSelected';
 import { SelectPDFFile, GetPDFMetadata, SelectOutputDirectory, ApplyWatermark } from '../../wailsjs/go/main/App';
 import { SelectedPDF } from '../types';
 import { formatFileSize, formatDate } from '../utils/formatters';
+import { getErrorMessage } from '../utils/errors';
 import { models } from '../../wailsjs/go/models';
 import { useI18n } from '../utils/i18n';
 
@@ -76,9 +77,7 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
         });
         setError(null);
       } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error occurred';
-        setError(`${t('failedToLoadPDFWatermark')} ${errorMessage}`);
+        setError(`${t('failedToLoadPDFWatermark')} ${getErrorMessage(err)}`);
       }
     },
     [t]
@@ -109,9 +108,7 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
         setError(null);
       }
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error occurred';
-      setError(`${t('failedToSelectPDFWatermark')} ${errorMessage}`);
+      setError(`${t('failedToSelectPDFWatermark')} ${getErrorMessage(err)}`);
     }
   };
 
@@ -125,9 +122,7 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
         setError(null);
       }
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error occurred';
-      setError(`${t('failedToSelectOutputDirectoryWatermark')} ${errorMessage}`);
+      setError(`${t('failedToSelectOutputDirectoryWatermark')} ${getErrorMessage(err)}`);
     }
   };
 
@@ -163,9 +158,7 @@ export const WatermarkTab = ({ onFileDrop }: WatermarkTabProps) => {
       setSelectedPDF(null);
       setOutputFilename('watermarked');
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : typeof err === 'string' ? err : String(err) || 'Unknown error occurred';
-      setError(`${t('watermarkFailed')} ${errorMessage}`);
+      setError(`${t('watermarkFailed')} ${getErrorMessage(err)}`);
     } finally {
       setIsProcessing(false);
     }
