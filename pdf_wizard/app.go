@@ -89,7 +89,7 @@ func (a *App) beginOperation() ([]func(*services.OperationOptions), context.Canc
 	a.opMu.Unlock()
 
 	progress := func(operation string, current, totalItems int) {
-		if a.ctx == nil {
+		if a.ctx == nil || a.ctx.Value("frontend") == nil {
 			return
 		}
 		var percent float64
