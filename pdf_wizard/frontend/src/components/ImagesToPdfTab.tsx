@@ -37,6 +37,7 @@ import { useI18n } from '../utils/i18n';
 
 /** Must match services.PhoneUploadMaxFilesPerSession in the Go LAN upload handler. */
 const PHONE_UPLOAD_MAX_FILES = 25;
+import { getErrorMessage } from '../utils/errors';
 import { useImageDrop } from '../hooks/useImageDrop';
 import { useOutputDirectory } from '../hooks/useOutputDirectory';
 import { useErrorHandler } from '../hooks/useErrorHandler';
@@ -294,9 +295,7 @@ export const ImagesToPdfTab = ({ onFileDrop }: ImagesToPdfTabProps) => {
       setFiles([]);
       setOutputFilename('from_images');
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : typeof err === 'string' ? err : String(err) || 'Unknown error occurred';
-      setError(`${t('imagesToPdfFailed')} ${errorMessage}`);
+      setError(`${t('imagesToPdfFailed')} ${getErrorMessage(err)}`);
     } finally {
       setIsProcessing(false);
     }

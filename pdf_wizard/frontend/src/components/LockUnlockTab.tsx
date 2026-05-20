@@ -7,6 +7,7 @@ import { formatDate, formatFileSize } from '../utils/formatters';
 import { useI18n } from '../utils/i18n';
 import { models } from '../../wailsjs/go/models';
 import { GetFileMetadata, GetPDFMetadata, LockPDF, SelectOutputDirectory, SelectPDFFile, UnlockPDF } from '../../wailsjs/go/main/App';
+import { getErrorMessage } from '../utils/errors';
 import { NoPDFSelected } from './NoPDFSelected';
 
 interface LockUnlockTabProps {
@@ -59,7 +60,7 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
         totalPages: metadata.totalPages,
       });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
+      const message = getErrorMessage(err);
       if (!isPasswordProtectedReadError(message)) {
         throw err;
       }
@@ -94,8 +95,7 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
       try {
         await loadPDF(pdfPaths[0]);
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
-        setError(`${t('lockUnlockFailedToLoadPDF')} ${message}`);
+        setError(`${t('lockUnlockFailedToLoadPDF')} ${getErrorMessage(err)}`);
       }
     },
     [loadPDF, t]
@@ -118,8 +118,7 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
       }
       await loadPDF(path);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
-      setError(`${t('lockUnlockFailedToSelectPDF')} ${message}`);
+      setError(`${t('lockUnlockFailedToSelectPDF')} ${getErrorMessage(err)}`);
     }
   };
 
@@ -134,8 +133,7 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
       setOutputDirectory(dir);
       setError(null);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
-      setError(`${t('lockUnlockFailedToSelectOutputDirectory')} ${message}`);
+      setError(`${t('lockUnlockFailedToSelectOutputDirectory')} ${getErrorMessage(err)}`);
     }
   };
 
@@ -157,8 +155,7 @@ export const LockUnlockTab = ({ onFileDrop }: LockUnlockTabProps) => {
       setPassword('');
       setOutputFilename(defaultFilename);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err) || 'Unknown error occurred';
-      setError(`${t(mode === 'lock' ? 'lockUnlockLockFailed' : 'lockUnlockUnlockFailed')} ${message}`);
+      setError(`${t(mode === 'lock' ? 'lockUnlockLockFailed' : 'lockUnlockUnlockFailed')} ${getErrorMessage(err)}`);
     } finally {
       setIsProcessing(false);
     }

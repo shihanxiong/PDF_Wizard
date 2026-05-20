@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { GetLanguage, SetLanguage } from '../../wailsjs/go/main/App';
 import { useI18n, getNativeLanguageName, type Language } from '../utils/i18n';
+import { getErrorMessage } from '../utils/errors';
 import { SUPPORTED_LANGUAGES, isValidLanguage } from '../utils/i18n/constants';
 
 interface SettingsDialogProps {
@@ -39,8 +40,8 @@ export const SettingsDialog = ({ open, onClose }: SettingsDialogProps) => {
       // Validate language code and default to 'en' if invalid
       const language = (isValidLanguage(lang) ? lang : 'en') as Language;
       setSelectedLanguage(language);
-    } catch (err) {
-      console.error('Failed to load language:', err);
+    } catch (err: unknown) {
+      console.error('Failed to load language:', getErrorMessage(err));
     }
   };
 
@@ -55,8 +56,8 @@ export const SettingsDialog = ({ open, onClose }: SettingsDialogProps) => {
       await SetLanguage(selectedLanguage);
       setLanguage(selectedLanguage);
       onClose();
-    } catch (err) {
-      console.error('Failed to save language:', err);
+    } catch (err: unknown) {
+      console.error('Failed to save language:', getErrorMessage(err));
     } finally {
       setLoading(false);
     }
