@@ -7,8 +7,6 @@ import {
   IconButton,
   Card,
   CardContent,
-  Alert,
-  CircularProgress,
   Paper,
   MenuItem,
   Select,
@@ -17,7 +15,6 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { SelectPDFFile, GetPDFMetadata, RotatePDF } from '../../wailsjs/go/main/App';
 import { SelectedPDF, RotateDefinition } from '../types';
 import { models } from '../../wailsjs/go/models';
@@ -27,10 +24,7 @@ import { usePDFDrop } from '../hooks/usePDFDrop';
 import { useOutputDirectory } from '../hooks/useOutputDirectory';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import { getErrorMessage } from '../utils/errors';
-import { PDFInfoCard } from './PDFInfoCard';
-import { FilenameInput } from './FilenameInput';
-import { OutputDirectorySelector } from './OutputDirectorySelector';
-import { NoPDFSelected } from './NoPDFSelected';
+import { PdfOperationTabShell } from './PdfOperationTabShell';
 
 interface RotateTabProps {
   onFileDrop: (handler: (paths: string[]) => void) => void;
@@ -51,14 +45,13 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
   );
   const { error, setError, handleError } = useErrorHandler();
 
-  // Register drag and drop handler with App component
   useEffect(() => {
     const handleDroppedPDF = (paths: string[]) => {
       handlePDFDrop(paths, {
         allowMultiple: false,
         onSuccess: (pdf) => {
           setSelectedPDF(pdf as SelectedPDF);
-          setRotations([]); // Clear existing rotations when new PDF is selected
+          setRotations([]);
           setError(null);
         },
         onError: (errorMsg) => {
@@ -86,7 +79,6 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
           lastModified: new Date(metadata.lastModified),
           totalPages: metadata.totalPages,
         });
-        // Clear existing rotations when new PDF is selected
         setRotations([]);
         setError(null);
       }
@@ -105,7 +97,7 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
       id: `rotate-${Date.now()}-${rotationNumber}`,
       startPage: Math.min(lastEndPage + 1, selectedPDF.totalPages),
       endPage: Math.min(lastEndPage + 10, selectedPDF.totalPages),
-      rotation: 90, // Default to +90 degrees
+      rotation: 90,
     };
 
     setRotations((prev) => [...prev, newRotation]);
@@ -133,7 +125,6 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
   const handleRotate = async () => {
     if (!selectedPDF || rotations.length === 0 || !outputDirectory || !outputFilename.trim()) return;
 
-    // Validate all rotations
     const invalidRotations = rotations.filter((rotation) => !validateRotate(rotation));
     if (invalidRotations.length > 0) {
       setError(t('pleaseFixInvalidRotations'));
@@ -153,7 +144,6 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
 
       await RotatePDF(selectedPDF.path, rotateDefinitions, outputDirectory, outputFilename.trim());
       setSuccess(`${t('pdfRotatedSuccessfully')} ${outputDirectory}/${outputFilename.trim()}.pdf`);
-      // Clear selected PDF, rotations, and reset filename after successful rotation
       setSelectedPDF(null);
       setRotations([]);
       setOutputFilename('rotated');
@@ -174,199 +164,146 @@ export const RotateTab = ({ onFileDrop }: RotateTabProps) => {
     !isProcessing;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 3, overflow: 'hidden' }}>
-      {/* PDF Selection Section */}
-      <Box sx={{ mb: 1 }}>
-        <Button
-          variant="contained"
-          startIcon={<CloudUploadIcon />}
-          onClick={handleSelectPDF}
-          sx={{ mb: 2 }}
-          disabled={isProcessing}
-        >
-          {t('selectPDFFile')}
+    <PdfOperationTabShell
+      selectedPDF={selectedPDF}
+      onSelectPDF={handleSelectPDF}
+      onFileDrop={onFileDrop}
+      error={error}
+      onClearError={() => setError(null)}
+      success={success}
+      onClearSuccess={() => setSuccess(null)}
+      isProcessing={isProcessing}
+      outputDirectory={outputDirectory}
+      onSelectOutputDirectory={selectDirectory}
+      outputFilename={outputFilename}
+      onOutputFilenameChange={setOutputFilename}
+      actionLabel={t('rotatePDF')}
+      actionLoadingLabel={t('rotating')}
+      canExecute={canRotate}
+      onExecute={handleRotate}
+      outputDirectoryLabel="selectOutputDirectoryRotate"
+      filenamePlaceholder="rotated"
+    >
+      {/* Add Rotate Button */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+        <Button onClick={handleAddRotate} disabled={!canAddRotate} startIcon={<AddIcon />} variant="outlined">
+          {t('addRotate')}
         </Button>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t('dragDropPDFHint')}
+        <Typography variant="body2" color="text.secondary">
+          {rotations.length} / {MAX_ROTATIONS} {t('rotations')}
         </Typography>
       </Box>
 
-      {/* Error/Success Messages */}
-      {error && (
-        <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      {success && (
-        <Alert severity="success" onClose={() => setSuccess(null)} sx={{ mb: 2 }}>
-          {success}
-        </Alert>
-      )}
-
-      {/* Selected PDF Information */}
-      {selectedPDF ? (
-        <>
-          <PDFInfoCard pdf={selectedPDF} />
-
-          {/* Add Rotate Button */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <Button onClick={handleAddRotate} disabled={!canAddRotate} startIcon={<AddIcon />} variant="outlined">
-              {t('addRotate')}
-            </Button>
-            <Typography variant="body2" color="text.secondary">
-              {rotations.length} / {MAX_ROTATIONS} {t('rotations')}
-            </Typography>
-          </Box>
-
-          {/* Rotation Definitions List */}
-          <Paper
-            sx={{
-              flex: 1,
-              overflow: 'auto',
-              mb: 3,
-              minHeight: 200,
-              p: 2,
-            }}
-          >
-            {rotations.length === 0 ? (
-              <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>
-                <Typography>{t('noRotationsDefined')}</Typography>
-              </Box>
-            ) : (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {rotations.map((rotation, index) => {
-                  const isValid = validateRotate(rotation);
-                  const pageCount = rotation.endPage - rotation.startPage + 1;
-                  const rotationLabel =
-                    rotation.rotation === 90
-                      ? t('clockwise')
-                      : rotation.rotation === -90
-                      ? t('counterClockwise')
-                      : t('upsideDown');
-
-                  return (
-                    <Card
-                      key={rotation.id}
-                      sx={{
-                        border: isValid ? '1px solid' : '2px solid',
-                        borderColor: isValid ? 'divider' : 'error.main',
-                      }}
-                    >
-                      <CardContent>
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            mb: 2,
-                          }}
-                        >
-                          <Typography variant="subtitle1">
-                            {t('rotation')} {index + 1}
-                          </Typography>
-                          <IconButton
-                            onClick={() => handleRemoveRotate(rotation.id)}
-                            size="small"
-                            disabled={isProcessing}
-                            color="error"
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Box>
-
-                        <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-                          <TextField
-                            label={t('startPage')}
-                            type="number"
-                            value={rotation.startPage}
-                            onChange={(e) =>
-                              handleUpdateRotate(rotation.id, 'startPage', parseInt(e.target.value) || 1)
-                            }
-                            inputProps={{ min: 1, max: selectedPDF.totalPages }}
-                            size="small"
-                            error={!isValid && (rotation.startPage < 1 || rotation.startPage > selectedPDF.totalPages)}
-                            disabled={isProcessing}
-                            sx={{ width: '120px' }}
-                          />
-                          <TextField
-                            label={t('endPage')}
-                            type="number"
-                            value={rotation.endPage}
-                            onChange={(e) => handleUpdateRotate(rotation.id, 'endPage', parseInt(e.target.value) || 1)}
-                            inputProps={{ min: rotation.startPage, max: selectedPDF.totalPages }}
-                            size="small"
-                            error={
-                              !isValid &&
-                              (rotation.endPage < rotation.startPage || rotation.endPage > selectedPDF.totalPages)
-                            }
-                            disabled={isProcessing}
-                            sx={{ width: '120px' }}
-                          />
-                          <FormControl size="small" sx={{ minWidth: 150 }}>
-                            <InputLabel>{t('rotationLabel')}</InputLabel>
-                            <Select
-                              value={rotation.rotation}
-                              label={t('rotationLabel')}
-                              onChange={(e) => handleUpdateRotate(rotation.id, 'rotation', Number(e.target.value))}
-                              disabled={isProcessing}
-                            >
-                              <MenuItem value={90}>{t('clockwise')}</MenuItem>
-                              <MenuItem value={-90}>{t('counterClockwise')}</MenuItem>
-                              <MenuItem value={180}>{t('upsideDown')}</MenuItem>
-                            </Select>
-                          </FormControl>
-                        </Box>
-
-                        <Typography variant="body2" color="text.secondary">
-                          {t('pages')} {rotation.startPage}-{rotation.endPage} ({pageCount}{' '}
-                          {pageCount === 1 ? t('page') : t('pages')}) • {rotationLabel}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </Box>
-            )}
-          </Paper>
-        </>
-      ) : (
-        <NoPDFSelected />
-      )}
-
-      {/* Output Configuration Section */}
-      <Box
+      {/* Rotation Definitions List */}
+      <Paper
         sx={{
-          mt: 'auto',
-          pt: 2,
-          pb: 2,
-          flexShrink: 0,
+          flex: 1,
+          overflow: 'auto',
+          mb: 3,
+          minHeight: 200,
+          p: 2,
         }}
       >
-        <OutputDirectorySelector
-          directory={outputDirectory}
-          onSelect={selectDirectory}
-          labelKey="selectOutputDirectoryRotate"
-          disabled={isProcessing}
-        />
+        {rotations.length === 0 ? (
+          <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>
+            <Typography>{t('noRotationsDefined')}</Typography>
+          </Box>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {rotations.map((rotation, index) => {
+              const isValid = validateRotate(rotation);
+              const pageCount = rotation.endPage - rotation.startPage + 1;
+              const rotationLabel =
+                rotation.rotation === 90
+                  ? t('clockwise')
+                  : rotation.rotation === -90
+                  ? t('counterClockwise')
+                  : t('upsideDown');
 
-        <FilenameInput
-          value={outputFilename}
-          onChange={setOutputFilename}
-          placeholder="rotated"
-          disabled={isProcessing}
-        />
+              return (
+                <Card
+                  key={rotation.id}
+                  sx={{
+                    border: isValid ? '1px solid' : '2px solid',
+                    borderColor: isValid ? 'divider' : 'error.main',
+                  }}
+                >
+                  <CardContent>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        mb: 2,
+                      }}
+                    >
+                      <Typography variant="subtitle1">
+                        {t('rotation')} {index + 1}
+                      </Typography>
+                      <IconButton
+                        onClick={() => handleRemoveRotate(rotation.id)}
+                        size="small"
+                        disabled={isProcessing}
+                        color="error"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
 
-        <Button
-          variant="contained"
-          onClick={handleRotate}
-          disabled={!canRotate}
-          fullWidth
-          sx={{ py: 1.5, mb: 2 }}
-          startIcon={isProcessing ? <CircularProgress size={16} color="inherit" /> : undefined}
-        >
-          {isProcessing ? t('rotating') : t('rotatePDF')}
-        </Button>
-      </Box>
-    </Box>
+                    <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <TextField
+                        label={t('startPage')}
+                        type="number"
+                        value={rotation.startPage}
+                        onChange={(e) =>
+                          handleUpdateRotate(rotation.id, 'startPage', parseInt(e.target.value) || 1)
+                        }
+                        inputProps={{ min: 1, max: selectedPDF!.totalPages }}
+                        size="small"
+                        error={!isValid && (rotation.startPage < 1 || rotation.startPage > selectedPDF!.totalPages)}
+                        disabled={isProcessing}
+                        sx={{ width: '120px' }}
+                      />
+                      <TextField
+                        label={t('endPage')}
+                        type="number"
+                        value={rotation.endPage}
+                        onChange={(e) => handleUpdateRotate(rotation.id, 'endPage', parseInt(e.target.value) || 1)}
+                        inputProps={{ min: rotation.startPage, max: selectedPDF!.totalPages }}
+                        size="small"
+                        error={
+                          !isValid &&
+                          (rotation.endPage < rotation.startPage || rotation.endPage > selectedPDF!.totalPages)
+                        }
+                        disabled={isProcessing}
+                        sx={{ width: '120px' }}
+                      />
+                      <FormControl size="small" sx={{ minWidth: 150 }}>
+                        <InputLabel>{t('rotationLabel')}</InputLabel>
+                        <Select
+                          value={rotation.rotation}
+                          label={t('rotationLabel')}
+                          onChange={(e) => handleUpdateRotate(rotation.id, 'rotation', Number(e.target.value))}
+                          disabled={isProcessing}
+                        >
+                          <MenuItem value={90}>{t('clockwise')}</MenuItem>
+                          <MenuItem value={-90}>{t('counterClockwise')}</MenuItem>
+                          <MenuItem value={180}>{t('upsideDown')}</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Box>
+
+                    <Typography variant="body2" color="text.secondary">
+                      {t('pages')} {rotation.startPage}-{rotation.endPage} ({pageCount}{' '}
+                      {pageCount === 1 ? t('page') : t('pages')}) • {rotationLabel}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </Box>
+        )}
+      </Paper>
+    </PdfOperationTabShell>
   );
 };
