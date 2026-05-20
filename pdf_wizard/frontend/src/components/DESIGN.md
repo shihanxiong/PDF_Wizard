@@ -17,6 +17,12 @@ The application features seven main tab components for PDF manipulation:
 
 Components use Material-UI. Strings use **`useI18n()`** from `utils/i18n` (see [utils/i18n/DESIGN.md](../utils/i18n/DESIGN.md)).
 
+### Shared Shell: `PdfOperationTabShell`
+
+Single-PDF tabs (Split, Rotate, Lock/Unlock, PDF-to-Text) share a common layout pattern: file picker button, drag-drop hint, alerts, `PDFInfoCard` / `NoPDFSelected` placeholder, tab-specific content, and a sticky bottom section with `OutputDirectorySelector`, `FilenameInput`, and primary action button.
+
+**`PdfOperationTabShell`** extracts that boilerplate into a single presentational component. Each tab passes its unique UI as `children` (rendered between the info card and the output section). All state stays in the parent tab; the shell is purely layout. Currently adopted by **RotateTab** (proof of concept); other single-PDF tabs will migrate in follow-up PRs.
+
 When the UI language is English, **`App.tsx`** applies a slightly smaller `Tabs` label font so seven tabs fit comfortably without crowding.
 
 `App.tsx` lazy-loads the seven main tabs with **`React.lazy` + `Suspense`**. The shell (`AppBar`, tab strip, drag/drop wiring, settings dialog) renders immediately; each tab chunk is fetched on first activation and then stays mounted for local state continuity. The tab content container chain (`App` content box, `TabPanel` wrapper, inner panel `Box`) keeps **`minHeight: 0`** so nested tab layouts can shrink correctly without clipping/overflow at the window bottom.
