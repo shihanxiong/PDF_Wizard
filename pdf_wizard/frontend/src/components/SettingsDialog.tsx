@@ -12,9 +12,9 @@ import {
   Box,
   SelectChangeEvent,
 } from '@mui/material';
-import { GetLanguage, SetLanguage } from '../../wailsjs/go/main/App';
 import { useI18n, getNativeLanguageName, type Language } from '../utils/i18n';
-import { SUPPORTED_LANGUAGES, isValidLanguage } from '../utils/i18n/constants';
+import { SUPPORTED_LANGUAGES } from '../utils/i18n/constants';
+import { usePersistedLanguage } from '../hooks/usePersistedLanguage';
 
 interface SettingsDialogProps {
   open: boolean;
@@ -22,27 +22,16 @@ interface SettingsDialogProps {
 }
 
 export const SettingsDialog = ({ open, onClose }: SettingsDialogProps) => {
-  const { t, setLanguage } = useI18n();
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>('en');
+  const { t } = useI18n();
+  const { language, saveLanguage } = usePersistedLanguage();
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(language);
   const [loading, setLoading] = useState(false);
 
-  // Load current language setting when dialog opens
   useEffect(() => {
     if (open) {
-      loadLanguage();
-    }
-  }, [open]);
-
-  const loadLanguage = async () => {
-    try {
-      const lang = await GetLanguage();
-      // Validate language code and default to 'en' if invalid
-      const language = (isValidLanguage(lang) ? lang : 'en') as Language;
       setSelectedLanguage(language);
-    } catch (err) {
-      console.error('Failed to load language:', err);
     }
-  };
+  }, [open, language]);
 
   const handleLanguageChange = (event: SelectChangeEvent<string>) => {
     const newLanguage = event.target.value as Language;
@@ -52,8 +41,7 @@ export const SettingsDialog = ({ open, onClose }: SettingsDialogProps) => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      await SetLanguage(selectedLanguage);
-      setLanguage(selectedLanguage);
+      await saveLanguage(selectedLanguage);
       onClose();
     } catch (err) {
       console.error('Failed to save language:', err);
@@ -63,8 +51,7 @@ export const SettingsDialog = ({ open, onClose }: SettingsDialogProps) => {
   };
 
   const handleCancel = () => {
-    // Reset to current language
-    loadLanguage();
+    setSelectedLanguage(language);
     onClose();
   };
 
