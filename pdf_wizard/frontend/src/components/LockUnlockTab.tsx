@@ -4,6 +4,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import FolderIcon from '@mui/icons-material/Folder';
 import { SelectedPDF } from '../types';
 import { formatDate, formatFileSize } from '../utils/formatters';
+import { isPDFError, PDFErrorCode } from '../utils/pdfErrors';
 import { useI18n } from '../utils/i18n';
 import { models } from '../../wailsjs/go/models';
 import { GetFileMetadata, GetPDFMetadata, LockPDF, SelectOutputDirectory, SelectPDFFile, UnlockPDF } from '../../wailsjs/go/main/App';

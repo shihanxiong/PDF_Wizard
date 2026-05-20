@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
-import { Box, Button, Typography, IconButton, Paper, Alert, CircularProgress } from '@mui/material';
+import { useState, useEffect, useCallback } from 'react';
+import { Box, Button, Typography, IconButton, Paper, Alert, CircularProgress, LinearProgress } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import CancelIcon from '@mui/icons-material/Cancel';
 import {
   DndContext,
   closestCenter,
@@ -29,6 +30,7 @@ import { usePDFDrop } from '../hooks/usePDFDrop';
 import { useOutputDirectory } from '../hooks/useOutputDirectory';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import { getErrorMessage } from '../utils/errors';
+import { usePDFOperation } from '../hooks/usePDFOperation';
 import { FilenameInput } from './FilenameInput';
 import { OutputDirectorySelector } from './OutputDirectorySelector';
 import { NoPDFSelected } from './NoPDFSelected';
@@ -120,12 +122,17 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
   const { t } = useI18n();
   const [files, setFiles] = useState<SelectedFile[]>([]);
   const [outputFilename, setOutputFilename] = useState<string>('merged');
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [success, setSuccess] = useState<string | null>(null);
 
   const { handlePDFDrop } = usePDFDrop();
   const { outputDirectory, selectDirectory } = useOutputDirectory('failedToSelectOutputDirectory', 'selectOutputDirectory');
   const { error, setError, handleError } = useErrorHandler();
+
+  const mergeFn = useCallback(
+    (filePaths: string[], dir: string, filename: string) => MergePDFs(filePaths, dir, filename),
+    [],
+  );
+  const { execute: executeMerge, cancel: cancelMerge, isProcessing, progress } = usePDFOperation(mergeFn);
 
   // Register drag and drop handler with App component
   useEffect(() => {
@@ -190,21 +197,20 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
   const handleMerge = async () => {
     if (files.length === 0 || !outputDirectory || !outputFilename.trim()) return;
 
-    setIsProcessing(true);
     setError(null);
     setSuccess(null);
 
     try {
       const filePaths = files.map((f) => f.path);
-      await MergePDFs(filePaths, outputDirectory, outputFilename.trim());
+      await executeMerge(filePaths, outputDirectory, outputFilename.trim());
       setSuccess(`${t('pdfsMergedSuccessfully')} ${outputDirectory}/${outputFilename}.pdf`);
-      // Clear files after successful merge
       setFiles([]);
       setOutputFilename('merged');
     } catch (err: unknown) {
-      setError(`${t('mergeFailed')} ${getErrorMessage(err)}`);
-    } finally {
-      setIsProcessing(false);
+      const msg = getErrorMessage(err);
+      if (!msg.includes('cancelled')) {
+        setError(`${t('mergeFailed')} ${msg}`);
+      }
     }
   };
 
@@ -272,16 +278,38 @@ export const MergeTab = ({ onFileDrop }: MergeTabProps) => {
           disabled={isProcessing}
         />
 
-        <Button
-          variant="contained"
-          onClick={handleMerge}
-          disabled={!canMerge}
-          fullWidth
-          sx={{ py: 1.5, mb: 2 }}
-          startIcon={isProcessing ? <CircularProgress size={16} color="inherit" /> : undefined}
-        >
-          {isProcessing ? t('merging') : t('mergePDF')}
-        </Button>
+        {isProcessing && progress && (
+          <Box sx={{ mb: 1 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+              {`${t('merging')} ${progress.current}/${progress.total}`}
+            </Typography>
+            <LinearProgress variant="determinate" value={progress.percent} />
+          </Box>
+        )}
+
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="contained"
+            onClick={handleMerge}
+            disabled={!canMerge}
+            fullWidth
+            sx={{ py: 1.5, mb: 2 }}
+            startIcon={isProcessing ? <CircularProgress size={16} color="inherit" /> : undefined}
+          >
+            {isProcessing ? t('merging') : t('mergePDF')}
+          </Button>
+          {isProcessing && (
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={cancelMerge}
+              sx={{ py: 1.5, mb: 2, minWidth: 'auto', px: 2 }}
+              startIcon={<CancelIcon />}
+            >
+              {t('cancel')}
+            </Button>
+          )}
+        </Box>
       </Box>
     </Box>
   );
